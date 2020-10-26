@@ -7,7 +7,7 @@ data
 videos
 plots
 notebooks
-_research
+#_research
 
 ################################################################################
 #                                    Julia                                     #

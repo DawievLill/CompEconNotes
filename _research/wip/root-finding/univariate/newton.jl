@@ -1,7 +1,15 @@
+#=
+Newtons method for scalar root finding
 
-# Newtons method for scalar root finding -- univariate case from Fundamentals of Numerical Computation. 
+@author: Dawie van Lill <dvanlill@sun.ac.za>
 
-# In Julia the docstring is found above the function, not the same as in python. 
+@date: 2020-10-27
+
+References
+----------
+Fundamentals of numerical computation
+
+=#
 
 using Parameters
 
@@ -40,11 +48,8 @@ function newton(f, dfdx, x1)
     if k == maxiter
         @warn "Maximum number of iterations reached"
     end
-
     return x
-
 end
-
 
 # Example 
 

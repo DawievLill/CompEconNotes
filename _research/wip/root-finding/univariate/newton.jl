@@ -11,7 +11,9 @@ Fundamentals of numerical computation
 
 =#
 
+using ForwardDiff 
 using Parameters
+using Roots
 
 @with_kw struct params
     funtol::Float64 = 100 * eps()
@@ -53,7 +55,13 @@ end
 
 # Example 
 
-f = x -> exp(x) - x - 2;        # Our function that we want to evaluate
-dfdx = x -> exp(x) - 1;          # We can also determine this with AD of symbolic differentiation. 
+f(x) = exp(x) - x - 2;        # Our function that we want to evaluate
+dfdx(x) = exp(x) - 1;         # We can also determine this with AD of symbolic differentiation. 
 x = newton(f, dfdx, 1.0);        
-print(x[end])                   # Provide us with the value for the root
+# println(x[end])               # Provide us with the value for the root
+
+
+# There is an implementation of Newton's method using the Roots.jl package and also ForwardDiff to find the derivative
+
+D(f) = x -> ForwardDiff.derivative(f, float(x))
+@time find_zero((f, D(f)), 1.0, Roots.Newton())

@@ -72,3 +72,5 @@ end
 
 x1 = [0,0,0]
 x = newtonsys(nlfun,nljac,x1)
+
+

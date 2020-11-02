@@ -19,8 +19,8 @@ using Parameters
 
 @with_kw struct params
     maxiter::Int64 = 50
-    tol::Float64   = 1000 * eps
-    xtol::Float64  = 1000 * eps 
+    tol::Float64   = 1000 * eps()
+    xtol::Float64  = 1000 * eps() 
 end
 
 p = params()
@@ -34,9 +34,10 @@ residual vector and the Jacobian matrix, respectively. Returns
 history of root estimates as a vector of vectors.
 """
 function broyden(f, jac, x)
-    @unpack maxiter, tol = p
+    @unpack maxiter, tol, xtol = p
 
-    y, J = f(x), jac(x)
+    x = [float(x)]
+    y, J = f(x), jac(x)     # At this stage this gives the function and the Jacobian (which can be determined manually, or via ForwardDiff)
     dx   = Inf
     k    = 1
 
@@ -44,7 +45,7 @@ function broyden(f, jac, x)
     while (norm(dx) > xtol) && (norm(y) > tol) && (k < maxiter)
 
         dx = -J\y
-        push!(x, x[k] + dx)
+        push!(x, x[k] .+ dx)
         k += 1
         y = f(x[k])
 
@@ -55,14 +56,22 @@ function broyden(f, jac, x)
     return x
 end
 
-
-function f(x)
-    return [x[1] + 2*x[2] - 2, x[1]^2 + 4*x[2]^2 - 4]
+function nlfun(x)
+    f = zeros(3)  
+    f[1] = exp(x[2]-x[1]) - 2;
+    f[2] = x[1]*x[2] + x[3];
+    f[3] = x[2]*x[3] + x[1]^2 - x[2];
+    return f
+end
+   
+# Jacobian is manually calculated here. There should be a way to do this automatically. 
+function nljac(x)
+    J = zeros(3,3)
+    J[1,:] = [-exp(x[2]-x[1]),exp(x[2]-x[1]), 0]
+    J[2,:] = [x[2], x[1], 1]
+    J[3,:] = [2*x[1], x[3]-1, x[2]]
+    return J
 end
 
-function jac(x)
-    return [1 2;
-           2*x[1] 8*x[2]]
-end
-
-print(broyden(fun, jac, [1.0, 2.0]))
+x = [0,0,0]
+y = broyden(nlfun, nljac, x)

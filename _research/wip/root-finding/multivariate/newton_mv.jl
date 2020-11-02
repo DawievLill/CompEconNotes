@@ -11,6 +11,7 @@ Fundamentals of numerical computation
 
 =#
 
+using Calculus
 using LinearAlgebra
 using Parameters
 
@@ -74,3 +75,17 @@ x1 = [0,0,0]
 x = newtonsys(nlfun,nljac,x1)
 
 
+
+# Another way to code this from Caraiani / Collard
+
+# function newton_calaiardi(f)
+
+#     maxit = 1000
+#     tol   = 1e-5
+    
+#     x0 = [1.0; 1.0]
+#     y0 = reshape(collect(f(x0[1], x0[2])), 2, 1)
+
+#     gr1 = Calculus.gradient()
+
+# end

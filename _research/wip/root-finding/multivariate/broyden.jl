@@ -28,10 +28,7 @@ p = params()
 """
 broyden(f, jac, x)
 
-Use Broyden's method to find a root of a system of equations,
-starting from `x`. The functions `f` and `jac' should return the
-residual vector and the Jacobian matrix, respectively. Returns
-history of root estimates as a vector of vectors.
+Use Broyden's method to find a root of a system of equations, starting from `x`. The functions `f` and `jac' should return the residual vector and the Jacobian matrix, respectively. Returns history of root estimates as a vector of vectors.
 """
 function broyden(f, jac, x)
     @unpack maxiter, tol, xtol = p
@@ -57,21 +54,26 @@ function broyden(f, jac, x)
 end
 
 function nlfun(x)
+
     f = zeros(3)  
     f[1] = exp(x[2]-x[1]) - 2;
     f[2] = x[1]*x[2] + x[3];
     f[3] = x[2]*x[3] + x[1]^2 - x[2];
     return f
+    
 end
    
 # Jacobian is manually calculated here. There should be a way to do this automatically. 
 function nljac(x)
+
     J = zeros(3,3)
     J[1,:] = [-exp(x[2]-x[1]),exp(x[2]-x[1]), 0]
     J[2,:] = [x[2], x[1], 1]
     J[3,:] = [2*x[1], x[3]-1, x[2]]
     return J
+
 end
 
 x = [0,0,0]
 y = broyden(nlfun, nljac, x)
+

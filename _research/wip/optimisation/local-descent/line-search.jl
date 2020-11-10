@@ -11,6 +11,9 @@ Algorithms for Optimisation
 
 =#
 
+using LineSearches
+using Optim
+
 function bracket_minimum(f, x=0; s=1e-2, k=2.0)
     a, ya = x, f(x)
     b, yb = a + s, f(a + s)
@@ -52,3 +55,5 @@ function line_search(f, x, d)
 
     return x + α * d
 end
+
+## One can use the LineSearches package in Julia

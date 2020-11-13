@@ -8,6 +8,7 @@
 using LinearAlgebra
 using Parameters
 using ProximalOperators
+using Optim
 
 @with_kw struct params
     niter::Float64 = 50
@@ -21,7 +22,7 @@ function grad_descent(f, ∇f, x)
     @unpack niter, gtol = p
 
     g_old = ∇f(x)
-    γ = 0.1
+    γ = 0.1 # This is the step size
 
     for cont = 1:niter
 
@@ -56,3 +57,33 @@ end
 println(grad_descent(rosen, rosen_grad, [2.0, 1.0]))
 
 
+# One nice way to approach this is using Optim.jl
+
+
+# Put a pin in this last method below, I don't know much about proximal operators. 
+
+## An alternative method, which seems more comprehensive. Try and follow along with the logic. 
+
+# For this problem we will be creating types in Julia 
+
+struct GD_problem{F <: ProximableFunction, A <: AbstractVecOrMat{<:Real}, R <: Real}
+
+    # This is the problem structure that contains information regarding the specific gradient descent problem at hand. 
+
+    f::F        # Our objective function is a Proximable Function types
+    x0::A       # The initial condition is of type Vector or Matrix with real entries
+    γ::R        # The stepsize is a real value 
+
+end
+
+# Example for the usage of this struct. If you want to solve least squares problem.
+
+A = randn(6, 5)
+b = randn(6)
+m, n  = size(A)
+
+x0 = randn(n)
+f = LeastSquares(A, b)
+γ = 1.0
+
+problem  = GD_problem(f, x0, γ)

@@ -19,3 +19,4 @@ end
 
 
 kgrid::Float64 = 1e-2:(grid_max - 1e-2)/(n-1):grid_max  # Represents the equispaced grid. There are other ways to choose the grid points, which we will see later when we talk about function approximation methods, see the notes of Rudik. 
+

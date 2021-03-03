@@ -12,10 +12,16 @@ using Parameters
     δ::Float64 = 0.1
     β::Float64 = 0.95
     α::Float64 = 0.30
-    
+    nbk::Float64 = 1000         # Number of grid points
+
 p = params()
 
 function cara_vfi()
     @unpack σ, δ, β, α = p
 
+    kstar = ((1 - β * (1 - δ))/(α * β))^(1/(α - 1))     # Steady state value for capital (this is important to be able to determine)
 
+    dev = 0.9                                           # Maximal deviation from the steady state
+
+
+VSCODE

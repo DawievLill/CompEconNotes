@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.12
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -18,9 +18,6 @@ using Markdown
 
 # ╔═╡ 66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
 using InteractiveUtils
-
-# ╔═╡ 6f5370c6-7b78-11eb-2076-45dc8e4908ae
-using GraphRecipes, Plots
 
 # ╔═╡ d482635e-7ab4-11eb-0d53-398ca84dab54
 using DecFP
@@ -59,10 +56,10 @@ A `byte` is equal to 8 `bits`, a `kilobyte` is $$10^3$$ `bytes` and a `megabyte`
 md" As an aside, we can determine the amount of memory used by an object with the `Base.summarysize` command in _Julia_. I am not aware a specific function that does this in _Matlab_, there is a `whos()` funtion that returns the size of all variables in the workspace. The _Julia_ equivalent of `whos()` is `varinfo()`."
 
 # ╔═╡ 84df01a6-7861-11eb-2e3d-bd2e48f379f0
-xx = rand(10, 10)
+xx = rand(100, 100);
 
 # ╔═╡ 6db2ed2a-7862-11eb-0053-99ca2c0cc1e6
-Base.summarysize(xx)
+Base.summarysize(xx);
 
 # ╔═╡ 387561c8-7ce9-11eb-3458-03ad24bc43c3
 md" ### Why do we need floating point numbers?"
@@ -72,7 +69,7 @@ md"A fixed point number system is a computer model for integers $$\mathbb{Z}$$, 
 
 We want to use a finite set of floating point numbers, denoted by $\mathbb{F}$, to represent $\mathbb{R}$. 
 
-The fact that the real numbers are infinite along two dimensions (continuous and uncountable) is problematic in computing. Our objective is to understand the set $\mathbb{F}$, how rounding occurs when you operate on floating point values and also how rounding errors accumulate, and how you analyse the accuracy of numerical algorithms.."
+The fact that the real numbers are infinite along two dimensions (continuous and uncountable) is problematic in computing. Our objective is to understand the set $\mathbb{F}$, how rounding occurs when you operate on floating point values and also how rounding errors accumulate, and how you analyse the accuracy of numerical algorithms."
 
 # ╔═╡ 6444bf22-7cbb-11eb-045b-7d7c90a508cb
 md" Let us take a quick look at how the set $\mathbb{F}$ is represented on a computer with the following slider. We start with integers and then move on to floating point numbers.  "
@@ -120,7 +117,7 @@ r * 49
 md" This difference is about $10^{-16}$ since the default precision in _Julia_ is double precision. We will get back to this topic later in this lesson. We will continue this discussion on precision after a quick detour into a discussion on types." 
 
 # ╔═╡ d66c205c-7c54-11eb-1500-2deb82c42c6c
-md" ### Quick detour into types "
+md" #### Quick detour into types "
 
 # ╔═╡ d5191c50-7b55-11eb-20c9-896d13cd253e
 md"Before we move on with floating point numbers, let us quickly talk about types. In _Julia_ (and most other programming languages) `1` and `1.0` are different values, because they have different types. One could also think of other ways to represent one in different ways (all of which are equally valid). Look at the following possible representations of one."
@@ -171,26 +168,53 @@ md"Double precision numbers are the dominant data type in scientific computing. 
 md" ### Floating point numbers contd. " 
 
 # ╔═╡ 56547ac2-7cba-11eb-2698-a13ef1195c67
-md" The floating point representation of a real number in scientific notation is $$\pm d_0.d_1d_2 \ldots d_{p} \times b^{e}$$.  
+md" This first part is perhaps a bit more techical and you can just skim through on your first reading. The objective is to help you understand how numbers are represented. In a computer the real numbers are represented by a floating-point number system with a fixed number of digits. The idea resembles scientific notation in which a very large or very small magnitude is expressed as a number of moderate size times an appropriate power of ten. 
 
-The $d_i$ are digits of the `significand` in some base, typically $b = 2$. The number of digits of $p$ is the precision and $e$ is the exponent. 
+As an example, $2347$ van be written as $2.347 \times 10^{3}$. In this standard-form scientific notation format the decimal point moves (floats) as the power of $10$ changes.
 
-In this floating number system the computer stores a `sign` bit, the `significand` / `mantissa` and the `exponent` bit in a tuple.   "
+The floating-point number system is similar to scientific notation and $\mathbb{F}$ is characterised by four integers, namely the base $b$, precision $p$ and exponent range $[L, U]$. 
 
-# ╔═╡ 393311b0-7cb8-11eb-1960-d7b76bcb326c
-md" The following image is retrieved from the Wipedia entry on double floating point format and helps visualise the floating point representation. The first bit is a `sign` bit. Then there are $11$ `exponent` bits, with the exponent range being $[-1022, 1023]$. "
+Any floating point number $x \in \mathbb{F}$ has the form $$x = \pm \left(d_0 + \frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p-1}}{b^{p-1}}\right) \times b^{e}$$.  
+
+Here $d_i$ is an integer such that $0 \leq d_i \leq b - 1$ with $i = 0, \ldots, p -1$.
+
+We also have that $e$ is an integer such that $ L \leq e \leq U$.
+
+The part in parentheses, which is represented by a string of $p$ base-$b$ digits $d_0 d_1 \ldots d_{p-1}$ is called the `significand`, which includes the `sign` bit in this representation. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. 
+
+As an example, if we were using base-$10$ (decimal floating point) then the orbital period of Jupiter's moon Io is $152,853.5047$ seconds, which has ten decmial digits of precision and is represented as the `significand` $1,528,535,047$ together with $5$ as the `exponent`. 
+
+To determine the actual value, a decimal point is placed after the first digit of the `significand` and the result is multiplied by $10^{5}$ to give $1.528535047 \times 10^5$. "
+
+# ╔═╡ 735dbd02-7f85-11eb-197a-9d5bd5750b35
+md" ##### Double precision"
+
+# ╔═╡ 2f56aafa-7f86-11eb-0e4c-51b5754a86ec
+md"In the example above the base was $10$, which is an example of the decimal floating point. However, floating-point numbers are traditionally represented with base of $2$ (binary). "
+
+# ╔═╡ 8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
+md" Double-precision binary floating-point is a commonly used format on PCs, due to its wider range over single-precision floating point, in spite of its performance and bandwidth cost.  "
+
+# ╔═╡ c6a576d2-7f85-11eb-1e11-43906c0c1187
+md" We can derive from our representation above that the real value assumed by a 64-bit double-precision number with a given biased `exponent` $e$ and a 52-bit `significand` is:
+
+![double](https://wikimedia.org/api/rest_v1/media/math/render/svg/5f677b27f52fcd521355049a560d53b5c01800e1)
+
+or alternatively, 
+
+![double2](https://wikimedia.org/api/rest_v1/media/math/render/svg/61345d47f069d645947b9c0ab676c75551f1b188)"
+
+# ╔═╡ 531698fe-7f85-11eb-0f2d-bbc361c47c72
+md"The following image on double floating point format helps visualise the floating point representation. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $0$ to $2047$. We interpret in biased form. The biased form means that an exponent value of $1023$ represents the actual zero. One calculates the value of the exponent by subtracting the bias for `exponent` $(1023)$ to get an exponent value in the range $[−1022, 1023]$. We shall look at this in more practical terms later on. The final part is the $p = 52$ bit `significand`."
 
 # ╔═╡ 7f430c70-7b4e-11eb-3f09-7bd60114d1de
 md" ![floating point numbers](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/IEEE_754_Double_Floating_Point_Format.svg/1024px-IEEE_754_Double_Floating_Point_Format.svg.png)"
 
-# ╔═╡ b5078aee-7cd3-11eb-3488-2dbdefb2bc7a
-md" The $52$ bit `significand` means that floating point numbers between $1$ and $2$ are spaced $2^{-52} \approx 10^{-16}$ apart. We will see why we look at this specific interval in the discussion below. This means that $52$ bit precision gives $16$ significant decimal digit precision. When you type in a decimal number or perform an arithmetic operation, in general the result must be rounded to the nearest floating point number. "
+# ╔═╡ fa852618-8119-11eb-05a1-ab845cc64139
+md" The way that this is represented in the book by Miranda and Fackler, or Judd, is somewhat different."
 
-# ╔═╡ ad699a36-7cb8-11eb-13b2-f5766ae18536
-md"The precision can thus be described by machine epsilon, or $\epsilon_\text{mach} = 2^{-p}$, where $p$ refers to the number of bits in the `significand`. This precision bounds the relative error between any element of $\mathbb{R}$ and the closest element of $\mathbb{F}$. We can access this machine precision by using the `eps()` command in _Julia_."
-
-# ╔═╡ c9d11136-7cb8-11eb-1669-83a40d46fb64
-2.0^-52, eps(), eps(1.0), eps(Float64) # These are all the same thing
+# ╔═╡ df023fb6-7f70-11eb-215a-7d834c2e7b56
+md" ##### Looking under the hood "
 
 # ╔═╡ 06bfbdd0-7c6a-11eb-033b-4df5aaeb3220
 md"""
@@ -201,13 +225,13 @@ The bit of code that we have below will give us the different components of this
 ieee0(x::Float64) = [bitstring(x)[1:1], bitstring(x)[2:12], bitstring(x)[13:64]]
 
 # ╔═╡ 9ba79240-7c6c-11eb-3385-7917a37df361
-md" Remember that with floating point numbers we are working with a computer representation of real numbers. One of the properties of $\mathbb{R}$ is that it is continuous. Let's focus our attention on a range of values in the interval $[1, 2)$. This will be the interval if our value for the `exponent` is set to zero."
+md" Remember that with floating point numbers we are working with a computer representation of real numbers. One of the properties of $\mathbb{R}$ is that it is continuous. Let's focus our attention on a range of values in the interval $[1, 2)$. This will be the interval if our value for the `exponent` is set to zero. "
 
 # ╔═╡ 74bec6fa-7c6d-11eb-27d0-c972ad74515c
 @bind n Slider(1: 2^(52), show_value = true)
 
 # ╔═╡ 803ff050-7c6d-11eb-1bc3-ff5335e4b361
-md" You will see that the values for the slider range from $1:2^{52}$. This slider provides us with a range of values between 1 and 2. For the real numbers there are an infinite amount of values between 1 and 2, but we can only present a limited amount on a computer. In fact, $2^{52}$ is maximum that we can present. Have you seen this number before? " 
+md" Generally the spacing between elements of $\mathbb{F}$ in $[2^{e}, 2^{e+1})$ is $2^{e-p}$. Therefore you will see that the values for the slider range from $1:2^{52}$. This slider provides us with a range of values between 1 and 2. For the real numbers there are an infinite amount of values between 1 and 2, but we can only present a limited amount on a computer. In fact, $2^{52}$ is maximum that we can present." 
 
 # ╔═╡ 14591b22-7c6e-11eb-008f-27a2ca96c8e9
 q = 1 + n/2^52
@@ -223,6 +247,12 @@ md" The problem for us is that these are not completely readable, since we are u
 
 # ╔═╡ bfaf9f4c-7c6f-11eb-01b3-8334e46772b6
 ieee(x) = [ parse.(Int,ieee0(x),base=2) ieee0(x)]
+
+# ╔═╡ 988d1952-80fb-11eb-3f37-25d71c811413
+md" So before we look at the output of the function let us remember how to read this:
+
+**s**, **e**, **m**  (`sign`, `exponent`, `mantissa`)  $\rightarrow$  $(-1)^s  * 2^{(e-1023)} * (1 + m/2^{52})$
+"
 
 # ╔═╡ d0a53b18-7c6f-11eb-0afd-0faa5c85a613
 ieee(q)
@@ -263,13 +293,15 @@ begin
 end
 
 # ╔═╡ 31795f9a-7b7a-11eb-1786-89aad77aff4b
-md" As we mentioned in the example before, this problem is due to rounding. Rounding is necesarry when a number has more than $p$ `significand` bits. _Julia_ offers several rounding modes, with the default being `RoundNearest`. In our example here, the number `0.1` in the decimal system cannot be represented accurately as a floating point number." 
+md" As we mentioned in the example before, this problem is due to rounding. Rounding is necesarry when a number has more than $p$ `significand` bits. _Julia_ offers several rounding modes, with the default being `RoundNearest`. In our example here, the number `0.1` in the decimal system cannot be represented accurately as a floating point number. " 
 
 # ╔═╡ de5fc23a-7b7a-11eb-12b0-a513044b39a6
 ieee(0.1)
 
 # ╔═╡ e7475a98-7b7a-11eb-00a2-63e52e403c16
-md"Do you see the repeating pattern in the `significand`? Even thought `0.1` can easily be represented with only two base-10 digits, it requires an infinite number of binary digits, which is cut off. This is a confusing aspect of floating point arithmetic. Rounding occurs on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. "
+md"Do you see the repeating pattern in the `significand`? Even thought `0.1` can easily be represented with only two base-10 digits, it requires an infinite number of binary digits, which is cut off. This quotient of two integers has a nonterminating binary expansion is not a binary floating-point number. This is a confusing aspect of floating-point arithmetic. We have a real arithmetic operation on two floating-point numbers that does not result in aother floating-point number. 
+
+If a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. "
 
 # ╔═╡ e54c99d8-7c74-11eb-29cc-f5d7f64c4937
 md" Given the previous example why do you think the following example is different?"
@@ -303,7 +335,7 @@ f
 md" Even though the statements are mathematically the same (by the associative property of addition and subtraction), if we compare the values we see that `e` > `f`. In this case this is because adding numbers of different magnitudes does not always work like you would want. In the example, when we added $10^{-20}$ to $1$, it got rounded away. This means the floating point arithmetic is not associative in general. "
 
 # ╔═╡ 0b370ade-7b5d-11eb-14ae-8fb84aa69edc
-md"Another class of problems using floating point arithmentic is illustrated in the following example:"
+md" Unfortunately rounding errors are not the only cause for concern in floating-point arithmetic. Another class of problems using floating point arithmentic is illustrated in the following example:"
 
 # ╔═╡ 19fd463c-7b5d-11eb-342c-293f27a0f396
 begin 
@@ -359,6 +391,9 @@ import Pkg; Pkg.add("DecFP")
 # ╔═╡ 844fa292-7b48-11eb-0f9c-c521a4125ce6
 Pkg.add("PlutoUI"); using PlutoUI
 
+# ╔═╡ 6f5370c6-7b78-11eb-2076-45dc8e4908ae
+Pkg.add("GraphRecipes"); Pkg.add("Plots"); using GraphRecipes, Plots
+
 # ╔═╡ 70ab6652-7ab4-11eb-1309-8f833821ef88
 begin
 	interest_1 = Dec64(interest)
@@ -412,6 +447,24 @@ expm1(x)
 # ╔═╡ 3d198bac-78c5-11eb-35af-87b99956e4de
 md"We have to realise that real numbers are only presented with a certain precision. Most of the time we don't need to worry, but we want to make sure our code is robust. In other words, we shouldn't be surprised by the outcome of our code. The **numerical stability** of our code is important! "
 
+# ╔═╡ 000779f6-7f6c-11eb-012b-6b67b412eb5b
+md" ## Error analysis"
+
+# ╔═╡ 1029caaa-7f6c-11eb-0121-5b4b86a9a832
+md" The study of the effects of approximations on the accuracy and stability of numberical algorithms is traditionally referred to as error analysis. We will not undertake a deep look into error analysis in this section, but it it something that might appear in other sessions, so let us introduce some basic concepts."
+
+# ╔═╡ 5f093552-7f6c-11eb-3ea4-5b0032275023
+md" Two types of error are commonly used. Absolute and relative error, which are defined as:"
+
+# ╔═╡ 7a843716-7f6c-11eb-3656-a1014b9984ad
+md" `Absolute error` = `approx value` - `true value`. "
+
+# ╔═╡ 92dda336-7f6c-11eb-2e80-d959593aff78
+md" `Relative error` = `absolute error` / `true value`. "
+
+# ╔═╡ b8c2920a-7f6c-11eb-37fc-9fa12702d8f2
+md" A completely erroneous approximation would correspond to a `relative error` of at least 1. This means that `absolute error` is greater than the `true value`. "
+
 # ╔═╡ 7bd38294-7b7c-11eb-0329-99e46b366e1b
 md" ## Rules for numerical computation "
 
@@ -434,7 +487,7 @@ md" We will encounter more types of errors in approximation in the future, espec
 # ╔═╡ b2b0b842-7b57-11eb-1727-95c07b5b2de6
 md" ## Exercises 
 
-For the first few exercises let's check whether floating-point numbers obey certain algebraic rules. For 2-5, one couterexample will suffice. 
+For the first few exercises let's check whether floating-point numbers obey certain algebraic rules. For 2-5, one couterexample will suffice. All these initial problems are considered **[Easy]**. 
 
 1. The associative rule for addition says `(x + y) + z == x + (y + z)`. Check this rule using `x = 0.1`, `y = 0.1` and `z = 1.0`. Explain what you find.
 2. Do floating-point numbers obey the associative rule for multiplication: `(x * y) * z == x * (y * z)`?
@@ -442,8 +495,26 @@ For the first few exercises let's check whether floating-point numbers obey cert
 4. Is `0 * x == 0` true for all `x` (where `x` is a floating point number)?
 5. Is `x / a == x * (1 / a)` always true?"
 
+# ╔═╡ 9bd103ee-7f75-11eb-0f0d-b13097313f0a
+md"6. **[Easy-Medium]**  In this question we will be looking at the standard formula for finding the roots of a quadratic equation, which is given by: 
+
+$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+
+If some values of the coefficients in this formula we can run into problems. If the coefficients are very large or very small then the values of $b^2$ or $4ac$ my **overflow** or **underflow**. We did not deal with this issue specifically in this session, so you can go `Google` those ideas and read more on them. The basic idea is that we don't have good representations of values for infinity or zero. This question does not focus on those issues, rather we would like to think about another possible problem that might occur with the usage of this quadratic formula in floating-point arithmetic. 
+
+6.1. How would one avoid cancellation between $-b$ and the square root?
+
+6.2. Consider the following coefficient values to see why we might have a problem with our arithmetic. Select $a = 0.05010$, $ b = -98.78$ and $c = 5.015$. The correct roots, rounded to ten significant digits are: $1971.605916$ and $0.05077069387$. Compute the roots using the formula and see how they compare. What did you find?
+"
+
+
+# ╔═╡ b8783bca-7f75-11eb-070c-697f8d79c0e8
+md"7. **[Medium]**"
+
 # ╔═╡ 7779ed4c-7b7d-11eb-034b-5fe2925df5df
-md" 6. **[Hard]** In this problem we will use `for loops`, so be sure that you have an idea of how to use loops. We can expect floating point errors to accumulate randomly during computation, creating what is known as a **random walk**. On average we expect the errors to partially cancel out. Suppose you define a random sequence by $x_0 = 0$ and $x_n = x_{n-1} \pm 1$ with the signs chosen by tossing a fair coin for each $n$. et $\alpha_n$ and $\beta_n$ be the average value of $x_n$ and $|x_n|$ respectively over all such walks. Then a classic result of probability is that $\alpha_n = 0$ and $\lim_{n\rightarrow \infty} \frac{\pi \beta^{2}_{n}}{2n} = 1$. Perform a million random walks"
+md" 8. **[Hard]** In this problem we will use `for loops`, so be sure that you have an idea of how to use loops. We can expect floating point errors to accumulate randomly during computation, creating what is known as a **random walk**. 
+
+On average we expect the errors to partially cancel out. Suppose you define a random sequence by $x_0 = 0$ and $x_n = x_{n-1} \pm 1$ with the signs chosen by tossing a fair coin for each $n$. et $\alpha_n$ and $\beta_n$ be the average value of $x_n$ and $|x_n|$ respectively over all such walks. Then a classic result of probability is that $\alpha_n = 0$ and $\lim_{n\rightarrow \infty} \frac{\pi \beta^{2}_{n}}{2n} = 1$. Perform a million random walks"
 
 # ╔═╡ Cell order:
 # ╠═5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
@@ -489,11 +560,14 @@ md" 6. **[Hard]** In this problem we will use `for loops`, so be sure that you h
 # ╟─4e406a14-7b56-11eb-109c-6136655fc096
 # ╟─237a5fe0-7c6b-11eb-2fa1-7f3135c6faa0
 # ╟─56547ac2-7cba-11eb-2698-a13ef1195c67
-# ╟─393311b0-7cb8-11eb-1960-d7b76bcb326c
+# ╟─735dbd02-7f85-11eb-197a-9d5bd5750b35
+# ╟─2f56aafa-7f86-11eb-0e4c-51b5754a86ec
+# ╟─8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
+# ╟─c6a576d2-7f85-11eb-1e11-43906c0c1187
+# ╟─531698fe-7f85-11eb-0f2d-bbc361c47c72
 # ╟─7f430c70-7b4e-11eb-3f09-7bd60114d1de
-# ╟─b5078aee-7cd3-11eb-3488-2dbdefb2bc7a
-# ╟─ad699a36-7cb8-11eb-13b2-f5766ae18536
-# ╠═c9d11136-7cb8-11eb-1669-83a40d46fb64
+# ╟─fa852618-8119-11eb-05a1-ab845cc64139
+# ╟─df023fb6-7f70-11eb-215a-7d834c2e7b56
 # ╟─06bfbdd0-7c6a-11eb-033b-4df5aaeb3220
 # ╠═fbe88cde-7c69-11eb-2c11-f744889098a8
 # ╟─9ba79240-7c6c-11eb-3385-7917a37df361
@@ -504,6 +578,7 @@ md" 6. **[Hard]** In this problem we will use `for loops`, so be sure that you h
 # ╠═2111ff28-7c6e-11eb-1ff1-f5017b3889fa
 # ╟─955462da-7c6f-11eb-0fe9-a7f3913bf97d
 # ╠═bfaf9f4c-7c6f-11eb-01b3-8334e46772b6
+# ╟─988d1952-80fb-11eb-3f37-25d71c811413
 # ╠═d0a53b18-7c6f-11eb-0afd-0faa5c85a613
 # ╟─5f54346a-7866-11eb-3df4-658de2c2ce5f
 # ╟─5cf34e4e-7867-11eb-18ff-01b71b0d5934
@@ -555,10 +630,18 @@ md" 6. **[Hard]** In this problem we will use `for loops`, so be sure that you h
 # ╟─4efe834c-7cc7-11eb-1060-9137f0a8da19
 # ╠═64337256-7cc7-11eb-2ef3-4304c425d51d
 # ╟─3d198bac-78c5-11eb-35af-87b99956e4de
+# ╟─000779f6-7f6c-11eb-012b-6b67b412eb5b
+# ╟─1029caaa-7f6c-11eb-0121-5b4b86a9a832
+# ╟─5f093552-7f6c-11eb-3ea4-5b0032275023
+# ╟─7a843716-7f6c-11eb-3656-a1014b9984ad
+# ╟─92dda336-7f6c-11eb-2e80-d959593aff78
+# ╟─b8c2920a-7f6c-11eb-37fc-9fa12702d8f2
 # ╟─7bd38294-7b7c-11eb-0329-99e46b366e1b
 # ╟─64484bfa-7b7c-11eb-1d40-296fcf167f53
 # ╟─0ff8fb0c-7b84-11eb-2a6a-0dedd44b3c7b
 # ╟─cc6069f2-7b7c-11eb-3cb9-afbd773708e2
 # ╟─18b49d34-7b80-11eb-3b12-3774bdf47ae6
 # ╟─b2b0b842-7b57-11eb-1727-95c07b5b2de6
+# ╟─9bd103ee-7f75-11eb-0f0d-b13097313f0a
+# ╟─b8783bca-7f75-11eb-070c-697f8d79c0e8
 # ╟─7779ed4c-7b7d-11eb-034b-5fe2925df5df

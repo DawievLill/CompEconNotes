@@ -56,7 +56,7 @@ md"You might have heard the term `binary` before. This refers to a base 2 number
 A `byte` is equal to 8 `bits`, a `kilobyte` is $$10^3$$ `bytes` and a `megabyte` is $$10^6$$ `bytes`. This pattern continues for gigabytes, terabytes, petabytes, exabytes, zetabytes and so forth."
 
 # ╔═╡ 85552d00-7865-11eb-1a94-3d5d52ed1772
-md" As an aside, we can determine the amount of memory used by an object with the `Base.summarysize` command in _Julia_. I am not aware a specific function that does this in _Matlab_, there is a `whos()` funtion that returns the size of all variables in the workspace. The _Julia_ equivalent of `whos()` is `varinfo()`."
+md" As an aside, we can determine the amount of memory used by an object with the `Base.summarysize` command in _Julia_. I am not aware a specific function that does this in _Matlab_, but there is a `whos()` funtion that returns the size of all variables in the workspace. The _Julia_ equivalent of `whos()` is `varinfo()`."
 
 # ╔═╡ 84df01a6-7861-11eb-2e3d-bd2e48f379f0
 xx = rand(100, 100);
@@ -117,7 +117,7 @@ r * 49
 1 - r * 49
 
 # ╔═╡ 0a9dea26-7c74-11eb-037b-b7d58b25cd03
-md" This difference is about $10^{-16}$ since the default precision in _Julia_ is double precision. We will get back to this topic later in this lesson. We will continue this discussion on precision after a quick detour into a discussion on types." 
+md" This difference is about $10^{-16} \approx 2^{-52}$ since the default precision in _Julia_ is double precision. We will get back to this topic later in this lesson. We will continue this discussion on precision after a quick detour into a discussion on types." 
 
 # ╔═╡ d66c205c-7c54-11eb-1500-2deb82c42c6c
 md" #### Quick detour into types "
@@ -168,54 +168,96 @@ end
 md"Double precision numbers are the dominant data type in scientific computing. `Float64` is the type for double precision numbers in _Julia_. As far as I know, _Matlab_ only uses the double precision floating point number. These numbers utilise $64$ bits of memory."
 
 # ╔═╡ 237a5fe0-7c6b-11eb-2fa1-7f3135c6faa0
-md" ### Floating point numbers contd. " 
+md" ### Floating point representation " 
 
 # ╔═╡ 56547ac2-7cba-11eb-2698-a13ef1195c67
 md" This first part is perhaps a bit more techical and you can just skim through on your first reading. The objective is to help you understand how numbers are represented. In a computer the real numbers are represented by a floating-point number system with a fixed number of digits. 
-
-
-The idea resembles scientific notation in which a very large or very small magnitude is expressed as a number of moderate size times an appropriate power of ten. As an example, $2347$ van be written as $2.347 \times 10^{3}$. In this standard-form scientific notation format the decimal point moves (floats) as the power of $10$ changes.
 
 The floating-point number system is similar to scientific notation and $\mathbb{F}$ is characterised by four integers, namely the base $b$, precision $p$ and exponent range $[L, U]$. 
 
 Any floating point number $x \in \mathbb{F}$ has the form 
 
-$$x = \pm 1 \left(\frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p}}{b^{p}}\right) \times b^{e} = s \left(.d_1\ldots d_p\right)_{b} \times b^{e}$$ 
+$$x = \pm \left(\frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p}}{b^{p}}\right) \times b^{e} = \pm (r) \times b^{e}$$ 
 
-Here $d_i$ is an integer such that $0 \leq d_i \leq b - 1$ with $i = 1, \ldots, p$.
+Here $d_i$ is an integer such that $0 \leq d_i \leq b$ with $i = 1, \ldots, p$.
 
 In this representation $e$ is an integer such that $ L \leq e \leq U$. 
 
-The part in parentheses, which is represented by a string of $p$ base-$b$ digits ($. d_1\ldots d_{p}$), is called the `significand` or `mantissa`. The `sign` is represented by $s$. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. "
+The part in parentheses, which is represented by a string of $p$ base-$b$ digits ($. d_1\ldots d_{p}$), is called the `significand` or `mantissa` (which we often indicate with an $r$). You should note that $1 \leq r < b$.
+
+The `sign` is represented by $s$. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. 
+
+As an example, if the base is $10$, then we have that:
+
+$x = \pm (r) \times 10^{e}$
+
+with $1 \leq r < 10$. If we want to represent $2347$, then we have $2.347 \times 10^{3}$."
 
 # ╔═╡ 735dbd02-7f85-11eb-197a-9d5bd5750b35
 md" ##### Double precision"
 
 # ╔═╡ 2f56aafa-7f86-11eb-0e4c-51b5754a86ec
-md"Floating-point numbers are traditionally represented with base of $2$. "
+md"Floating-point numbers are traditionally represented with base of $2$, which means that we have:
+
+$x = \pm (r) \times 2^{e} = s (r) \times 2^{e}$
+
+with $1 \leq r < 2$. We replace the $\pm$ with $s$ to indicate the `sign`. "
 
 # ╔═╡ 8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
 md" Double-precision binary floating-point is a commonly used format on PCs, due to its wider range over single-precision floating point, in spite of its performance and bandwidth cost.  "
 
+# ╔═╡ f761979e-835a-11eb-364b-09fd2e90b6d8
+md"For the binary version of the number system we that $r$ is a **normalised** `mantissa`. This means that $r$ will have the following form:
+
+$r = 1.\text{(fractional part)}$
+
+Normalisation forces the integer part of the mantissa to be exactly one and therefore is no reason to store it in the computer. The fractional part can be whatever we like it to be. "
+
+# ╔═╡ e1e354b0-835b-11eb-0682-9da5144f8f99
+md" Let us illustrate this quickly with an example. If you take the number $13.25$ in binary you will see that it gives $1101.01$. Look at the code below for an illustration. " 
+
+# ╔═╡ c2f91cf4-835d-11eb-3b5a-fb7f329f4697
+function dec2bin(x::String)
+    bx = parse(BigFloat, x)
+    xneg = bx >= 0 ? false : true
+    bx = BigFloat(xneg ? -bx : bx)
+    pre, post, n = "", "", div(nextpow(2, bx), 2)
+    while bx > 0
+        a, bx = divrem(bx, BigFloat(n))
+        if n >= 1
+            pre *= a > 0 ? '1' : '0'
+        else
+            post *= a > 0 ? '1' : '0'
+        end
+        n /= 2.0
+    end
+    (xneg ? "-" : "") * pre * "." * post
+end
+
+# ╔═╡ d4482e58-835d-11eb-1cf1-b1a6d9c5c0b2
+dec2bin("13.25")
+
+# ╔═╡ 0859b1c8-835e-11eb-3be5-2163e163e365
+md"The integer part of this binary number is $1101$ and $01$ is the fractional part. One could represent $13.25$ as $1101.01 * (2^0)$, but this is not normalised since the integer part is not $1$. However, we can shift the `mantissa` to the right one digit if we increase the exponent by one:
+
+$ 1101.01 * (2^0) = 110.101 * (2^1) = 11.0101 * (2^2) = 1.10101 * (2^3)$.
+
+This representation in the last equality is the normalised form of $13.25$. "
+
 # ╔═╡ 46c6770e-831b-11eb-067e-21334c077e86
 md" Continuing from our depiction in scientific notation in the previous section, we can now use the binary base to obtain the representation for the double precision number as the following:
 
-$s \left(.d_1\ldots d_p\right)_{2} \times 2^{e} = s \left(1 + m/2^{52}\right)\times 2^{e}$
+$s (r) \times 2^{e} = s \left(1.d_2\ldots d_{p+1}\right)_{2} \times 2^{e} = s \left(1 + m/2^{52}\right)\times 2^{e}$
 
-where $m = {d_1}\times{2}^{-1} + {d_2}\times{2}^{-2} + {d_3}\times{2}^{-3} \cdots$ is the `mantissa` and $s$ is the `sign`."
+where $m = {d_1}\times{2}^{-1} + {d_2}\times{2}^{-2} + {d_3}\times{2}^{-3} \cdots$"
 
 # ╔═╡ f8ca7706-831c-11eb-1ac3-77fa1483b53f
 md" Let us try and transform this representation so that it reflects the IEEE 64-bit floating-point representation. We start with the sign $s$, which can be $\pm 1$. Another way to write our representation:
 
-$(-1)^s \left(.d_1\ldots d_{52}\right)\times 2^{e}$" 
+$(-1)^s \left(1.d_2\ldots d_{53}\right)\times 2^{e}$" 
 
 # ╔═╡ c5b1fb6a-8327-11eb-2e9a-4fc8d2b3eac2
 md"We know that $s$ needs to be represented in binary, since our base is $2$. In this representation we have that if $s = 0$ then the number will be positive and if $s = 1$, then the number is negative."
-
-# ╔═╡ 87f9bdb4-8328-11eb-3aa4-8df6781d8733
-md"Take it as given at this stage that we want to have the first digit after the decimal point to be 1. There are several reasons for this, but it would take up too much time to explain (you can look into the **normalised** floating point representation if you are interested). This means that our representation will now become:
-
-$(-1)^s \left(1.d_2\ldots d_{53}\right)\times 2^{e}$"
 
 # ╔═╡ 58110390-8329-11eb-1c11-8b24865d91ff
 md" Finally we have to deal with the exponent. The main problem with the current representation is that negative exponents could pose a problem in comparisons. Let us look at an example to see why this is the case."
@@ -227,7 +269,7 @@ bitstring(1.0 * 2^(-1))
 bitstring(1.0 * 2^(1))
 
 # ╔═╡ ed24d814-831d-11eb-1018-1d0c85976c0b
-md" With this representation of the numbers $1.0 * 2^{-1}$ and $1.0 * 2^{-1}$ we see that the first exponent shows a larger binary number. The exponent here is represented by digits 2 though 12 in the bitstring. This makes direct comparison difficult."
+md" With this representation of the numbers $1.0 * 2^{-1}$ and $1.0 * 2^{1}$ we see that the first exponent shows a larger binary number. The exponent here is represented by digits 2 though 12 in the bitstring. This makes direct comparison difficult."
 
 # ╔═╡ 260bba26-831e-11eb-14b1-47d4ae08397d
 md" This motivates the usage of **biased notation** for exponents." 
@@ -289,7 +331,7 @@ ieee0(q)
 md" The problem for us is that these are not completely readable, since we are used to working with base-10. So let's parse this information using another bit of code." 
 
 # ╔═╡ bfaf9f4c-7c6f-11eb-01b3-8334e46772b6
-ieee(x) = [ parse.(Int,ieee0(x),base=2) ieee0(x)]
+ieee(x) = [ parse.(Int, ieee0(x), base=2) ieee0(x)]
 
 # ╔═╡ 988d1952-80fb-11eb-3f37-25d71c811413
 md" So before we look at the output of the function let us remember how to read this:
@@ -512,7 +554,7 @@ md"We have to realise that real numbers are only presented with a certain precis
 md" ## Error analysis"
 
 # ╔═╡ 1029caaa-7f6c-11eb-0121-5b4b86a9a832
-md" One of the topics we did not have time for is the study of the effects of approximations on the accuracy and stability of numberical algorithms. This is traditionally referred to as error analysis. We will not undertake a deep look into error analysis in this section, but it it something that might appear in other sessions, so let us introduce some basic concepts."
+md" One of the topics we did not have time for is the study of the effects of approximations on the accuracy and stability of numerical algorithms. This is traditionally referred to as error analysis. We will not undertake a deep look into error analysis in this section, but it it something that might appear in other sessions, so let us introduce some basic concepts."
 
 # ╔═╡ 5f093552-7f6c-11eb-3ea4-5b0032275023
 md" Two types of error are commonly used. Absolute and relative error, which are defined as:"
@@ -527,7 +569,7 @@ md" `Relative error` = `absolute error` / `true value`. "
 md" A completely erroneous approximation would correspond to a `relative error` of at least 1. This means that `absolute error` is greater than the `true value`. "
 
 # ╔═╡ 4fb32b18-8330-11eb-1cc8-779e4a09332d
-md" Consider a basic example. Recall the grade-school approximation to the number π"
+md" Consider a basic example. Recall the high-school approximation to the number π."
 
 # ╔═╡ 63b924f0-8330-11eb-121a-c56a30993c81
 p = 22/7
@@ -651,10 +693,14 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─735dbd02-7f85-11eb-197a-9d5bd5750b35
 # ╟─2f56aafa-7f86-11eb-0e4c-51b5754a86ec
 # ╟─8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
+# ╟─f761979e-835a-11eb-364b-09fd2e90b6d8
+# ╟─e1e354b0-835b-11eb-0682-9da5144f8f99
+# ╟─c2f91cf4-835d-11eb-3b5a-fb7f329f4697
+# ╠═d4482e58-835d-11eb-1cf1-b1a6d9c5c0b2
+# ╟─0859b1c8-835e-11eb-3be5-2163e163e365
 # ╟─46c6770e-831b-11eb-067e-21334c077e86
 # ╟─f8ca7706-831c-11eb-1ac3-77fa1483b53f
 # ╟─c5b1fb6a-8327-11eb-2e9a-4fc8d2b3eac2
-# ╟─87f9bdb4-8328-11eb-3aa4-8df6781d8733
 # ╟─58110390-8329-11eb-1c11-8b24865d91ff
 # ╠═1c178a14-831d-11eb-2380-93561ebc9bd8
 # ╠═dbb19784-831d-11eb-105e-ed8117a41c6b

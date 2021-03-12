@@ -19,6 +19,9 @@ using Markdown
 # ╔═╡ 66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
 using InteractiveUtils
 
+# ╔═╡ 6f5370c6-7b78-11eb-2076-45dc8e4908ae
+using GraphRecipes, Plots
+
 # ╔═╡ d482635e-7ab4-11eb-0d53-398ca84dab54
 using DecFP
 
@@ -168,23 +171,30 @@ md"Double precision numbers are the dominant data type in scientific computing. 
 md" ### Floating point numbers contd. " 
 
 # ╔═╡ 56547ac2-7cba-11eb-2698-a13ef1195c67
-md" This first part is perhaps a bit more techical and you can just skim through on your first reading. The objective is to help you understand how numbers are represented. In a computer the real numbers are represented by a floating-point number system with a fixed number of digits. The idea resembles scientific notation in which a very large or very small magnitude is expressed as a number of moderate size times an appropriate power of ten. 
+md" This first part is perhaps a bit more techical and you can just skim through on your first reading. The objective is to help you understand how numbers are represented. In a computer the real numbers are represented by a floating-point number system with a fixed number of digits. 
 
-As an example, $2347$ van be written as $2.347 \times 10^{3}$. In this standard-form scientific notation format the decimal point moves (floats) as the power of $10$ changes.
+
+The idea resembles scientific notation in which a very large or very small magnitude is expressed as a number of moderate size times an appropriate power of ten. As an example, $2347$ van be written as $2.347 \times 10^{3}$. In this standard-form scientific notation format the decimal point moves (floats) as the power of $10$ changes.
 
 The floating-point number system is similar to scientific notation and $\mathbb{F}$ is characterised by four integers, namely the base $b$, precision $p$ and exponent range $[L, U]$. 
 
-Any floating point number $x \in \mathbb{F}$ has the form $$x = \pm \left(d_0 + \frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p-1}}{b^{p-1}}\right) \times b^{e}$$.  
+Any floating point number $x \in \mathbb{F}$ has the form 
+
+$$x = \pm \left(d_0 + \frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p-1}}{b^{p-1}}\right) \times b^{e}$$ 
 
 Here $d_i$ is an integer such that $0 \leq d_i \leq b - 1$ with $i = 0, \ldots, p -1$.
 
-We also have that $e$ is an integer such that $ L \leq e \leq U$.
+In this representation $e$ is an integer such that $ L \leq e \leq U$.
 
-The part in parentheses, which is represented by a string of $p$ base-$b$ digits $d_0 d_1 \ldots d_{p-1}$ is called the `significand`, which includes the `sign` bit in this representation. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. 
+The part in parentheses, which is represented by a string of $p$ base-$b$ digits $d_0. d_1 \ldots d_{p-1}$ is called the `significand` or `mantissa`, which includes the `sign` bit in this representation. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. "
 
-As an example, if we were using base-$10$ (decimal floating point) then the orbital period of Jupiter's moon Io is $152,853.5047$ seconds, which has ten decmial digits of precision and is represented as the `significand` $1,528,535,047$ together with $5$ as the `exponent`. 
+# ╔═╡ c1ad133c-8317-11eb-2544-7f168a206626
+md" ##### Example "
 
-To determine the actual value, a decimal point is placed after the first digit of the `significand` and the result is multiplied by $10^{5}$ to give $1.528535047 \times 10^5$. "
+# ╔═╡ fcf372b0-8312-11eb-3553-b1f96d4f7b0d
+md"As an example, if we were using base-$10$ (decimal floating point) then the orbital period of Jupiter's moon Io is $152,853.5047$ seconds, which has ten decimal digits of precision and is represented as the `significand` $1,528,535,047$ together with $5$ as the `exponent`. 
+
+To determine the actual value, a decimal point is placed after the first digit of the `significand` and the result is multiplied by $10^{5}$ to give $1.528535047 \times 10^5$." 
 
 # ╔═╡ 735dbd02-7f85-11eb-197a-9d5bd5750b35
 md" ##### Double precision"
@@ -195,23 +205,53 @@ md"In the example above the base was $10$, which is an example of the decimal fl
 # ╔═╡ 8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
 md" Double-precision binary floating-point is a commonly used format on PCs, due to its wider range over single-precision floating point, in spite of its performance and bandwidth cost.  "
 
-# ╔═╡ c6a576d2-7f85-11eb-1e11-43906c0c1187
-md" We can derive from our representation above that the real value assumed by a 64-bit double-precision number with a given biased `exponent` $e$ and a 52-bit `significand` is:
+# ╔═╡ 46c6770e-831b-11eb-067e-21334c077e86
+md" Continuing from our depiction in scientific notation in the previous section, we can now use the binary base to obtain the representation for the double precision number as the following:
 
-![double](https://wikimedia.org/api/rest_v1/media/math/render/svg/5f677b27f52fcd521355049a560d53b5c01800e1)
+$(-1)^\text{sign} \left(1 + m\right)\times 2^{e}$
+
+where $m = {d_1}\times{2}^{-1} + {d_2}\times{2}^{-2} + {d_3}\times{2}^{-3} \cdots$ is the `mantissa`."
+
+# ╔═╡ f8ca7706-831c-11eb-1ac3-77fa1483b53f
+md" The main problem here is that negative exponents could pose a problem in comparisons. Let us look at an example to see why this is the case. " 
+
+# ╔═╡ 1c178a14-831d-11eb-2380-93561ebc9bd8
+bitstring(1.0 * 2^(-1))
+
+# ╔═╡ dbb19784-831d-11eb-105e-ed8117a41c6b
+bitstring(1.0 * 2^(1))
+
+# ╔═╡ ed24d814-831d-11eb-1018-1d0c85976c0b
+md" With this representation of the numbers $1.0 * 2^{-1}$ and $1.0 * 2^{-1}$ we see that the first exponent shows a larger binary number. This makes direct comparison difficult."
+
+# ╔═╡ 260bba26-831e-11eb-14b1-47d4ae08397d
+md" This motivates the usage of **biased notation** for exponents." 
+
+# ╔═╡ 4107719c-831e-11eb-1766-cb889deb02de
+md" If the real exponent of a number is $X$ then it is represented as $X$ + `bias`. The bias in IEEE double precision is $1023$, therefore the exponent $-1$ is represented as $-1 + 1023 = 1022$."
+
+# ╔═╡ f7504c8c-831e-11eb-270e-93430fbec364
+md" This means that the actual exponent is found by substracting the bias from the stored exponent."
+
+# ╔═╡ c6a576d2-7f85-11eb-1e11-43906c0c1187
+md" We can derive from our representation above that the real value assumed by a 64-bit double-precision number with a given **biased** `exponent` $e$ and a 52-bit `mantissa` is:
+
+$(-1)^\text{sign} \left(1 + m\right)\times 2^{e-1023} = (-1)^\text{sign} \left(1 + \sum_{i=1}^{52}d_{52-i}2^{-i}\right)\times 2^{e-1023}$ 
 
 or alternatively, 
 
-![double2](https://wikimedia.org/api/rest_v1/media/math/render/svg/61345d47f069d645947b9c0ab676c75551f1b188)"
+$(-1)^\text{sign} \left(1.d_{51}d_{50}\ldots d_{0}\right)\times 2^{e-1023}$"
 
 # ╔═╡ 531698fe-7f85-11eb-0f2d-bbc361c47c72
-md"The following image on double floating point format helps visualise the floating point representation. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $0$ to $2047$. We interpret in biased form. The biased form means that an exponent value of $1023$ represents the actual zero. One calculates the value of the exponent by subtracting the bias for `exponent` $(1023)$ to get an exponent value in the range $[−1022, 1023]$. We shall look at this in more practical terms later on. The final part is the $p = 52$ bit `significand`."
+md"The following image on double floating point format helps visualise the floating point representation. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $0$ to $2047$. We interpret in biased form as explained before. 
+
+The biased form means that an exponent value of $1023$ represents the actual value of zero. One calculates the value of the exponent by subtracting the bias for `exponent` $(1023)$ to get an exponent value in the range $[−1022, 1023]$. The final part is the $p = 52$ bit `significand`."
 
 # ╔═╡ 7f430c70-7b4e-11eb-3f09-7bd60114d1de
 md" ![floating point numbers](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/IEEE_754_Double_Floating_Point_Format.svg/1024px-IEEE_754_Double_Floating_Point_Format.svg.png)"
 
-# ╔═╡ fa852618-8119-11eb-05a1-ab845cc64139
-md" The way that this is represented in the book by Miranda and Fackler, or Judd, is somewhat different."
+# ╔═╡ a54ba598-831a-11eb-2dcf-dbc008024c55
+md" With double precision we can then see that the flaoting point number occupies 64-bits. There is a compromise between the size of the `significand` and the `exponent`. The chosen sizes provide a range of approximately $\pm 10^{-308} \ldots 10^{308}$. In the case that the exponent is too large to be represented in the exponent field we have **overflow**. If the number is too small to be represented in this exponent field we have **underflow**. "
 
 # ╔═╡ df023fb6-7f70-11eb-215a-7d834c2e7b56
 md" ##### Looking under the hood "
@@ -251,7 +291,7 @@ ieee(x) = [ parse.(Int,ieee0(x),base=2) ieee0(x)]
 # ╔═╡ 988d1952-80fb-11eb-3f37-25d71c811413
 md" So before we look at the output of the function let us remember how to read this:
 
-**s**, **e**, **m**  (`sign`, `exponent`, `mantissa`)  $\rightarrow$  $(-1)^s  * 2^{(e-1023)} * (1 + m/2^{52})$
+$(-1)^\text{sign}  * 2^{(e-1023)} * (1 + m/2^{52})$
 "
 
 # ╔═╡ d0a53b18-7c6f-11eb-0afd-0faa5c85a613
@@ -391,9 +431,6 @@ import Pkg; Pkg.add("DecFP")
 # ╔═╡ 844fa292-7b48-11eb-0f9c-c521a4125ce6
 Pkg.add("PlutoUI"); using PlutoUI
 
-# ╔═╡ 6f5370c6-7b78-11eb-2076-45dc8e4908ae
-Pkg.add("GraphRecipes"); Pkg.add("Plots"); using GraphRecipes, Plots
-
 # ╔═╡ 70ab6652-7ab4-11eb-1309-8f833821ef88
 begin
 	interest_1 = Dec64(interest)
@@ -424,7 +461,7 @@ x = 2.0^-60
 exp(x)
 
 # ╔═╡ df91c5f2-7cc6-11eb-17c4-f9129b2fc701
-exp(x) - 1 # naive algorithm: catastrophic cancellation
+exp(x) - 1 # naive algorithm leads to catastrophic cancellation
 
 # ╔═╡ ea286192-7cc6-11eb-3274-6fa2ee43cc44
 md" The correct answer is in fact the following "  
@@ -451,7 +488,7 @@ md"We have to realise that real numbers are only presented with a certain precis
 md" ## Error analysis"
 
 # ╔═╡ 1029caaa-7f6c-11eb-0121-5b4b86a9a832
-md" The study of the effects of approximations on the accuracy and stability of numberical algorithms is traditionally referred to as error analysis. We will not undertake a deep look into error analysis in this section, but it it something that might appear in other sessions, so let us introduce some basic concepts."
+md" One of the topics we did not have time for is the study of the effects of approximations on the accuracy and stability of numberical algorithms. This is traditionally referred to as error analysis. We will not undertake a deep look into error analysis in this section, but it it something that might appear in other sessions, so let us introduce some basic concepts."
 
 # ╔═╡ 5f093552-7f6c-11eb-3ea4-5b0032275023
 md" Two types of error are commonly used. Absolute and relative error, which are defined as:"
@@ -464,6 +501,12 @@ md" `Relative error` = `absolute error` / `true value`. "
 
 # ╔═╡ b8c2920a-7f6c-11eb-37fc-9fa12702d8f2
 md" A completely erroneous approximation would correspond to a `relative error` of at least 1. This means that `absolute error` is greater than the `true value`. "
+
+# ╔═╡ ef4606b8-8318-11eb-1bf5-5fee8d428bae
+md" ## Machine epsilon"
+
+# ╔═╡ 0698f0c8-8319-11eb-2035-191ff7afc846
+md" This is another important concept, related to ideas of underflow and overflow, that I did not have time to explore. However, in future iterations we will perhaps talk about this."
 
 # ╔═╡ 7bd38294-7b7c-11eb-0329-99e46b366e1b
 md" ## Rules for numerical computation "
@@ -500,7 +543,7 @@ md"6. **[Easy-Medium]**  In this question we will be looking at the standard for
 
 $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
 
-If some values of the coefficients in this formula we can run into problems. If the coefficients are very large or very small then the values of $b^2$ or $4ac$ my **overflow** or **underflow**. We did not deal with this issue specifically in this session, so you can go `Google` those ideas and read more on them. The basic idea is that we don't have good representations of values for infinity or zero. This question does not focus on those issues, rather we would like to think about another possible problem that might occur with the usage of this quadratic formula in floating-point arithmetic. 
+If some values of the coefficients in this formula we can run into problems. If the coefficients are very large or very small then the values of $b^2$ or $4ac$ may **overflow** or **underflow**. We did not deal with this issue specifically in this session, so you can go `Google` those ideas and read more on them. The basic idea is that we don't have good representations of values for infinity or zero. This question does not focus on those issues, rather we would like to think about another possible problem that might occur with the usage of this quadratic formula in floating-point arithmetic. 
 
 6.1. How would one avoid cancellation between $-b$ and the square root?
 
@@ -509,12 +552,12 @@ If some values of the coefficients in this formula we can run into problems. If 
 
 
 # ╔═╡ b8783bca-7f75-11eb-070c-697f8d79c0e8
-md"7. **[Medium]**"
+md"7. **[Medium]** Exercise still to be completed"
 
 # ╔═╡ 7779ed4c-7b7d-11eb-034b-5fe2925df5df
 md" 8. **[Hard]** In this problem we will use `for loops`, so be sure that you have an idea of how to use loops. We can expect floating point errors to accumulate randomly during computation, creating what is known as a **random walk**. 
 
-On average we expect the errors to partially cancel out. Suppose you define a random sequence by $x_0 = 0$ and $x_n = x_{n-1} \pm 1$ with the signs chosen by tossing a fair coin for each $n$. et $\alpha_n$ and $\beta_n$ be the average value of $x_n$ and $|x_n|$ respectively over all such walks. Then a classic result of probability is that $\alpha_n = 0$ and $\lim_{n\rightarrow \infty} \frac{\pi \beta^{2}_{n}}{2n} = 1$. Perform a million random walks"
+On average we expect the errors to partially cancel out. Suppose you define a random sequence by $x_0 = 0$ and $x_n = x_{n-1} \pm 1$ with the signs chosen by tossing a fair coin for each $n$. et $\alpha_n$ and $\beta_n$ be the average value of $x_n$ and $|x_n|$ respectively over all such walks. Then a classic result of probability is that $\alpha_n = 0$ and $\lim_{n\rightarrow \infty} \frac{\pi \beta^{2}_{n}}{2n} = 1$. Perform a million random walks. Exercise still to be completed. "
 
 # ╔═╡ Cell order:
 # ╠═5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
@@ -560,13 +603,23 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─4e406a14-7b56-11eb-109c-6136655fc096
 # ╟─237a5fe0-7c6b-11eb-2fa1-7f3135c6faa0
 # ╟─56547ac2-7cba-11eb-2698-a13ef1195c67
+# ╟─c1ad133c-8317-11eb-2544-7f168a206626
+# ╟─fcf372b0-8312-11eb-3553-b1f96d4f7b0d
 # ╟─735dbd02-7f85-11eb-197a-9d5bd5750b35
 # ╟─2f56aafa-7f86-11eb-0e4c-51b5754a86ec
 # ╟─8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
+# ╟─46c6770e-831b-11eb-067e-21334c077e86
+# ╟─f8ca7706-831c-11eb-1ac3-77fa1483b53f
+# ╠═1c178a14-831d-11eb-2380-93561ebc9bd8
+# ╠═dbb19784-831d-11eb-105e-ed8117a41c6b
+# ╟─ed24d814-831d-11eb-1018-1d0c85976c0b
+# ╟─260bba26-831e-11eb-14b1-47d4ae08397d
+# ╟─4107719c-831e-11eb-1766-cb889deb02de
+# ╟─f7504c8c-831e-11eb-270e-93430fbec364
 # ╟─c6a576d2-7f85-11eb-1e11-43906c0c1187
 # ╟─531698fe-7f85-11eb-0f2d-bbc361c47c72
 # ╟─7f430c70-7b4e-11eb-3f09-7bd60114d1de
-# ╟─fa852618-8119-11eb-05a1-ab845cc64139
+# ╟─a54ba598-831a-11eb-2dcf-dbc008024c55
 # ╟─df023fb6-7f70-11eb-215a-7d834c2e7b56
 # ╟─06bfbdd0-7c6a-11eb-033b-4df5aaeb3220
 # ╠═fbe88cde-7c69-11eb-2c11-f744889098a8
@@ -636,6 +689,8 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─7a843716-7f6c-11eb-3656-a1014b9984ad
 # ╟─92dda336-7f6c-11eb-2e80-d959593aff78
 # ╟─b8c2920a-7f6c-11eb-37fc-9fa12702d8f2
+# ╟─ef4606b8-8318-11eb-1bf5-5fee8d428bae
+# ╟─0698f0c8-8319-11eb-2035-191ff7afc846
 # ╟─7bd38294-7b7c-11eb-0329-99e46b366e1b
 # ╟─64484bfa-7b7c-11eb-1d40-296fcf167f53
 # ╟─0ff8fb0c-7b84-11eb-2a6a-0dedd44b3c7b

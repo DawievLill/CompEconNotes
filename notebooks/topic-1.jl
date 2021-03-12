@@ -254,7 +254,7 @@ md" ![floating point numbers](https://upload.wikimedia.org/wikipedia/commons/thu
 md"We use the exponent in biased form as explained before. The biased form means that an exponent value of $1023$ represents the actual value of zero. One calculates the value of the exponent by subtracting the bias for `exponent` to get an exponent value in the range $[−1023, 1024]$. The bounds for the exponent are: $0 \leq e \leq 2047$. The final part is the $p = 52$ bit `significand`."
 
 # ╔═╡ a54ba598-831a-11eb-2dcf-dbc008024c55
-md" With double precision we can then see that the floating-point number occupies 64-bits. There is a compromise between the size of the `significand` and the `exponent`. The chosen sizes provide a range of approximately $\pm 10^{-308} \ldots 10^{308}$. In the case that the exponent is too large to be represented in the exponent field we have **overflow**. If the number is too small to be represented in this exponent field we have **underflow**. "
+md" With double precision we can then see that the floating-point number occupies 64-bits. There is a compromise between the size of the `significand` and the `exponent`. The chosen size for the exponent provides a largest positive number of $2^{1024} \approx 2 \times 10^{308}$ and a smallest positive number of $2^{-1022} \approx 10^{-308}$. In the case that the exponent is too large to be represented in the exponent field we have **overflow**. If the number is too small to be represented in this exponent field we have **underflow**. "
 
 # ╔═╡ df023fb6-7f70-11eb-215a-7d834c2e7b56
 md" ##### Looking under the hood "
@@ -526,6 +526,27 @@ md" `Relative error` = `absolute error` / `true value`. "
 # ╔═╡ b8c2920a-7f6c-11eb-37fc-9fa12702d8f2
 md" A completely erroneous approximation would correspond to a `relative error` of at least 1. This means that `absolute error` is greater than the `true value`. "
 
+# ╔═╡ 4fb32b18-8330-11eb-1cc8-779e4a09332d
+md" Consider a basic example. Recall the grade-school approximation to the number π"
+
+# ╔═╡ 63b924f0-8330-11eb-121a-c56a30993c81
+p = 22/7
+
+# ╔═╡ 90a198a8-8330-11eb-3b78-fff35e711256
+md"Not all the digits displayed for $p$ are the same as those of π. As an approximation, its absolute and relative accuracy are:"
+
+# ╔═╡ 6a25b7e0-8330-11eb-2258-c357b0033d47
+abs_accuracy = abs(p-pi)
+
+# ╔═╡ 7a9c88b0-8330-11eb-0938-39c0cca872ae
+rel_accuracy = abs(p-pi)/pi
+
+# ╔═╡ a92a2796-8330-11eb-210b-11fb46621064
+md"We can also calculate the number of accurate digits in $p$"
+
+# ╔═╡ 84e1f6d4-8330-11eb-3fc9-271654090046
+accurate_digits = -log(10,rel_accuracy)
+
 # ╔═╡ ef4606b8-8318-11eb-1bf5-5fee8d428bae
 md" ## Machine epsilon"
 
@@ -720,6 +741,13 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─7a843716-7f6c-11eb-3656-a1014b9984ad
 # ╟─92dda336-7f6c-11eb-2e80-d959593aff78
 # ╟─b8c2920a-7f6c-11eb-37fc-9fa12702d8f2
+# ╟─4fb32b18-8330-11eb-1cc8-779e4a09332d
+# ╠═63b924f0-8330-11eb-121a-c56a30993c81
+# ╟─90a198a8-8330-11eb-3b78-fff35e711256
+# ╠═6a25b7e0-8330-11eb-2258-c357b0033d47
+# ╠═7a9c88b0-8330-11eb-0938-39c0cca872ae
+# ╟─a92a2796-8330-11eb-210b-11fb46621064
+# ╠═84e1f6d4-8330-11eb-3fc9-271654090046
 # ╟─ef4606b8-8318-11eb-1bf5-5fee8d428bae
 # ╟─0698f0c8-8319-11eb-2035-191ff7afc846
 # ╟─7bd38294-7b7c-11eb-0329-99e46b366e1b

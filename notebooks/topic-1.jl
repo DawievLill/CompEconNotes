@@ -180,27 +180,19 @@ The floating-point number system is similar to scientific notation and $\mathbb{
 
 Any floating point number $x \in \mathbb{F}$ has the form 
 
-$$x = \pm \left(d_0 + \frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p-1}}{b^{p-1}}\right) \times b^{e}$$ 
+$$x = \pm 1 \left(\frac{d_1}{b} + \frac{d_2}{b^2} + \cdots + \frac{d_{p}}{b^{p}}\right) \times b^{e} = s \left(.d_1\ldots d_p\right)_{b} \times b^{e}$$ 
 
-Here $d_i$ is an integer such that $0 \leq d_i \leq b - 1$ with $i = 0, \ldots, p -1$.
+Here $d_i$ is an integer such that $0 \leq d_i \leq b - 1$ with $i = 1, \ldots, p$.
 
-In this representation $e$ is an integer such that $ L \leq e \leq U$.
+In this representation $e$ is an integer such that $ L \leq e \leq U$. 
 
-The part in parentheses, which is represented by a string of $p$ base-$b$ digits $d_0. d_1 \ldots d_{p-1}$ is called the `significand` or `mantissa`, which includes the `sign` bit in this representation. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. "
-
-# ╔═╡ c1ad133c-8317-11eb-2544-7f168a206626
-md" ##### Example "
-
-# ╔═╡ fcf372b0-8312-11eb-3553-b1f96d4f7b0d
-md"As an example, if we were using base-$10$ (decimal floating point) then the orbital period of Jupiter's moon Io is $152,853.5047$ seconds, which has ten decimal digits of precision and is represented as the `significand` $1,528,535,047$ together with $5$ as the `exponent`. 
-
-To determine the actual value, a decimal point is placed after the first digit of the `significand` and the result is multiplied by $10^{5}$ to give $1.528535047 \times 10^5$." 
+The part in parentheses, which is represented by a string of $p$ base-$b$ digits ($. d_1\ldots d_{p}$), is called the `significand` or `mantissa`. The `sign` is represented by $s$. The number of digits of $p$ is the `precision` and $e$ is the `exponent`. "
 
 # ╔═╡ 735dbd02-7f85-11eb-197a-9d5bd5750b35
 md" ##### Double precision"
 
 # ╔═╡ 2f56aafa-7f86-11eb-0e4c-51b5754a86ec
-md"In the example above the base was $10$, which is an example of the decimal floating point. However, floating-point numbers are traditionally represented with base of $2$ (binary). "
+md"Floating-point numbers are traditionally represented with base of $2$. "
 
 # ╔═╡ 8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
 md" Double-precision binary floating-point is a commonly used format on PCs, due to its wider range over single-precision floating point, in spite of its performance and bandwidth cost.  "
@@ -208,12 +200,25 @@ md" Double-precision binary floating-point is a commonly used format on PCs, due
 # ╔═╡ 46c6770e-831b-11eb-067e-21334c077e86
 md" Continuing from our depiction in scientific notation in the previous section, we can now use the binary base to obtain the representation for the double precision number as the following:
 
-$(-1)^\text{sign} \left(1 + m\right)\times 2^{e}$
+$s \left(.d_1\ldots d_p\right)_{2} \times 2^{e} = s \left(1 + m/2^{52}\right)\times 2^{e}$
 
-where $m = {d_1}\times{2}^{-1} + {d_2}\times{2}^{-2} + {d_3}\times{2}^{-3} \cdots$ is the `mantissa`."
+where $m = {d_1}\times{2}^{-1} + {d_2}\times{2}^{-2} + {d_3}\times{2}^{-3} \cdots$ is the `mantissa` and $s$ is the `sign`."
 
 # ╔═╡ f8ca7706-831c-11eb-1ac3-77fa1483b53f
-md" The main problem here is that negative exponents could pose a problem in comparisons. Let us look at an example to see why this is the case. " 
+md" Let us try and transform this representation so that it reflects the IEEE 64-bit floating-point representation. We start with the sign $s$, which can be $\pm 1$. Another way to write our representation:
+
+$(-1)^s \left(.d_1\ldots d_{52}\right)\times 2^{e}$" 
+
+# ╔═╡ c5b1fb6a-8327-11eb-2e9a-4fc8d2b3eac2
+md"We know that $s$ needs to be represented in binary, since our base is $2$. In this representation we have that if $s = 0$ then the number will be positive and if $s = 1$, then the number is negative."
+
+# ╔═╡ 87f9bdb4-8328-11eb-3aa4-8df6781d8733
+md"Take it as given at this stage that we want to have the first digit after the decimal point to be 1. There are several reasons for this, but it would take up too much time to explain (you can look into the **normalised** floating point representation if you are interested). This means that our representation will now become:
+
+$(-1)^s \left(1.d_2\ldots d_{53}\right)\times 2^{e}$"
+
+# ╔═╡ 58110390-8329-11eb-1c11-8b24865d91ff
+md" Finally we have to deal with the exponent. The main problem with the current representation is that negative exponents could pose a problem in comparisons. Let us look at an example to see why this is the case."
 
 # ╔═╡ 1c178a14-831d-11eb-2380-93561ebc9bd8
 bitstring(1.0 * 2^(-1))
@@ -222,36 +227,34 @@ bitstring(1.0 * 2^(-1))
 bitstring(1.0 * 2^(1))
 
 # ╔═╡ ed24d814-831d-11eb-1018-1d0c85976c0b
-md" With this representation of the numbers $1.0 * 2^{-1}$ and $1.0 * 2^{-1}$ we see that the first exponent shows a larger binary number. This makes direct comparison difficult."
+md" With this representation of the numbers $1.0 * 2^{-1}$ and $1.0 * 2^{-1}$ we see that the first exponent shows a larger binary number. The exponent here is represented by digits 2 though 12 in the bitstring. This makes direct comparison difficult."
 
 # ╔═╡ 260bba26-831e-11eb-14b1-47d4ae08397d
 md" This motivates the usage of **biased notation** for exponents." 
 
 # ╔═╡ 4107719c-831e-11eb-1766-cb889deb02de
-md" If the real exponent of a number is $X$ then it is represented as $X$ + `bias`. The bias in IEEE double precision is $1023$, therefore the exponent $-1$ is represented as $-1 + 1023 = 1022$."
-
-# ╔═╡ f7504c8c-831e-11eb-270e-93430fbec364
-md" This means that the actual exponent is found by substracting the bias from the stored exponent."
+md" If the real exponent of a number is $X$ then it is represented as $X$ + `bias`. The bias in IEEE double precision is $1023$, therefore the exponent $-1$ is represented as $-1 + 1023 = 1022$. This means that the actual exponent is found by substracting the bias from the stored exponent."
 
 # ╔═╡ c6a576d2-7f85-11eb-1e11-43906c0c1187
-md" We can derive from our representation above that the real value assumed by a 64-bit double-precision number with a given **biased** `exponent` $e$ and a 52-bit `mantissa` is:
+md" Now we have our final IEEE represenation with a given **biased** `exponent` $e$ and a 52-bit `mantissa`:
 
-$(-1)^\text{sign} \left(1 + m\right)\times 2^{e-1023} = (-1)^\text{sign} \left(1 + \sum_{i=1}^{52}d_{52-i}2^{-i}\right)\times 2^{e-1023}$ 
+$(-1)^\text{sign} \left(1.d_{2}d_{3}\ldots d_{53}\right)\times 2^{e-1023}$
 
 or alternatively, 
 
-$(-1)^\text{sign} \left(1.d_{51}d_{50}\ldots d_{0}\right)\times 2^{e-1023}$"
+$(-1)^\text{sign} \left(1 + m/2^{52}\right)\times 2^{e-1023}$"
 
 # ╔═╡ 531698fe-7f85-11eb-0f2d-bbc361c47c72
-md"The following image on double floating point format helps visualise the floating point representation. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $0$ to $2047$. We interpret in biased form as explained before. 
-
-The biased form means that an exponent value of $1023$ represents the actual value of zero. One calculates the value of the exponent by subtracting the bias for `exponent` $(1023)$ to get an exponent value in the range $[−1022, 1023]$. The final part is the $p = 52$ bit `significand`."
+md"The following image on double floating point format helps visualise the floating point representation. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $e = (00\ldots 0)_2 = 0$ to $e = (11\ldots 1)_2 = 2047$."
 
 # ╔═╡ 7f430c70-7b4e-11eb-3f09-7bd60114d1de
 md" ![floating point numbers](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/IEEE_754_Double_Floating_Point_Format.svg/1024px-IEEE_754_Double_Floating_Point_Format.svg.png)"
 
+# ╔═╡ 4fb1b54a-8320-11eb-0cd4-b38d5e72b1b1
+md"We use the exponent in biased form as explained before. The biased form means that an exponent value of $1023$ represents the actual value of zero. One calculates the value of the exponent by subtracting the bias for `exponent` to get an exponent value in the range $[−1023, 1024]$. The bounds for the exponent are: $0 \leq e \leq 2047$. The final part is the $p = 52$ bit `significand`."
+
 # ╔═╡ a54ba598-831a-11eb-2dcf-dbc008024c55
-md" With double precision we can then see that the flaoting point number occupies 64-bits. There is a compromise between the size of the `significand` and the `exponent`. The chosen sizes provide a range of approximately $\pm 10^{-308} \ldots 10^{308}$. In the case that the exponent is too large to be represented in the exponent field we have **overflow**. If the number is too small to be represented in this exponent field we have **underflow**. "
+md" With double precision we can then see that the floating-point number occupies 64-bits. There is a compromise between the size of the `significand` and the `exponent`. The chosen sizes provide a range of approximately $\pm 10^{-308} \ldots 10^{308}$. In the case that the exponent is too large to be represented in the exponent field we have **overflow**. If the number is too small to be represented in this exponent field we have **underflow**. "
 
 # ╔═╡ df023fb6-7f70-11eb-215a-7d834c2e7b56
 md" ##### Looking under the hood "
@@ -305,8 +308,17 @@ md"The basic issue is that, for computer arithmetic to be fast, it has to be don
 
 Let us work with some examples to show what problems we might encounter. "
 
+# ╔═╡ 7c389718-8321-11eb-2e05-d3969090fe0e
+md" #### Rounding error"
+
 # ╔═╡ 0926daac-7ccb-11eb-21ca-391422834af3
 md" The results of the following floating point calculations are often surprising to people. "
+
+# ╔═╡ bd2cb4c8-8323-11eb-34dc-a1cdf2cccb25
+(sqrt(3))^2
+
+# ╔═╡ d12e4e0a-8323-11eb-0d74-6b574609a909
+md"Shouldn't the answer be 3? Here we have the problem that in the original process of taking the square root, we are rounding off the answer. Once we try to square this number we are taking the square of a number that has been rounded. " 
 
 # ╔═╡ c54e39f0-7ccb-11eb-3d69-331302b5def2
 5/6
@@ -321,7 +333,16 @@ md" Shouldn't the last digit be a 3? The reason for the trailing 4 is because th
 md" Shouldn't this answer be 0? In this case none of the three decimal numbers has an exact 64-bit binary representation, so each must be rounded to the nearest 64-bit float before doing arithmetic. The number that we see in the output is actually $2^{-52}$"
 
 # ╔═╡ 11ea91ce-7cd0-11eb-2aa5-3df9a4b24db5
-md" These are not bugs in _Julia_ and you will encounter them in all programming languages that adopt the IEEE-standard 64-bit binary representation of floating point numbers. Let us consider some more examples. " 
+md" These are not bugs in _Julia_ and you will encounter them in all programming languages that adopt the IEEE-standard 64-bit binary representation of floating point numbers. " 
+
+# ╔═╡ 479d8d1c-8324-11eb-2d03-8dfbf74ea283
+md" Conducting computer arithmetic differs fundamentally from the way that you would do it by hand. There are two obvious reasons for this. 
+
+1. Only finite many numbers can be represented in a computer.
+2. A number represented in a computer can only have finitely many digits."
+
+# ╔═╡ 8fdc5676-8324-11eb-01c6-b1f82b890a40
+md" Let us look at some examples of computer arithmetic to make the problems clear."
 
 # ╔═╡ ac567efc-7867-11eb-07c3-21989feec15c
 begin
@@ -373,6 +394,9 @@ f
 
 # ╔═╡ fbf35d0a-7b77-11eb-3b36-194f011f00ab
 md" Even though the statements are mathematically the same (by the associative property of addition and subtraction), if we compare the values we see that `e` > `f`. In this case this is because adding numbers of different magnitudes does not always work like you would want. In the example, when we added $10^{-20}$ to $1$, it got rounded away. This means the floating point arithmetic is not associative in general. "
+
+# ╔═╡ ad6d4176-8321-11eb-2cf0-89aa37f483f5
+md" #### Catastrophic cancellation"
 
 # ╔═╡ 0b370ade-7b5d-11eb-14ae-8fb84aa69edc
 md" Unfortunately rounding errors are not the only cause for concern in floating-point arithmetic. Another class of problems using floating point arithmentic is illustrated in the following example:"
@@ -603,22 +627,23 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─4e406a14-7b56-11eb-109c-6136655fc096
 # ╟─237a5fe0-7c6b-11eb-2fa1-7f3135c6faa0
 # ╟─56547ac2-7cba-11eb-2698-a13ef1195c67
-# ╟─c1ad133c-8317-11eb-2544-7f168a206626
-# ╟─fcf372b0-8312-11eb-3553-b1f96d4f7b0d
 # ╟─735dbd02-7f85-11eb-197a-9d5bd5750b35
 # ╟─2f56aafa-7f86-11eb-0e4c-51b5754a86ec
 # ╟─8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
 # ╟─46c6770e-831b-11eb-067e-21334c077e86
 # ╟─f8ca7706-831c-11eb-1ac3-77fa1483b53f
+# ╟─c5b1fb6a-8327-11eb-2e9a-4fc8d2b3eac2
+# ╟─87f9bdb4-8328-11eb-3aa4-8df6781d8733
+# ╟─58110390-8329-11eb-1c11-8b24865d91ff
 # ╠═1c178a14-831d-11eb-2380-93561ebc9bd8
 # ╠═dbb19784-831d-11eb-105e-ed8117a41c6b
 # ╟─ed24d814-831d-11eb-1018-1d0c85976c0b
 # ╟─260bba26-831e-11eb-14b1-47d4ae08397d
 # ╟─4107719c-831e-11eb-1766-cb889deb02de
-# ╟─f7504c8c-831e-11eb-270e-93430fbec364
 # ╟─c6a576d2-7f85-11eb-1e11-43906c0c1187
 # ╟─531698fe-7f85-11eb-0f2d-bbc361c47c72
 # ╟─7f430c70-7b4e-11eb-3f09-7bd60114d1de
+# ╟─4fb1b54a-8320-11eb-0cd4-b38d5e72b1b1
 # ╟─a54ba598-831a-11eb-2dcf-dbc008024c55
 # ╟─df023fb6-7f70-11eb-215a-7d834c2e7b56
 # ╟─06bfbdd0-7c6a-11eb-033b-4df5aaeb3220
@@ -635,12 +660,17 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╠═d0a53b18-7c6f-11eb-0afd-0faa5c85a613
 # ╟─5f54346a-7866-11eb-3df4-658de2c2ce5f
 # ╟─5cf34e4e-7867-11eb-18ff-01b71b0d5934
+# ╟─7c389718-8321-11eb-2e05-d3969090fe0e
 # ╟─0926daac-7ccb-11eb-21ca-391422834af3
+# ╠═bd2cb4c8-8323-11eb-34dc-a1cdf2cccb25
+# ╟─d12e4e0a-8323-11eb-0d74-6b574609a909
 # ╠═c54e39f0-7ccb-11eb-3d69-331302b5def2
 # ╟─c950647e-7ccb-11eb-028f-d1c7c065342f
 # ╠═c89d83a4-7ccb-11eb-210e-355010a04b45
 # ╟─e17b1136-7ccb-11eb-1c45-e9de3d9cd831
 # ╟─11ea91ce-7cd0-11eb-2aa5-3df9a4b24db5
+# ╟─479d8d1c-8324-11eb-2d03-8dfbf74ea283
+# ╟─8fdc5676-8324-11eb-01c6-b1f82b890a40
 # ╠═ac567efc-7867-11eb-07c3-21989feec15c
 # ╟─31795f9a-7b7a-11eb-1786-89aad77aff4b
 # ╠═de5fc23a-7b7a-11eb-12b0-a513044b39a6
@@ -654,6 +684,7 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╠═f3fce35a-7b77-11eb-0935-13399babee72
 # ╠═f80d6c4e-7b77-11eb-31bc-d55c9905b0a6
 # ╟─fbf35d0a-7b77-11eb-3b36-194f011f00ab
+# ╟─ad6d4176-8321-11eb-2cf0-89aa37f483f5
 # ╟─0b370ade-7b5d-11eb-14ae-8fb84aa69edc
 # ╠═19fd463c-7b5d-11eb-342c-293f27a0f396
 # ╠═2f54327a-7b5d-11eb-0352-e713aba2460d

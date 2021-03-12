@@ -462,11 +462,11 @@ md" What about the following example. Think about what the result should be and 
 begin
 	j = 2.0^30 # Very large number
 	k = 2.0^-30 # Very small number
-	j + k == j
+	j - k == j
 end
 
 # ╔═╡ 2a044f08-7b7b-11eb-19fc-9fe29ad589bf
-md"Both of the examples above showcase the idea of **catastrophic cancellation**. In the first instance the subtraction of two nearly equal numbers eleminates significant digits (since the numbers can't be precisely represented by the machine) and in the second case there is a potential loss of precision when subtracting close real numbers that are represented by floats.
+md"Both of the examples above showcase the idea of **catastrophic cancellation**. In the first instance the subtraction of two nearly equal numbers eleminates significant digits (since the numbers can't be precisely represented by the machine) and in the second case there is a potential loss of precision when subtracting distant real numbers that are represented by floats.
 
 This type of error is a common source of huge floating point errors.
 
@@ -513,6 +513,50 @@ diff = sum_1 - Dec64(sum)
 
 # ╔═╡ 3d11b968-78c5-11eb-3962-f50b8e05803d
 md" Do you expect there to be any difference between the answers?"
+
+# ╔═╡ 441ea182-8361-11eb-2fef-11c314784df1
+md" In this next example we will make use of two functions to see where the loss of significant digits can be really worrisome. Consider computing the function:
+
+$p(x) = (x-1)^5$
+
+One can expand the polynomial to find an *equivalent* function:
+
+$q(x) = x^5 - 5x^4 + 10x^3 - 10x^2 + 5x - 1$
+
+However, we run into problems when $x \approx 1$. The alternating signs lead to subtractions of two very close numbers, which leads to large error!"
+
+# ╔═╡ fd34d75e-8363-11eb-1ddd-efaf1569a22b
+md" Our code below generates plots for $p(x)$ and $q(x)$ on the interval $1-10^{-10} \leq x \leq 1 + 10^{-10}$."
+
+# ╔═╡ e688f190-8361-11eb-1fe8-2bc7c5295926
+X = 1.0 - 10^(-10) : 10^(-12) : 1.0 + 10^(-10)
+
+# ╔═╡ 4a4ab3ca-8363-11eb-1c65-cb866fc822ee
+md"**Note:** You can use the `@` symbol to invoke `macros`. In this case the macro allows me to broadcast the `.` operator across all arithmetic operations. This means I don't repeatedly have to type `.` before each arithmetic operation."
+
+# ╔═╡ 53b3db4a-8362-11eb-1948-7b49d75d9f99
+P = @. (X - 1)^5
+
+# ╔═╡ b77ec01c-8363-11eb-037f-833825146fa5
+plot(P,
+    xlabel = "p(x)",
+    xlims = (0.9999,1.001)
+)
+
+# ╔═╡ 75d0456a-8362-11eb-244b-7f53c80e5bc8
+Q = @. X^5 - (5 * X^4) + (10 * X^3) - (10 * X^2) + (5 * X) - 1 
+
+# ╔═╡ a7de2550-8363-11eb-038d-696d2e53f139
+plot(Q,
+    xlabel = "q(x)",
+    xlims = (0.99999,50)
+)
+
+# ╔═╡ caeae7de-8363-11eb-003d-83d7fbea4217
+md"One would expect that the result would be pretty flat in the region around the value of $1$, but in the graph of $q(x)$ we see this strange behaviour. There is large error here with wild oscillations, which does not capture the properties of the function at all. "
+
+# ╔═╡ c8daad14-8361-11eb-169d-e36ccbd815ba
+md" ##### Not so catastrophic cancellation?"
 
 # ╔═╡ 9fb8ee4a-7cc5-11eb-0a93-2fea93a38c75
 md" Catastrophic cancellation is not inevitable! We can often avoid it by simply re-arranging the calculation. Let us look at a final example to see how to do this. "
@@ -769,6 +813,16 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─3cf74998-78c5-11eb-1191-a9f56dbadda6
 # ╠═3cfda932-78c5-11eb-3ad9-512459ffebc4
 # ╟─3d11b968-78c5-11eb-3962-f50b8e05803d
+# ╟─441ea182-8361-11eb-2fef-11c314784df1
+# ╟─fd34d75e-8363-11eb-1ddd-efaf1569a22b
+# ╠═e688f190-8361-11eb-1fe8-2bc7c5295926
+# ╟─4a4ab3ca-8363-11eb-1c65-cb866fc822ee
+# ╠═53b3db4a-8362-11eb-1948-7b49d75d9f99
+# ╠═b77ec01c-8363-11eb-037f-833825146fa5
+# ╠═75d0456a-8362-11eb-244b-7f53c80e5bc8
+# ╠═a7de2550-8363-11eb-038d-696d2e53f139
+# ╟─caeae7de-8363-11eb-003d-83d7fbea4217
+# ╟─c8daad14-8361-11eb-169d-e36ccbd815ba
 # ╟─9fb8ee4a-7cc5-11eb-0a93-2fea93a38c75
 # ╟─5974daa4-7cc6-11eb-097a-1303b35124dc
 # ╠═c8e07448-7cc6-11eb-1e2d-15d48c74d921

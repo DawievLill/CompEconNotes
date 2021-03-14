@@ -43,7 +43,7 @@ In this section we introduce the idea of floating point numbers. It is not cruci
 # ╔═╡ e25b1a6a-7b75-11eb-06de-bdfec783caa1
 html"""
 
-<iframe width="892" height="502" src="https://www.youtube.com/embed/PZRI1IfStY0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="680" height="400" src="https://www.youtube.com/embed/PZRI1IfStY0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 """
 
@@ -117,7 +117,26 @@ r * 49
 1 - r * 49
 
 # ╔═╡ 0a9dea26-7c74-11eb-037b-b7d58b25cd03
-md" This difference is about $10^{-16} \approx 2^{-52}$ since the default precision in _Julia_ is double precision. We will get back to this topic later in this lesson. We will continue this discussion on precision after a quick detour into a discussion on types." 
+md" This difference is about $10^{-16} \approx 2^{-52}$ since the default precision in _Julia_ is **double precision**. " 
+
+# ╔═╡ 5bdb0f86-84ee-11eb-2869-d9f08e860d61
+bitstring(r)
+
+# ╔═╡ cafaabec-84ee-11eb-35f5-15a895dbe372
+md" Ok, so what causes this? Well, how are numbers represented in a computer: A bit string of 64 characters. 
+
+Not simple binary, but a code where the position a digit occupies means something very precise. The first digit contains the `sign` of the number (positive or negative), the next 11 digits contain the order of magnitude (the `exponent`), and the final 52 digits, the fractional value in mathematical notation (in base 2/binary) that represents the number (the `mantissa`). 
+
+This allows an extremely flexible way of (approximately) representing an enormous (but finite) number of real numbers exactly. The problems arise with those real numbers that cannot be represented exactly."
+
+# ╔═╡ c2ebed22-84ed-11eb-0a10-a135b1823f78
+md"The following image on double floating point format helps visualise the idea of a 64-bit precision representation as described. The first bit is a `sign` bit. Then there is the 11 bit `exponent` field and finally the 52 bit `mantissa`. Compare against the bit string for `r`."
+
+# ╔═╡ f6c2e2b8-84ed-11eb-3026-890a1d21c649
+md" ![floating point numbers](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/IEEE_754_Double_Floating_Point_Format.svg/1024px-IEEE_754_Double_Floating_Point_Format.svg.png)"
+
+# ╔═╡ 45d983b6-84ee-11eb-327c-55f5a3ca3341
+md"We will continue this discussion on double precision and floating-point number representation after a quick detour into a discussion on types."
 
 # ╔═╡ d66c205c-7c54-11eb-1500-2deb82c42c6c
 md" #### Quick detour into types "
@@ -213,9 +232,6 @@ $r = 1.\text{(fractional part)}$
 
 Normalisation forces the integer part of the mantissa to be exactly one and therefore is no reason to store it in the computer. The fractional part can be whatever we like it to be. "
 
-# ╔═╡ e1e354b0-835b-11eb-0682-9da5144f8f99
-md" Let us illustrate this quickly with an example. If you take the number $13.25$ in binary you will see that it gives $1101.01$. Look at the code below for an illustration. " 
-
 # ╔═╡ c2f91cf4-835d-11eb-3b5a-fb7f329f4697
 function dec2bin(x::String)
     bx = parse(BigFloat, x)
@@ -237,12 +253,15 @@ end
 # ╔═╡ d4482e58-835d-11eb-1cf1-b1a6d9c5c0b2
 dec2bin("13.25")
 
+# ╔═╡ e1e354b0-835b-11eb-0682-9da5144f8f99
+md" Let us illustrate this quickly with an example. If you take the number $13.25$ in binary you will see that it gives $1101.01$. Look at the code above for an illustration. " 
+
 # ╔═╡ 0859b1c8-835e-11eb-3be5-2163e163e365
 md"The integer part of this binary number is $1101$ and $01$ is the fractional part. One could represent $13.25$ as $1101.01 * (2^0)$, but this is not normalised since the integer part is not $1$. However, we can shift the `mantissa` to the right one digit if we increase the exponent by one:
 
 $ 1101.01 * (2^0) = 110.101 * (2^1) = 11.0101 * (2^2) = 1.10101 * (2^3)$.
 
-This representation in the last equality is the normalised form of $13.25$. "
+This representation in the last equality is the **normalised** form of $13.25$. "
 
 # ╔═╡ 46c6770e-831b-11eb-067e-21334c077e86
 md" Continuing from our depiction in scientific notation in the previous section, we can now use the binary base to obtain the representation for the double precision number as the following:
@@ -287,9 +306,9 @@ or alternatively,
 $(-1)^\text{sign} \left(1 + m/2^{52}\right)\times 2^{e-1023}$"
 
 # ╔═╡ 531698fe-7f85-11eb-0f2d-bbc361c47c72
-md"The following image on double floating point format helps visualise the floating point representation. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $e = (00\ldots 0)_2 = 0$ to $e = (11\ldots 1)_2 = 2047$."
+md"Remember the image from before with respect to floating point numbers. The first bit is a `sign` bit. Then there is the $11$ bit `exponent` field, which is an unsigned integer from $e = (00\ldots 0)_2 = 0$ to $e = (11\ldots 1)_2 = 2047$."
 
-# ╔═╡ 7f430c70-7b4e-11eb-3f09-7bd60114d1de
+# ╔═╡ ee13edce-84ed-11eb-394d-85367178ceec
 md" ![floating point numbers](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/IEEE_754_Double_Floating_Point_Format.svg/1024px-IEEE_754_Double_Floating_Point_Format.svg.png)"
 
 # ╔═╡ 4fb1b54a-8320-11eb-0cd4-b38d5e72b1b1
@@ -336,7 +355,7 @@ ieee(x) = [ parse.(Int, ieee0(x), base=2) ieee0(x)]
 # ╔═╡ 988d1952-80fb-11eb-3f37-25d71c811413
 md" So before we look at the output of the function let us remember how to read this:
 
-$(-1)^\text{sign}  * 2^{(e-1023)} * (1 + m/2^{52})$
+$(-1)^s  * 2^{(e-1023)} * (1 + m/2^{52})$
 "
 
 # ╔═╡ d0a53b18-7c6f-11eb-0afd-0faa5c85a613
@@ -344,6 +363,16 @@ ieee(q)
 
 # ╔═╡ 5f54346a-7866-11eb-3df4-658de2c2ce5f
 md"### Floating point arithmetic"
+
+# ╔═╡ 600b116c-84eb-11eb-00e0-f14d7b241d24
+md" Here is a nice video that explains most of the concepts on floating-point representation that we covered and some discussion on computer arithmetic (although it talks about algebra). It is a bit more technical, but it provides some interesting insights."
+
+# ╔═╡ 1d08b996-84eb-11eb-0736-510e5f7cdd1f
+html"""
+
+<iframe width="680" height="400" src="https://www.youtube.com/embed/pQs_wx8eoQ8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+"""
 
 # ╔═╡ 5cf34e4e-7867-11eb-18ff-01b71b0d5934
 md"The basic issue is that, for computer arithmetic to be fast, it has to be done in hardware, operating on numbers stored in a fixed, finite number of digits (bits). As a consequence, only a finite subset of the real numbers can be represented, and the question becomes which subset to store, how arithmetic on this subset is defined, and how to analyze the errors compared to theoretical exact arithmetic on real numbers.
@@ -372,7 +401,7 @@ md" Shouldn't the last digit be a 3? The reason for the trailing 4 is because th
 2.6 - 0.7 - 1.9
 
 # ╔═╡ e17b1136-7ccb-11eb-1c45-e9de3d9cd831
-md" Shouldn't this answer be 0? In this case none of the three decimal numbers has an exact 64-bit binary representation, so each must be rounded to the nearest 64-bit float before doing arithmetic. The number that we see in the output is actually $2^{-52}$"
+md" Shouldn't this answer be 0? In this case none of the three decimal numbers has an exact 64-bit binary representation, so each must be rounded to the nearest 64-bit float before doing arithmetic. The number that we see in the output is actually $10^{-16} \approx 2^{-52}$."
 
 # ╔═╡ 11ea91ce-7cd0-11eb-2aa5-3df9a4b24db5
 md" These are not bugs in _Julia_ and you will encounter them in all programming languages that adopt the IEEE-standard 64-bit binary representation of floating point numbers. " 
@@ -404,7 +433,7 @@ ieee(0.1)
 # ╔═╡ e7475a98-7b7a-11eb-00a2-63e52e403c16
 md"Do you see the repeating pattern in the `significand`? Even thought `0.1` can easily be represented with only two base-10 digits, it requires an infinite number of binary digits, which is cut off. This quotient of two integers has a nonterminating binary expansion is not a binary floating-point number. This is a confusing aspect of floating-point arithmetic. We have a real arithmetic operation on two floating-point numbers that does not result in aother floating-point number. 
 
-If a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. "
+If a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. One could also use **BigFloats** that have an arbitrary amount of precision. "
 
 # ╔═╡ e54c99d8-7c74-11eb-29cc-f5d7f64c4937
 md" Given the previous example why do you think the following example is different?"
@@ -468,12 +497,16 @@ end
 # ╔═╡ 2a044f08-7b7b-11eb-19fc-9fe29ad589bf
 md"Both of the examples above showcase the idea of **catastrophic cancellation**. In the first instance the subtraction of two nearly equal numbers eleminates significant digits (since the numbers can't be precisely represented by the machine) and in the second case there is a potential loss of precision when subtracting distant real numbers that are represented by floats.
 
-This type of error is a common source of huge floating point errors.
-
-For the first example we see that the values are approximately equal, as shown below."
+This type of error is a common source of huge floating point errors."
 
 # ╔═╡ 8b29e5b4-7b7f-11eb-2679-bd248ed2d88b
 isapprox(100000.2 - 100000.1, 0.1)
+
+# ╔═╡ bc86d990-83d2-11eb-1401-e1ac3ac6b36c
+md"For the first example we see that the values are approximately equal, as shown above."
+
+# ╔═╡ 95750e6c-83d2-11eb-31e4-673d932bb999
+md" ##### Calculating returns on investment "
 
 # ╔═╡ 0f9373f0-78c5-11eb-26ba-05bea8874141
 md" These examples makes it somewhat difficult for us to trust calculations if we don't know what the pitfalls are. Look at the following investment calculation. Can we trust this answer?"
@@ -513,6 +546,9 @@ diff = sum_1 - Dec64(sum)
 
 # ╔═╡ 3d11b968-78c5-11eb-3962-f50b8e05803d
 md" Do you expect there to be any difference between the answers?"
+
+# ╔═╡ 6ff7cb16-83d2-11eb-0155-e38cae990886
+md"##### Comparing functions"
 
 # ╔═╡ 441ea182-8361-11eb-2fef-11c314784df1
 md" In this next example we will make use of two functions to see where the loss of significant digits can be really worrisome. Consider computing the function:
@@ -691,9 +727,9 @@ md" 8. **[Hard]** In this problem we will use `for loops`, so be sure that you h
 On average we expect the errors to partially cancel out. Suppose you define a random sequence by $x_0 = 0$ and $x_n = x_{n-1} \pm 1$ with the signs chosen by tossing a fair coin for each $n$. et $\alpha_n$ and $\beta_n$ be the average value of $x_n$ and $|x_n|$ respectively over all such walks. Then a classic result of probability is that $\alpha_n = 0$ and $\lim_{n\rightarrow \infty} \frac{\pi \beta^{2}_{n}}{2n} = 1$. Perform a million random walks. Exercise still to be completed. "
 
 # ╔═╡ Cell order:
-# ╠═5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
-# ╠═66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
-# ╠═844fa292-7b48-11eb-0f9c-c521a4125ce6
+# ╟─5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
+# ╟─66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
+# ╟─844fa292-7b48-11eb-0f9c-c521a4125ce6
 # ╟─8598d0ca-7863-11eb-1549-21bc81a5cb1f
 # ╟─e6a2f610-7ac6-11eb-2920-0ba6b5af0ee6
 # ╟─f1f991e0-7864-11eb-1b11-abf2aa055858
@@ -717,8 +753,13 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╠═0ada5afe-7c73-11eb-3f48-6ff9cc36362b
 # ╟─36534b10-7c73-11eb-07a5-37a4fb5cc343
 # ╠═e720262c-7c73-11eb-0838-ab15f18a90dc
-# ╟─edf67168-7c73-11eb-2cd5-d73de1a10454
+# ╠═edf67168-7c73-11eb-2cd5-d73de1a10454
 # ╟─0a9dea26-7c74-11eb-037b-b7d58b25cd03
+# ╠═5bdb0f86-84ee-11eb-2869-d9f08e860d61
+# ╟─cafaabec-84ee-11eb-35f5-15a895dbe372
+# ╟─c2ebed22-84ed-11eb-0a10-a135b1823f78
+# ╟─f6c2e2b8-84ed-11eb-3026-890a1d21c649
+# ╟─45d983b6-84ee-11eb-327c-55f5a3ca3341
 # ╟─d66c205c-7c54-11eb-1500-2deb82c42c6c
 # ╟─d5191c50-7b55-11eb-20c9-896d13cd253e
 # ╠═de731d1a-7c53-11eb-10d6-3572e8e7ee70
@@ -738,9 +779,9 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─2f56aafa-7f86-11eb-0e4c-51b5754a86ec
 # ╟─8f4efeec-7f85-11eb-20a5-d705eb5d9b2e
 # ╟─f761979e-835a-11eb-364b-09fd2e90b6d8
-# ╟─e1e354b0-835b-11eb-0682-9da5144f8f99
 # ╟─c2f91cf4-835d-11eb-3b5a-fb7f329f4697
 # ╠═d4482e58-835d-11eb-1cf1-b1a6d9c5c0b2
+# ╟─e1e354b0-835b-11eb-0682-9da5144f8f99
 # ╟─0859b1c8-835e-11eb-3be5-2163e163e365
 # ╟─46c6770e-831b-11eb-067e-21334c077e86
 # ╟─f8ca7706-831c-11eb-1ac3-77fa1483b53f
@@ -753,7 +794,7 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─4107719c-831e-11eb-1766-cb889deb02de
 # ╟─c6a576d2-7f85-11eb-1e11-43906c0c1187
 # ╟─531698fe-7f85-11eb-0f2d-bbc361c47c72
-# ╟─7f430c70-7b4e-11eb-3f09-7bd60114d1de
+# ╟─ee13edce-84ed-11eb-394d-85367178ceec
 # ╟─4fb1b54a-8320-11eb-0cd4-b38d5e72b1b1
 # ╟─a54ba598-831a-11eb-2dcf-dbc008024c55
 # ╟─df023fb6-7f70-11eb-215a-7d834c2e7b56
@@ -770,6 +811,8 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─988d1952-80fb-11eb-3f37-25d71c811413
 # ╠═d0a53b18-7c6f-11eb-0afd-0faa5c85a613
 # ╟─5f54346a-7866-11eb-3df4-658de2c2ce5f
+# ╟─600b116c-84eb-11eb-00e0-f14d7b241d24
+# ╟─1d08b996-84eb-11eb-0736-510e5f7cdd1f
 # ╟─5cf34e4e-7867-11eb-18ff-01b71b0d5934
 # ╟─7c389718-8321-11eb-2e05-d3969090fe0e
 # ╟─0926daac-7ccb-11eb-21ca-391422834af3
@@ -804,6 +847,8 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╠═c5f3dde8-7b7b-11eb-3a14-bbe7f374c856
 # ╟─2a044f08-7b7b-11eb-19fc-9fe29ad589bf
 # ╠═8b29e5b4-7b7f-11eb-2679-bd248ed2d88b
+# ╟─bc86d990-83d2-11eb-1401-e1ac3ac6b36c
+# ╟─95750e6c-83d2-11eb-31e4-673d932bb999
 # ╟─0f9373f0-78c5-11eb-26ba-05bea8874141
 # ╠═3933c4ee-78c5-11eb-2692-7989afac7ebb
 # ╟─6dda76f6-78c6-11eb-0fe0-a36a5663dfd7
@@ -813,6 +858,7 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─3cf74998-78c5-11eb-1191-a9f56dbadda6
 # ╠═3cfda932-78c5-11eb-3ad9-512459ffebc4
 # ╟─3d11b968-78c5-11eb-3962-f50b8e05803d
+# ╟─6ff7cb16-83d2-11eb-0155-e38cae990886
 # ╟─441ea182-8361-11eb-2fef-11c314784df1
 # ╟─fd34d75e-8363-11eb-1ddd-efaf1569a22b
 # ╠═e688f190-8361-11eb-1fe8-2bc7c5295926

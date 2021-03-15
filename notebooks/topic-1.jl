@@ -459,16 +459,19 @@ This is a confusing and seemingly stupid aspect of floating-point arithmetic. We
 
 This system is not stupid though, it is just different. In the decimal system we don't have a correct representation of 1/3 and we normally round it to something like 0.33. We don't expect 0.33 + 0.33 + 0.33 = 1. Computers use binary because it is fast and quite accurate for most cases.  
 
-In general, if a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. One could also use **BigFloats** that have an arbitrary amount of precision. "
+In general, if a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session.  "
 
-# ╔═╡ e54c99d8-7c74-11eb-29cc-f5d7f64c4937
-md" Given the previous example why do you think the following example is different?"
+# ╔═╡ 1e32df9c-8561-11eb-075c-4f21542642d4
+md" In _Julia_ you could also use rational numbers or the **BigFloat** datatype (which works to arbitrary precision) to make the math work more in line with what you would expect."
 
-# ╔═╡ 0977c012-7c75-11eb-3cf4-e9a1bfca6541
-1.0 + 1.0 == 2.0
+# ╔═╡ a20512b8-8561-11eb-13f9-bf17d0ae6a0a
+1//10 + 1//10 + 1//10 == 3//10  # Working with rational numbers
 
-# ╔═╡ 314c5f4e-7c75-11eb-2b48-5787c4c781c9
-md" This is since basic mathematical operations like addition and subtraction are guaranteed to be true for **integer arithmetic** in floating point until you exceed the largest representable integer in your precision. This is a more subtle point and requires some further reading in the fundamental axioms of floating point arithmetic."
+# ╔═╡ 3022a664-8562-11eb-0153-43f005dd3071
+BigFloat(0.1) + BigFloat(0.1) + BigFloat(0.1) 
+
+# ╔═╡ 4a8c4cc6-8562-11eb-129b-4387482289fb
+
 
 # ╔═╡ 3310e738-7ac1-11eb-38ea-2f1cfc2f0090
 md"Let us illustrate with another example that exact arithmetic and computer arithmetic don't always give the same answers. Consider the following:"
@@ -479,6 +482,9 @@ begin
 	f = 1e-20 + (1 - 1)
 	e == f
 end
+
+# ╔═╡ e54c99d8-7c74-11eb-29cc-f5d7f64c4937
+md" Given the previous example why do you think the following example is different?"
 
 # ╔═╡ 9fb90230-7ac1-11eb-1c50-634ba7a9a7bb
 md" The value we obtain for `e` is actually incorrect."
@@ -491,6 +497,15 @@ f
 
 # ╔═╡ fbf35d0a-7b77-11eb-3b36-194f011f00ab
 md" Even though the statements are mathematically the same (by the associative property of addition and subtraction), if we compare the values we see that `e` > `f`. In this case this is because adding numbers of different magnitudes does not always work like you would want. In the example, when we added $10^{-20}$ to $1$, it got rounded away. This means the floating point arithmetic is not associative in general! "
+
+# ╔═╡ 8658cb76-8562-11eb-26e1-e7e58c9deae2
+md" Given what we know so far, the answer to the next question should be obvious, right?"
+
+# ╔═╡ 0977c012-7c75-11eb-3cf4-e9a1bfca6541
+1.0 + 1.0 == 2.0
+
+# ╔═╡ 314c5f4e-7c75-11eb-2b48-5787c4c781c9
+md" This is since basic mathematical operations like addition and subtraction are guaranteed to be true for **integer arithmetic** in floating point until you exceed the largest representable integer in your precision. This is a more subtle point and requires some further reading in the fundamental axioms of floating point arithmetic."
 
 # ╔═╡ 712345f0-855e-11eb-13aa-e168cfbcbd43
 md" ##### Avoiding rounding error"
@@ -870,15 +885,20 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─31795f9a-7b7a-11eb-1786-89aad77aff4b
 # ╠═de5fc23a-7b7a-11eb-12b0-a513044b39a6
 # ╟─e7475a98-7b7a-11eb-00a2-63e52e403c16
-# ╟─e54c99d8-7c74-11eb-29cc-f5d7f64c4937
-# ╠═0977c012-7c75-11eb-3cf4-e9a1bfca6541
-# ╟─314c5f4e-7c75-11eb-2b48-5787c4c781c9
+# ╟─1e32df9c-8561-11eb-075c-4f21542642d4
+# ╠═a20512b8-8561-11eb-13f9-bf17d0ae6a0a
+# ╠═3022a664-8562-11eb-0153-43f005dd3071
+# ╠═4a8c4cc6-8562-11eb-129b-4387482289fb
 # ╟─3310e738-7ac1-11eb-38ea-2f1cfc2f0090
 # ╠═8f365958-7ac1-11eb-145b-69bff762b7a8
+# ╟─e54c99d8-7c74-11eb-29cc-f5d7f64c4937
 # ╟─9fb90230-7ac1-11eb-1c50-634ba7a9a7bb
 # ╠═f3fce35a-7b77-11eb-0935-13399babee72
 # ╠═f80d6c4e-7b77-11eb-31bc-d55c9905b0a6
 # ╟─fbf35d0a-7b77-11eb-3b36-194f011f00ab
+# ╟─8658cb76-8562-11eb-26e1-e7e58c9deae2
+# ╠═0977c012-7c75-11eb-3cf4-e9a1bfca6541
+# ╟─314c5f4e-7c75-11eb-2b48-5787c4c781c9
 # ╟─712345f0-855e-11eb-13aa-e168cfbcbd43
 # ╟─92329bda-855e-11eb-30f7-c962f990ad51
 # ╟─a86b3cc0-855e-11eb-2dbd-638f2ea6a9a5

@@ -19,9 +19,6 @@ using Markdown
 # ╔═╡ 66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
 using InteractiveUtils
 
-# ╔═╡ 6f5370c6-7b78-11eb-2076-45dc8e4908ae
-using GraphRecipes, Plots
-
 # ╔═╡ d482635e-7ab4-11eb-0d53-398ca84dab54
 using DecFP
 
@@ -108,7 +105,7 @@ md" Here are some other examples of floating point numbers. "
 r = 1 / 49  # Division of two integers produce a floating point value
 
 # ╔═╡ 36534b10-7c73-11eb-07a5-37a4fb5cc343
-md" Note that $1 / 49 \notin \mathbb{F}$, our value given by $r$ is a rounded version of $1/49$. If we multiply by $49$ we see that it gives something close to but not exactly equal to $1$."
+md" Note that $1 / 49 \notin \mathbb{F}$. Our value given by $r$ is a rounded version of $1/49$. If we multiply by $49$ we see that it gives something close, but not exactly equal, to $1$."
 
 # ╔═╡ e720262c-7c73-11eb-0838-ab15f18a90dc
 r * 49
@@ -468,10 +465,7 @@ md" In _Julia_ you could also use rational numbers or the **BigFloat** datatype 
 1//10 + 1//10 + 1//10 == 3//10  # Working with rational numbers
 
 # ╔═╡ 3022a664-8562-11eb-0153-43f005dd3071
-BigFloat(0.1) + BigFloat(0.1) + BigFloat(0.1) 
-
-# ╔═╡ 4a8c4cc6-8562-11eb-129b-4387482289fb
-
+BigFloat(0.1) + BigFloat(0.1) + BigFloat(0.1) # Increase precision with BigFloat
 
 # ╔═╡ 3310e738-7ac1-11eb-38ea-2f1cfc2f0090
 md"Let us illustrate with another example that exact arithmetic and computer arithmetic don't always give the same answers. Consider the following:"
@@ -579,6 +573,12 @@ import Pkg; Pkg.add("DecFP")
 
 # ╔═╡ 844fa292-7b48-11eb-0f9c-c521a4125ce6
 Pkg.add("PlutoUI"); using PlutoUI
+
+# ╔═╡ 590bdbfe-857b-11eb-0e36-ff07c99cbfd7
+Pkg.add("GraphRecipes"); using GraphRecipes
+
+# ╔═╡ 654c2572-857b-11eb-21e2-71f7f731d658
+Pkg.add("Plots"); using Plots
 
 # ╔═╡ 70ab6652-7ab4-11eb-1309-8f833821ef88
 begin
@@ -777,9 +777,11 @@ md" 8. **[Hard]** In this problem we will use `for loops`, so be sure that you h
 On average we expect the errors to partially cancel out. Suppose you define a random sequence by $x_0 = 0$ and $x_n = x_{n-1} \pm 1$ with the signs chosen by tossing a fair coin for each $n$. et $\alpha_n$ and $\beta_n$ be the average value of $x_n$ and $|x_n|$ respectively over all such walks. Then a classic result of probability is that $\alpha_n = 0$ and $\lim_{n\rightarrow \infty} \frac{\pi \beta^{2}_{n}}{2n} = 1$. Perform a million random walks. Exercise still to be completed. "
 
 # ╔═╡ Cell order:
-# ╟─5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
-# ╟─66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
-# ╟─844fa292-7b48-11eb-0f9c-c521a4125ce6
+# ╠═5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
+# ╠═66ca1514-7863-11eb-2fd9-c5a2e7d1a74d
+# ╠═844fa292-7b48-11eb-0f9c-c521a4125ce6
+# ╠═590bdbfe-857b-11eb-0e36-ff07c99cbfd7
+# ╠═654c2572-857b-11eb-21e2-71f7f731d658
 # ╟─8598d0ca-7863-11eb-1549-21bc81a5cb1f
 # ╟─e6a2f610-7ac6-11eb-2920-0ba6b5af0ee6
 # ╟─f1f991e0-7864-11eb-1b11-abf2aa055858
@@ -820,7 +822,6 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╠═689c2086-7c54-11eb-2e4d-f7b6c988d7c3
 # ╟─4140fd08-7c55-11eb-1583-7d3c3de7c8ef
 # ╟─a0592f30-7b78-11eb-2482-f5eaa3a66228
-# ╠═6f5370c6-7b78-11eb-2076-45dc8e4908ae
 # ╟─65b2d784-7b78-11eb-063b-1b7c30edd211
 # ╟─4e406a14-7b56-11eb-109c-6136655fc096
 # ╟─237a5fe0-7c6b-11eb-2fa1-7f3135c6faa0
@@ -888,7 +889,6 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─1e32df9c-8561-11eb-075c-4f21542642d4
 # ╠═a20512b8-8561-11eb-13f9-bf17d0ae6a0a
 # ╠═3022a664-8562-11eb-0153-43f005dd3071
-# ╠═4a8c4cc6-8562-11eb-129b-4387482289fb
 # ╟─3310e738-7ac1-11eb-38ea-2f1cfc2f0090
 # ╠═8f365958-7ac1-11eb-145b-69bff762b7a8
 # ╟─e54c99d8-7c74-11eb-29cc-f5d7f64c4937

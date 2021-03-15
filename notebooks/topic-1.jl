@@ -123,7 +123,9 @@ md" This difference is about $10^{-16} \approx 2^{-52}$ since the default precis
 bitstring(r)
 
 # ╔═╡ cafaabec-84ee-11eb-35f5-15a895dbe372
-md" Ok, so what causes this? Well, how are numbers represented in a computer: A bit string of 64 characters. 
+md" Ok, so what causes this? 
+
+Well, how are numbers represented in a computer: A bit string of 64 characters. 
 
 Not simple binary, but a code where the position a digit occupies means something very precise. The first digit contains the `sign` of the number (positive or negative), the next 11 digits contain the order of magnitude (the `exponent`), and the final 52 digits, the fractional value in mathematical notation (in base 2/binary) that represents the number (the `mantissa`). 
 
@@ -382,8 +384,20 @@ Let us work with some examples to show what problems we might encounter. "
 # ╔═╡ 7c389718-8321-11eb-2e05-d3969090fe0e
 md" #### Rounding error"
 
+# ╔═╡ 95f1bb86-855f-11eb-0a7f-2312eb99af3b
+md" As always, `xkcd` has a webcomic dedicated to the topic" 
+
+# ╔═╡ 6e09a5ca-855f-11eb-3d9a-cfc22abd2711
+md" ![xkcd](https://imgs.xkcd.com/comics/e_to_the_pi_minus_pi.png) "
+
+# ╔═╡ ac2024b0-855f-11eb-36f8-c9f4242f1220
+md" Let's test this to see what _Julia_ thinks. " 
+
+# ╔═╡ c020f2c8-855f-11eb-0138-f3dd85fe9cca
+exp(π)-π
+
 # ╔═╡ 0926daac-7ccb-11eb-21ca-391422834af3
-md" The results of the following floating point calculations are often surprising to people. "
+md" Seems that we have some rounding errors! This is a nice little segue into our first topic for floating point arithmetic. The results of the following floating point calculations are often surprising to people. "
 
 # ╔═╡ bd2cb4c8-8323-11eb-34dc-a1cdf2cccb25
 (sqrt(3))^2
@@ -424,16 +438,28 @@ begin
 	a + b + c == 0.3
 end
 
+# ╔═╡ 629ed6e4-855d-11eb-0fd8-0907510d4e78
+md" Interestingly, if we show the answer for this sum we see why we have a problem. "
+
+# ╔═╡ 58966d9c-855d-11eb-237c-cb41ffd09421
+a + b + c
+
 # ╔═╡ 31795f9a-7b7a-11eb-1786-89aad77aff4b
-md" As we mentioned in the example before, this problem is due to rounding. Rounding is necesarry when a number has more than $p$ `significand` bits. _Julia_ offers several rounding modes, with the default being `RoundNearest`. In our example here, the number `0.1` in the decimal system cannot be represented accurately as a floating point number. " 
+md" As we mentioned in the example before, this problem is due to rounding. This rounding error occurs even before the calculation happens!
+
+Rounding is necesarry when a number has more than $p$ `significand` bits. _Julia_ offers several rounding modes, with the default being `RoundNearest`. In our example here, the number `0.1` in the decimal system cannot be represented accurately as a binary floating-point number *at all*. " 
 
 # ╔═╡ de5fc23a-7b7a-11eb-12b0-a513044b39a6
 ieee(0.1)
 
 # ╔═╡ e7475a98-7b7a-11eb-00a2-63e52e403c16
-md"Do you see the repeating pattern in the `significand`? Even thought `0.1` can easily be represented with only two base-10 digits, it requires an infinite number of binary digits, which is cut off. This quotient of two integers has a nonterminating binary expansion is not a binary floating-point number. This is a confusing aspect of floating-point arithmetic. We have a real arithmetic operation on two floating-point numbers that does not result in aother floating-point number. 
+md"Do you see the repeating pattern in the `significand`? Even thought `0.1` can easily be represented with only two base-10 digits, it requires an infinite number of binary digits, which is cut off. This quotient of two integers has a nonterminating binary expansion that is not a binary floating-point number. 
 
-If a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. One could also use **BigFloats** that have an arbitrary amount of precision. "
+This is a confusing and seemingly stupid aspect of floating-point arithmetic. We have a real arithmetic operation on two floating-point numbers that does not result in another floating-point number. 
+
+This system is not stupid though, it is just different. In the decimal system we don't have a correct representation of 1/3 and we normally round it to something like 0.33. We don't expect 0.33 + 0.33 + 0.33 = 1. Computers use binary because it is fast and quite accurate for most cases.  
+
+In general, if a number that is not representable as a floating point number is entered into the computer then it must be rounded to obtain a floating-point number. It is possible to then have rounding errors on human-readable decimal values for both input and output. There is something called [decimal floating point](https://en.wikipedia.org/wiki/Decimal_floating_point) that avoids this particular issue, but it is slow and only used for relatively specialised purposes. We will cover this in another example toward the end of the session. One could also use **BigFloats** that have an arbitrary amount of precision. "
 
 # ╔═╡ e54c99d8-7c74-11eb-29cc-f5d7f64c4937
 md" Given the previous example why do you think the following example is different?"
@@ -442,7 +468,7 @@ md" Given the previous example why do you think the following example is differe
 1.0 + 1.0 == 2.0
 
 # ╔═╡ 314c5f4e-7c75-11eb-2b48-5787c4c781c9
-md" This is since basic mathematical operations like addition and subtraction are guaranteed to be true for integer arithmetic in floating point until you exceed the largest representable integer in your precision. This is a more subtle point and requires some further reading in the fundamental axioms of floating point arithmetic."
+md" This is since basic mathematical operations like addition and subtraction are guaranteed to be true for **integer arithmetic** in floating point until you exceed the largest representable integer in your precision. This is a more subtle point and requires some further reading in the fundamental axioms of floating point arithmetic."
 
 # ╔═╡ 3310e738-7ac1-11eb-38ea-2f1cfc2f0090
 md"Let us illustrate with another example that exact arithmetic and computer arithmetic don't always give the same answers. Consider the following:"
@@ -464,7 +490,16 @@ e
 f
 
 # ╔═╡ fbf35d0a-7b77-11eb-3b36-194f011f00ab
-md" Even though the statements are mathematically the same (by the associative property of addition and subtraction), if we compare the values we see that `e` > `f`. In this case this is because adding numbers of different magnitudes does not always work like you would want. In the example, when we added $10^{-20}$ to $1$, it got rounded away. This means the floating point arithmetic is not associative in general. "
+md" Even though the statements are mathematically the same (by the associative property of addition and subtraction), if we compare the values we see that `e` > `f`. In this case this is because adding numbers of different magnitudes does not always work like you would want. In the example, when we added $10^{-20}$ to $1$, it got rounded away. This means the floating point arithmetic is not associative in general! "
+
+# ╔═╡ 712345f0-855e-11eb-13aa-e168cfbcbd43
+md" ##### Avoiding rounding error"
+
+# ╔═╡ 92329bda-855e-11eb-30f7-c962f990ad51
+md" The next question should then be, how can I avoid this rounding error?" 
+
+# ╔═╡ a86b3cc0-855e-11eb-2dbd-638f2ea6a9a5
+md" There are a few options, some more elegant than other. If you really need your calculations to add up exactly then use the decimal datatype as previosuly suggested. If you only want to do the calculation up to a certain amount of decimal places then then you can arbitrarilly format the results to only round to a fixed number of digits. Finally, you can try and work with integers. If you are, for example, working with 23 cents as 0.23, instead rework your calculations to cents instead of Rand. This means that all your operations are now done in integer arithmetic. "
 
 # ╔═╡ ad6d4176-8321-11eb-2cf0-89aa37f483f5
 md" #### Catastrophic cancellation"
@@ -815,6 +850,10 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─1d08b996-84eb-11eb-0736-510e5f7cdd1f
 # ╟─5cf34e4e-7867-11eb-18ff-01b71b0d5934
 # ╟─7c389718-8321-11eb-2e05-d3969090fe0e
+# ╟─95f1bb86-855f-11eb-0a7f-2312eb99af3b
+# ╟─6e09a5ca-855f-11eb-3d9a-cfc22abd2711
+# ╟─ac2024b0-855f-11eb-36f8-c9f4242f1220
+# ╠═c020f2c8-855f-11eb-0138-f3dd85fe9cca
 # ╟─0926daac-7ccb-11eb-21ca-391422834af3
 # ╠═bd2cb4c8-8323-11eb-34dc-a1cdf2cccb25
 # ╟─d12e4e0a-8323-11eb-0d74-6b574609a909
@@ -826,6 +865,8 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─479d8d1c-8324-11eb-2d03-8dfbf74ea283
 # ╟─8fdc5676-8324-11eb-01c6-b1f82b890a40
 # ╠═ac567efc-7867-11eb-07c3-21989feec15c
+# ╟─629ed6e4-855d-11eb-0fd8-0907510d4e78
+# ╠═58966d9c-855d-11eb-237c-cb41ffd09421
 # ╟─31795f9a-7b7a-11eb-1786-89aad77aff4b
 # ╠═de5fc23a-7b7a-11eb-12b0-a513044b39a6
 # ╟─e7475a98-7b7a-11eb-00a2-63e52e403c16
@@ -838,6 +879,9 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╠═f3fce35a-7b77-11eb-0935-13399babee72
 # ╠═f80d6c4e-7b77-11eb-31bc-d55c9905b0a6
 # ╟─fbf35d0a-7b77-11eb-3b36-194f011f00ab
+# ╟─712345f0-855e-11eb-13aa-e168cfbcbd43
+# ╟─92329bda-855e-11eb-30f7-c962f990ad51
+# ╟─a86b3cc0-855e-11eb-2dbd-638f2ea6a9a5
 # ╟─ad6d4176-8321-11eb-2cf0-89aa37f483f5
 # ╟─0b370ade-7b5d-11eb-14ae-8fb84aa69edc
 # ╠═19fd463c-7b5d-11eb-342c-293f27a0f396

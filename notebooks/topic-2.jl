@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.12
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -9,10 +9,10 @@ begin
 	import Pkg
 	Pkg.activate(mktempdir())
 	Pkg.add([
-			Pkg.PackageSpec(name="Images", version="0.22.4"), 
-			Pkg.PackageSpec(name="ImageMagick", version="0.7"), 
-			Pkg.PackageSpec(name="PlutoUI", version="0.7"), 
-			Pkg.PackageSpec(name="HypertextLiteral", version="0.5"), 
+			Pkg.PackageSpec(name="Images"), 
+			Pkg.PackageSpec(name="ImageMagick"), 
+			Pkg.PackageSpec(name="PlutoUI"), 
+			Pkg.PackageSpec(name="HypertextLiteral"), 
 			Pkg.PackageSpec(name="ForwardDiff")
 			])
 
@@ -24,23 +24,48 @@ begin
 end
 
 # ╔═╡ 7819e032-7c56-11eb-290b-23dc34edfc58
-md"# Transformations and Autodiff "
+md"# Functions and Transformations"
 
 # ╔═╡ d88705f0-7c57-11eb-1950-bd54523e4a72
-md" This section takes inspiration from a course on computational thinking that is presented at MIT, which can be found [here](https://computationalthinking.mit.edu/Spring21/). Much of what we present here has been taken directly from these notes. We will start with basics on functions and arrays, in order to make sure everyone is one the same page with respect to these fundamental concepts. Once these topics have been covered, we move to a really cool way in which you can take derivatives, which is called `Autodiff`, which is short for automatic differentiation. This method of taking derivatives is a bit different from the numerical differentiation techniques that we will talk about later in the reading group. It is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. Finally, we will cover some basic foundational concepts in linear algebra, which will be useful for our next session inverses and solutions of linear systems of equations."
+md" This section takes inspiration from a course on computational thinking that is presented at MIT, which can be found [here](https://computationalthinking.mit.edu/Spring21/). Much of what we present here has been taken directly from these notes. We will start with basics on functions and arrays, in order to make sure everyone is one the same page with respect to these fundamental concepts. 
+
+Once these topics have been covered, we move to a really cool way in which you can take derivatives, which is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
+
+This method of taking derivatives is a bit different from the numerical differentiation techniques that we will talk about later in the reading group. It is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. Finally, we will cover some basic foundational concepts in linear algebra, which will be useful for our next session inverses and solutions of linear systems of equations."
 
 # ╔═╡ 45aed8a2-7c59-11eb-3f69-e701041d6a30
-md" ## Functions in Julia"
+md" ## Functions (in Julia)"
 
 # ╔═╡ 7cfa32e4-7c58-11eb-32c0-5760739f6de4
 md"""
-Before we get started with automatic differentiation, let us just make sure that everyone is up to speed on the basics of functions. In high school you learned about univariate functions e.g. 
-- $f₁(x)=x^2$
-- $f₂(x)=\sin(x)$
-- $f₃(x)=x^\alpha$
+Before we get started with automatic differentiation, let us just make sure that everyone is up to speed on the basics of functions. Remember that a function is defined as a relation which assigns to each element in the domain a **single element** in the range. A relation is a set of ordered pairs, $(x, y)$. The set of first coordinates is the domain, the set of second coordinates the range of the relation. Therefore a function is simply a mapping from values in the domain to a single value in the range. 
+
+The first type of functions you learned about were **univariate** functions or real-valued functions functions of a single variable e.g. $f₁(x)=x^2$, $f₂(x)=\sin(x)$, $f₃(x)=x^\alpha$.
 
 In _Julia_, functions can be written in short form, anonymous form, or long form.
 """
+
+# ╔═╡ a3d72150-87e9-11eb-29de-7d2adebbf9a7
+f₁(x) = x^2 # Short form
+
+# ╔═╡ cb0ac2ce-87e9-11eb-3c26-ed50a59978be
+x -> sin(x) # Anonymous form
+
+# ╔═╡ dfcad438-87e9-11eb-0fd2-218a4806a08c
+# Long form (most frequently used)
+
+function f₃(x, α = 3)
+	x^α
+end
+
+# ╔═╡ 6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
+md" In terms of these univariate functions it is easy to perform automatic differentiation. This method of differentiation is different from symbolic differentiaion that you will encounter in calculus or numerical differentition via first differences."
+
+# ╔═╡ c0cb6d4a-87ec-11eb-348b-e540882173e3
+md" There are several packages available to perform automatic differentiation in _Julia_. [Here](https://juliadiff.org/) is a curated list of all actively maintained `autodiff` packages." 
+
+# ╔═╡ b930ded2-87ea-11eb-3f26-3d4e1597615b
+md" First, let us illustrate how symbolic differentiation would look in _Julia_ and then turn to automatic differentiation (with numerical methods covered in later sessions)."
 
 # ╔═╡ 22845838-7c5a-11eb-2206-55a258d0d8ee
 md" ## Arrays in Julia "
@@ -87,6 +112,12 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─d88705f0-7c57-11eb-1950-bd54523e4a72
 # ╟─45aed8a2-7c59-11eb-3f69-e701041d6a30
 # ╟─7cfa32e4-7c58-11eb-32c0-5760739f6de4
+# ╠═a3d72150-87e9-11eb-29de-7d2adebbf9a7
+# ╠═cb0ac2ce-87e9-11eb-3c26-ed50a59978be
+# ╠═dfcad438-87e9-11eb-0fd2-218a4806a08c
+# ╟─6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
+# ╟─c0cb6d4a-87ec-11eb-348b-e540882173e3
+# ╟─b930ded2-87ea-11eb-3f26-3d4e1597615b
 # ╟─22845838-7c5a-11eb-2206-55a258d0d8ee
 # ╟─b17e4bca-7c5a-11eb-08fa-571bb45b7a3e
 # ╟─20c57a22-7c5a-11eb-2b4e-57ef185f5c53

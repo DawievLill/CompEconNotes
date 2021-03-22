@@ -86,7 +86,7 @@ md" Autodifferentiation is used in many machine learning and scientific computin
 ForwardDiff.derivative(f₁, 10) # Derivative of x² evaluated at x = 10
 
 # ╔═╡ cb201760-8b38-11eb-266a-0572493239ae
-ForwardDiff.derivative( x -> f₃(x, 3), 10) # Derivative of x³ at x = 10, with α = 3
+ForwardDiff.derivative( x -> f₃(x, 3), 10) # Derivative of x³ at x = 10
 
 # ╔═╡ 93607132-8b38-11eb-0359-2705eb558814
 md" As observed from the last equation, we could also use the anonymous function notation. In this case with the parameter set to $\alpha = 3$."
@@ -127,6 +127,38 @@ md" ### Scalar valued multivariate functions "
 md" Let us consider an example of a scalar valued multivariate function $f_5(x): \mathbb{R}^{3} \rightarrow \mathbb{R}$,
 
 $f_5(\textbf{x}) = 5\sin(x_1 * x_2) + 2x_2 / 4x_3$" 
+
+# ╔═╡ 189c3176-8b44-11eb-03fe-71a833f4d5e6
+md" There are multiple ways in Julia in which we can write this type of function. One can represent it as a function of many variables or a function of a vector. "
+
+# ╔═╡ c68350a4-8b43-11eb-0113-8ff369685239
+# Different ways to represent scalar valued multivariate function
+
+begin
+	f₅(x, y, z) = 5sin(x*y) + 2y/4z
+	f₅(v) = 5sin(v[1]*v[2]) + 2*v[2]/4v[3] 
+end
+
+# ╔═╡ 8711b310-8b44-11eb-3311-0b51038cab72
+md" Once the code cell has been executed, you will see that a `generic function with 2 methods` has been created. In this case, depending on whether you use a vector or list with three elements, you will call a different version of $f_5$. Let us illustrate with an example. "
+
+# ╔═╡ a3188eb2-8b44-11eb-3043-6faea3ffd81f
+f₅(1,2,3) # Input is a list of three elements (x, y, z)
+
+# ╔═╡ abde4208-8b44-11eb-1e72-29ca3336a118
+f₅([1,2,3]) # Input is a vector v (with three elements)
+
+# ╔═╡ 0903d2fe-8b45-11eb-2700-292eac0f88f7
+md" There is an even more efficient way of coding the portion above. Remember that programmers are lazy and don't want to copy code. You want to reuse code as much as possible. Look at the following code block and see if you can figure out how this abstraction works. I think it is quite elegant. " 
+
+# ╔═╡ ca4cf144-8b44-11eb-11a7-9f5b1511f14f
+begin
+	f₆(x, y, z)  = 5sin(x*y) + 2y/4z
+	f₆(v) = f₆(v[1], v[2], v[3]) # Does this part make sense to you? Think about what this is actually doing. 
+end
+
+# ╔═╡ 6685b140-8b45-11eb-08b8-6dc1fefab50b
+f₆(1,2,3), f₆([1,2,3])
 
 # ╔═╡ 42a95eec-8b3c-11eb-3f28-87ce9f6676d9
 md" ## Transformations "
@@ -314,6 +346,14 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─f603ce46-8b41-11eb-0d87-99b9c580169e
 # ╟─cf684c20-8b42-11eb-36e0-c318082f9f4f
 # ╟─e1cca2ee-8b42-11eb-0471-23a6523e7779
+# ╟─189c3176-8b44-11eb-03fe-71a833f4d5e6
+# ╠═c68350a4-8b43-11eb-0113-8ff369685239
+# ╟─8711b310-8b44-11eb-3311-0b51038cab72
+# ╠═a3188eb2-8b44-11eb-3043-6faea3ffd81f
+# ╠═abde4208-8b44-11eb-1e72-29ca3336a118
+# ╟─0903d2fe-8b45-11eb-2700-292eac0f88f7
+# ╠═ca4cf144-8b44-11eb-11a7-9f5b1511f14f
+# ╠═6685b140-8b45-11eb-08b8-6dc1fefab50b
 # ╟─42a95eec-8b3c-11eb-3f28-87ce9f6676d9
 # ╟─53bdd262-8b3c-11eb-34dd-27145fede5d1
 # ╟─081d69e2-8b3e-11eb-0559-b554269d230d

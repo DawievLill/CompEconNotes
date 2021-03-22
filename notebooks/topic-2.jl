@@ -22,7 +22,8 @@ begin
 			Pkg.PackageSpec(name="ImageMagick"), 
 			Pkg.PackageSpec(name="PlutoUI"), 
 			Pkg.PackageSpec(name="HypertextLiteral"), 
-			Pkg.PackageSpec(name="ForwardDiff")
+			Pkg.PackageSpec(name="ForwardDiff"), 
+			Pkg.PackageSpec(name="SymEngine")
 			])
 
 	using Images
@@ -30,6 +31,7 @@ begin
 	using HypertextLiteral
 	using LinearAlgebra
 	using ForwardDiff  # Automatic differentiation package
+	using SymEngine  # Symbolic differentiation package
 end
 
 # ╔═╡ 7819e032-7c56-11eb-290b-23dc34edfc58
@@ -100,9 +102,13 @@ md" We will not cover the notion of a finite difference approximation in detail 
 Note: Remember from calculus that the derivative of $\sin(x)$ is $\cos(x)$. "
 
 # ╔═╡ bd76ca72-8b39-11eb-0147-252776c0eddf
-md" The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation. You will see that finite differences utilises the limit definition of a derivative, namely 
+md" The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation. 
 
-$\lim_{\epsilon \rightarrow 0}\frac{\sin(1+\epsilon) - \sin(1)}{\epsilon}$"
+Finite differences utilises the limit definition of a derivative, namely 
+
+$\frac{df_{4}(x)}{dx} \equiv \lim_{\epsilon \rightarrow 0}\frac{\sin(1+\epsilon) - \sin(1)}{\epsilon}$
+
+In this case the limit equation above showcases the *forward difference* representation."
 
 # ╔═╡ 75f95eb2-8b39-11eb-211f-512a656e2f36
 begin
@@ -116,6 +122,24 @@ end
 
 # ╔═╡ a567131a-8b39-11eb-0769-11888a3de6b6
 (sin(1+ϵ)-sin(1))/ϵ , cos(1), ForwardDiff.derivative(sin,1)
+
+# ╔═╡ 3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
+md" #### What about symbolic differentiation? "
+
+# ╔═╡ 1a011e5c-8b4c-11eb-1996-ed9145ec9ee7
+md" An alternative to automatic differentiation and finite differences would be to use the _SymEngine.jl_ package to do symbolic differentiation. One could also use the _SymPy_ package from Python directly in Julia. For symbolic differentiation and manipulation _Mathematica_ is probably the most sophisticated, so if you have to do symbolic work, you should work in that space.  "
+
+# ╔═╡ 57a46a0a-8b4c-11eb-1210-cf6a303f32ac
+@vars s;
+
+# ╔═╡ 5da00e52-8b4c-11eb-199c-c1b0fda27cc3
+f₄ = sin(s)
+
+# ╔═╡ 75ed19fa-8b4c-11eb-0873-4b96f4617096
+diff(f₄, s)
+
+# ╔═╡ 97c0c0a4-8b4c-11eb-218d-6fb509350f95
+md" This seems to give us the answer that we were looking for. The derivative of $\sin(x)$ is $\cos(x)$."
 
 # ╔═╡ f603ce46-8b41-11eb-0d87-99b9c580169e
 md" Next we move into the world of scalar valued multivariate functions. A scalar valued function takes one or more inputs and only retuns a single value. So this means that our function in this setting will take in multiple variables with potentially different values attached to those variables and only return a single value. A general case would be an $n$-variable scalar valued function that maps from the space $\mathbb{R}^{n}$ to $\mathbb{R}$." 
@@ -343,6 +367,12 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─75f95eb2-8b39-11eb-211f-512a656e2f36
 # ╠═9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
 # ╠═a567131a-8b39-11eb-0769-11888a3de6b6
+# ╟─3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
+# ╟─1a011e5c-8b4c-11eb-1996-ed9145ec9ee7
+# ╠═57a46a0a-8b4c-11eb-1210-cf6a303f32ac
+# ╠═5da00e52-8b4c-11eb-199c-c1b0fda27cc3
+# ╠═75ed19fa-8b4c-11eb-0873-4b96f4617096
+# ╟─97c0c0a4-8b4c-11eb-218d-6fb509350f95
 # ╟─f603ce46-8b41-11eb-0d87-99b9c580169e
 # ╟─cf684c20-8b42-11eb-36e0-c318082f9f4f
 # ╟─e1cca2ee-8b42-11eb-0471-23a6523e7779

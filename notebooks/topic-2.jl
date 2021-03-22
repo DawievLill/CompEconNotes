@@ -65,7 +65,24 @@ md" In terms of these univariate functions it is easy to perform automatic diffe
 md" There are several packages available to perform automatic differentiation in _Julia_. [Here](https://juliadiff.org/) is a curated list of all actively maintained `autodiff` packages." 
 
 # ╔═╡ b930ded2-87ea-11eb-3f26-3d4e1597615b
-md" First, let us illustrate how symbolic differentiation would look in _Julia_ and then turn to automatic differentiation (with numerical methods covered in later sessions)."
+md" Autodifferentiation is used in many machine learning and scientific computing applications, so it is a useful tool to know. In order to take calculate the derivative of our function $f₁(x)$ and it evaluate it at $x = 10$ we only have to do the following."
+
+# ╔═╡ 5e60acc0-8b38-11eb-11be-3bb33c2e8c72
+ForwardDiff.derivative(f₁, 10) # Evaluated at x = 10
+
+# ╔═╡ 93607132-8b38-11eb-0359-2705eb558814
+md" We could also use the anonymous function notation, with the parameter set to $\alpha = 3$."
+
+# ╔═╡ cb201760-8b38-11eb-266a-0572493239ae
+ForwardDiff.derivative( x -> f₃(x, 3), 10)
+
+# ╔═╡ e9c48a0c-8b38-11eb-373e-3fc1ea18d52b
+md" We will not cover the notion of a finite difference approximation in detail yet, but consider the following example to see how much better the derivative approximation of $f₅(x) = \sin(x)$ evaluated at $x = 1$ is in the case of automatic differentiation. 
+
+Note: Remember from calculus that the derivative of $\sin(x)$ is $\cos(x)$. "
+
+# ╔═╡ 75f95eb2-8b39-11eb-211f-512a656e2f36
+
 
 # ╔═╡ 22845838-7c5a-11eb-2206-55a258d0d8ee
 md" ## Arrays in Julia "
@@ -118,7 +135,12 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
 # ╟─c0cb6d4a-87ec-11eb-348b-e540882173e3
 # ╟─b930ded2-87ea-11eb-3f26-3d4e1597615b
-# ╟─22845838-7c5a-11eb-2206-55a258d0d8ee
+# ╠═5e60acc0-8b38-11eb-11be-3bb33c2e8c72
+# ╟─93607132-8b38-11eb-0359-2705eb558814
+# ╠═cb201760-8b38-11eb-266a-0572493239ae
+# ╟─e9c48a0c-8b38-11eb-373e-3fc1ea18d52b
+# ╠═75f95eb2-8b39-11eb-211f-512a656e2f36
+# ╠═22845838-7c5a-11eb-2206-55a258d0d8ee
 # ╟─b17e4bca-7c5a-11eb-08fa-571bb45b7a3e
 # ╟─20c57a22-7c5a-11eb-2b4e-57ef185f5c53
 # ╠═7ec6d044-7c58-11eb-112d-5d8be6b4288c

@@ -42,7 +42,7 @@ md" This session draws heavily from a course on computational thinking that is p
 
 Once these topics have been covered, we move to a really cool way in which you can take derivatives, which is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
 
-This method of taking derivatives is a bit different from the numerical differentiation techniques that we will talk about later in the reading group. It is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. Finally, we will cover some basic foundational concepts in linear algebra, which will be useful for our next session inverses and solutions of linear systems of equations."
+This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. Finally, we will cover some basic foundational concepts in linear algebra, which will be useful for our next session inverses and solutions of linear systems of equations."
 
 # ╔═╡ 45aed8a2-7c59-11eb-3f69-e701041d6a30
 md" ## Functions (in Julia)"
@@ -97,18 +97,20 @@ md" As observed from the last equation, we could also use the anonymous function
 md" #### Finite differences vs autodiff"
 
 # ╔═╡ e9c48a0c-8b38-11eb-373e-3fc1ea18d52b
-md" We will not cover the notion of a finite difference approximation in detail yet, but consider the following example to see how much better the derivative approximation of $f_4(x) = \sin(x)$ evaluated at $x = 1$ is in the case of automatic differentiation. 
+md" Consider the following example to see how much better the automatic differentiation representation of $f_4(x) = \sin(x)$ is compared to that of finite differences. 
 
 Note: Remember from calculus that the derivative of $\sin(x)$ is $\cos(x)$. "
 
 # ╔═╡ bd76ca72-8b39-11eb-0147-252776c0eddf
-md" The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation. 
+md" Finite differences utilises the limit definition of a derivative, namely 
 
-Finite differences utilises the limit definition of a derivative, namely 
+$\frac{df_{4}(x)}{dx} \equiv \lim_{\epsilon \rightarrow 0}\frac{\sin(x+\epsilon) - \sin(x)}{\epsilon}$
 
-$\frac{df_{4}(x)}{dx} \equiv \lim_{\epsilon \rightarrow 0}\frac{\sin(1+\epsilon) - \sin(1)}{\epsilon}$
+The finite difference method computes the difference between two values that differ by a finite step size. There are three main approaches. In the case represented above the limit equation showcases the *forward difference* representation.
 
-In this case the limit equation above showcases the *forward difference* representation."
+The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation. 
+
+"
 
 # ╔═╡ 75f95eb2-8b39-11eb-211f-512a656e2f36
 begin
@@ -119,6 +121,9 @@ end
 
 # ╔═╡ 9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
 ϵ = 10.0^e
+
+# ╔═╡ 327cf250-8b4f-11eb-16b6-e709eb78504c
+md" The different approaches are finite differences, symbolic differentiation, automatic differentiation. These representations are evaluated at $x = 1$ below." 
 
 # ╔═╡ a567131a-8b39-11eb-0769-11888a3de6b6
 (sin(1+ϵ)-sin(1))/ϵ , cos(1), ForwardDiff.derivative(sin,1)
@@ -183,6 +188,9 @@ end
 
 # ╔═╡ 6685b140-8b45-11eb-08b8-6dc1fefab50b
 f₆(1,2,3), f₆([1,2,3])
+
+# ╔═╡ a83a91e8-8b4d-11eb-02f1-0506c0723d00
+md" The gradient is a generalisation of the concept of derivative to multivariate functions. It provides the local slope of the function, which gives some idea of what is going to happen if take a small step in a certain direction on that function. Derivatives are slopes of tangent lines and gradients we know that the gradients point in the direction of steepest ascent of the tangent hyperplane. Extend the idea of line to hyperplane for multivariate functions. "
 
 # ╔═╡ 42a95eec-8b3c-11eb-3f28-87ce9f6676d9
 md" ## Transformations "
@@ -366,6 +374,7 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─bd76ca72-8b39-11eb-0147-252776c0eddf
 # ╟─75f95eb2-8b39-11eb-211f-512a656e2f36
 # ╠═9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
+# ╟─327cf250-8b4f-11eb-16b6-e709eb78504c
 # ╠═a567131a-8b39-11eb-0769-11888a3de6b6
 # ╟─3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
 # ╟─1a011e5c-8b4c-11eb-1996-ed9145ec9ee7
@@ -384,6 +393,7 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─0903d2fe-8b45-11eb-2700-292eac0f88f7
 # ╠═ca4cf144-8b44-11eb-11a7-9f5b1511f14f
 # ╠═6685b140-8b45-11eb-08b8-6dc1fefab50b
+# ╟─a83a91e8-8b4d-11eb-02f1-0506c0723d00
 # ╟─42a95eec-8b3c-11eb-3f28-87ce9f6676d9
 # ╟─53bdd262-8b3c-11eb-34dd-27145fede5d1
 # ╟─081d69e2-8b3e-11eb-0559-b554269d230d

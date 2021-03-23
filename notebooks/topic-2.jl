@@ -35,14 +35,14 @@ begin
 end
 
 # ╔═╡ 7819e032-7c56-11eb-290b-23dc34edfc58
-md"# Functions and Transformations"
+md"# Functions and Differentiation"
 
 # ╔═╡ d88705f0-7c57-11eb-1950-bd54523e4a72
 md" This session draws heavily from a course on computational thinking that is presented at MIT, which can be found [here](https://computationalthinking.mit.edu/Spring21/). Much of what we present here has been taken directly from these notes. We will start with basics on functions and arrays, in order to make sure everyone is one the same page with respect to these fundamental concepts. 
 
 Once these topics have been covered, we move to a really cool way in which you can take derivatives, which is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
 
-This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. Finally, we will cover some basic foundational concepts in linear algebra, which will be useful for our next session inverses and solutions of linear systems of equations."
+This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. "
 
 # ╔═╡ 45aed8a2-7c59-11eb-3f69-e701041d6a30
 md" ## Functions (in Julia)"
@@ -192,136 +192,6 @@ f₆(1,2,3), f₆([1,2,3])
 # ╔═╡ a83a91e8-8b4d-11eb-02f1-0506c0723d00
 md" The gradient is a generalisation of the concept of derivative to multivariate functions. It provides the local slope of the function, which gives some idea of what is going to happen if take a small step in a certain direction on that function. Derivatives are slopes of tangent lines and gradients we know that the gradients point in the direction of steepest ascent of the tangent hyperplane. Extend the idea of line to hyperplane for multivariate functions. "
 
-# ╔═╡ 42a95eec-8b3c-11eb-3f28-87ce9f6676d9
-md" ## Transformations "
-
-# ╔═╡ 53bdd262-8b3c-11eb-34dd-27145fede5d1
-md" In mathematics you will have dealt with matrices and how to multiply them with each other and also with specific scalar values and vectors. Normally we teach you about matrices as tables of numbers while vectors contain columns or rows of values. You then proceed with learning all the rules of multiplication in addition. The good news is that this creates a way of thinking about operations between these mathematical constructs. However, it turns out that we are really bad at calculating these things in practice and that computers can do a much better job. Unfortunately we spend so much time teaching you about the operations of multiplication and addition that we fail to mention the intuition behind these transformations. In this next section we will delve a bit deeper into the intuition behind transformations and let the computer do all the computing. "
-
-# ╔═╡ 081d69e2-8b3e-11eb-0559-b554269d230d
-md" #### Transformation of images "
-
-# ╔═╡ 60e945d8-8b3d-11eb-3daa-d1384ce38fa4
-img_sources = ["https://user-images.githubusercontent.com/6933510/108883855-39690f80-7606-11eb-8eb1-e595c6c8d829.png" => "Arrows"]
-
-# ╔═╡ 8052e5be-8b3d-11eb-35a7-3dab7c30725b
-md"""
-You can choose an image from the dropwdown list below. You first need to add the image to the list above, with the appropriate name.
-
-**Choose image from list below:**
-
-$(@bind img_source Select(img_sources))
-"""
-
-# ╔═╡ b69b8d60-8b3d-11eb-1e92-35b001821ec9
-md" The slider below represents different values of $\alpha$"
-
-# ╔═╡ 986d0dbe-8b3d-11eb-2d42-91df7b63834b
-md"""
-$(@bind α Slider(.1:.1:3, show_value=true))
-"""
-
-# ╔═╡ a7d507ca-8b3d-11eb-1684-d5c042f3e5ef
-let
-
-range = -1.5:.1:1.5
-md"""
-This is a "scrubbable matrix" -- click on the number and drag to change.	
-	
-``(``	
- $(@bind a Scrubbable( range; default=1.0))
- $(@bind b Scrubbable( range; default=0.0))
-``)``
-
-``(``
-$(@bind c Scrubbable(range; default=0.0 ))
-$(@bind d Scrubbable(range; default=1.0))
-``)``
-	
-	**Re-run this cell to reset to identity transformation**
-"""
-end
-
-# ╔═╡ 8e5744f6-8b3e-11eb-3476-aba7c0c14df8
-
-
-# ╔═╡ 89f18e9e-8b3e-11eb-09f0-994df6d2d7ad
-det_A = 1.0
-
-# ╔═╡ ff3b70c0-8b3e-11eb-33da-47380409009d
-begin
-	 idy((x,y)) = [x,y]
-	 lin1((x,y)) =  [ 2x + 3y, -5x+4x ]
-	 scalex(α) = ((x,y),) -> (α*x, y)
-	 scaley(α) = ((x,y),) -> (x,   α*y)
-	 rot(θ) = ((x,y),) -> [cos(θ)*x + sin(θ)*y, -sin(θ)*x + cos(θ)*y]
-	 shear(α) = ((x,y),) -> [x+α*y,y]
-	 genlin(a,b,c,d) = ((x,y),) -> [ a*x + b*y ; c*x + d*y ]
-end
-
-# ╔═╡ 7a465ccc-8b3e-11eb-3a83-81f5e1bf996f
-begin
-	white(c::RGB) = RGB(1,1,1)
-	white(c::RGBA) = RGBA(1,1,1,0.75)
-end
-
-# ╔═╡ d831c2d6-8b3e-11eb-1ee9-33fdd15e72cd
-md"""
-center zoom = $(@bind z Slider(.1:.1:3, show_value=true, default=1))
-"""
-
-# ╔═╡ 714bad96-8b3e-11eb-196b-078e626f55a4
-function trygetpixel(img::AbstractMatrix, x::Float64, y::Float64)
-	rows, cols = size(img)
-	
-	"The linear map [-1,1] ↦ [0,1]"
-	f = t -> (t - -1.0)/(1.0 - -1.0)
-	
-	i = floor(Int, rows *  f(-y) / z)
-	j = floor(Int, cols *  f(x * (rows / cols))  / z)
- 
-	if 1 < i ≤ rows && 1 < j ≤ cols
-		img[i,j]
-	else
-		white(img[1,1])
-
-	end
-end
-
-# ╔═╡ d12685da-8b3e-11eb-38e7-e73d07b4589d
-md"""
-top left zoom =	$(@bind f Slider(.1:1:3, show_value=true, default=1))
-"""
-
-# ╔═╡ def5ec32-8b3e-11eb-185f-e701c61f84ab
-T = shear(1) # Pick a transformation
-#T = genlin(a,b,c,d)
-
-# ╔═╡ 8ffa6bb2-8b3e-11eb-2e3b-a3df10c48baf
-[
-	if det_A == 0
-		RGB(1.0, 1.0, 1.0)
-	else
-		
-		 # in_x, in_y = A \ [out_x, out_y]
-         # in_x, in_y = xy( [out_x, out_y] )
-		in_x, in_y =  T([out_x, out_y])
-		trygetpixel(img, in_x, in_y)
-	end
-	
-	for out_y in LinRange(f, -f, 500),
-		out_x in LinRange(-f, f, 500)
-]
-
-# ╔═╡ 22845838-7c5a-11eb-2206-55a258d0d8ee
-md" ### Arrays in Julia "
-
-# ╔═╡ b17e4bca-7c5a-11eb-08fa-571bb45b7a3e
-md" An array is a rectangular grid that is used for storing data of any type. We can store and retrieve data within this array by using indexing. You might have encountered arrays in mathematics under the name of matrices. An array can be one-dimensional, two-dimensional, three-dimensional and so forth. The dimension gives us an idea of the number of indices that we need to specify. For array objects we also need to know the length of the data in each of the dimensions. "
-
-# ╔═╡ 20c57a22-7c5a-11eb-2b4e-57ef185f5c53
-md" It might sound arbitrary at first to focus on things like dimension and length of arrays, but take it from me, you will frequently want to know the properties of the arrays that you are working with."
-
 # ╔═╡ 7ec6d044-7c58-11eb-112d-5d8be6b4288c
 
 
@@ -394,26 +264,6 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╠═ca4cf144-8b44-11eb-11a7-9f5b1511f14f
 # ╠═6685b140-8b45-11eb-08b8-6dc1fefab50b
 # ╟─a83a91e8-8b4d-11eb-02f1-0506c0723d00
-# ╟─42a95eec-8b3c-11eb-3f28-87ce9f6676d9
-# ╟─53bdd262-8b3c-11eb-34dd-27145fede5d1
-# ╟─081d69e2-8b3e-11eb-0559-b554269d230d
-# ╟─60e945d8-8b3d-11eb-3daa-d1384ce38fa4
-# ╟─8052e5be-8b3d-11eb-35a7-3dab7c30725b
-# ╟─b69b8d60-8b3d-11eb-1e92-35b001821ec9
-# ╟─986d0dbe-8b3d-11eb-2d42-91df7b63834b
-# ╟─a7d507ca-8b3d-11eb-1684-d5c042f3e5ef
-# ╠═8e5744f6-8b3e-11eb-3476-aba7c0c14df8
-# ╠═89f18e9e-8b3e-11eb-09f0-994df6d2d7ad
-# ╟─ff3b70c0-8b3e-11eb-33da-47380409009d
-# ╟─714bad96-8b3e-11eb-196b-078e626f55a4
-# ╟─7a465ccc-8b3e-11eb-3a83-81f5e1bf996f
-# ╟─d831c2d6-8b3e-11eb-1ee9-33fdd15e72cd
-# ╟─d12685da-8b3e-11eb-38e7-e73d07b4589d
-# ╠═def5ec32-8b3e-11eb-185f-e701c61f84ab
-# ╠═8ffa6bb2-8b3e-11eb-2e3b-a3df10c48baf
-# ╟─22845838-7c5a-11eb-2206-55a258d0d8ee
-# ╟─b17e4bca-7c5a-11eb-08fa-571bb45b7a3e
-# ╟─20c57a22-7c5a-11eb-2b4e-57ef185f5c53
 # ╠═7ec6d044-7c58-11eb-112d-5d8be6b4288c
 # ╠═7ee10e48-7c58-11eb-2e3b-f5805d4af19c
 # ╠═7efab6f4-7c58-11eb-006e-412089f351a0

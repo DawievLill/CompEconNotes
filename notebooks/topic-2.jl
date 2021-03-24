@@ -23,7 +23,9 @@ begin
 			Pkg.PackageSpec(name="PlutoUI"), 
 			Pkg.PackageSpec(name="HypertextLiteral"), 
 			Pkg.PackageSpec(name="ForwardDiff"), 
-			Pkg.PackageSpec(name="SymEngine")
+			Pkg.PackageSpec(name="SymEngine"),
+			Pkg.PackageSpec(name="Plots"), 
+			Pkg.PackageSpec(name="GR"),
 			])
 
 	using Images
@@ -32,6 +34,8 @@ begin
 	using LinearAlgebra
 	using ForwardDiff  # Automatic differentiation package
 	using SymEngine  # Symbolic differentiation package
+	#using Plots
+	using GR
 end
 
 # ╔═╡ 7819e032-7c56-11eb-290b-23dc34edfc58
@@ -42,7 +46,7 @@ md" This session draws heavily from a course on computational thinking that is p
 
 Once these topics have been covered, we move to a really cool way in which you can take derivatives, which is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
 
-This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. "
+This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. An excellent reference for all things optimisation, which also uses Julia as the main code base, can be found [here](https://algorithmsbook.com/optimization/#). "
 
 # ╔═╡ 45aed8a2-7c59-11eb-3f69-e701041d6a30
 md" ## Functions (in Julia)"
@@ -190,37 +194,53 @@ end
 f₆(1,2,3), f₆([1,2,3])
 
 # ╔═╡ a83a91e8-8b4d-11eb-02f1-0506c0723d00
-md" The gradient is a generalisation of the concept of derivative to multivariate functions. It provides the local slope of the function, which gives some idea of what is going to happen if take a small step in a certain direction on that function. Derivatives are slopes of tangent lines and gradients we know that the gradients point in the direction of steepest ascent of the tangent hyperplane. Extend the idea of line to hyperplane for multivariate functions. "
+md" The gradient is a generalisation of the concept of derivative to multivariate functions. It provides the local slope of the function, which gives some idea of what is going to happen if take a small step in a certain direction on that function. In the single vairable setting derivatives are slopes of tangent lines, while in the multivariate case we know that the gradients point in the direction of steepest ascent of the tangent **hyperplane**. "
 
 # ╔═╡ 7ec6d044-7c58-11eb-112d-5d8be6b4288c
-
+md" #### Nabla! $\nabla$! "
 
 # ╔═╡ 7ee10e48-7c58-11eb-2e3b-f5805d4af19c
+md" In scientific computing and especially in machine learning one needs to take derivatives of multivariate functions in the direction of every argument. Collecting the partial derivatives in a vector provides us with the gradient. The gradient of the function $f$ evaluated at $\textbf{x}$ is normally written as $\nabla f(\textbf{x})$, where:
 
-
-# ╔═╡ 7efab6f4-7c58-11eb-006e-412089f351a0
-
+$\nabla f(\textbf{x}) = \left[\frac{\partial f(\textbf{x})}{\partial x_1}, \frac{\partial f(\textbf{x})}{\partial x_2}, \frac{\partial f(\textbf{x})}{\partial x_3}\right]$"
 
 # ╔═╡ 7f14d2fa-7c58-11eb-1e88-773a06148b22
-
+md" You can calculate this gradient explicitly in the manner specified below. This becomes a bit more difficult to do when the number of dimensions increase, but it is good to see in order to establish intuition for what we are doing. "
 
 # ╔═╡ 7f2f1b06-7c58-11eb-038e-15bd2b4d1dbb
+begin
+	∂f₅∂x =  (f₅(1+ϵ, 2, 3  ) -f₅(1, 2, 3)) / ϵ
+	∂f₅∂y =  (f₅(1, 2+ϵ, 3  ) -f₅(1, 2, 3)) / ϵ
+	∂f₅∂z =  (f₅(1, 2,   3+ϵ) -f₅(1, 2, 3)) / ϵ
+	∇f = [ ∂f₅∂x , ∂f₅∂y, ∂f₅∂z]
+end
 
+# ╔═╡ ef8bc500-8ce0-11eb-380f-618627e4d182
+md" A better alternative is to simply use automatic differentiation to find the gradient. In fact, most machine learning algorithms that are looking for specific loss functions are using automatic differentiation procedures."
 
-# ╔═╡ 7f495aca-7c58-11eb-0e35-1917e679988c
+# ╔═╡ 7efab6f4-7c58-11eb-006e-412089f351a0
+ForwardDiff.gradient(f₅, [1, 2, 3])
 
+# ╔═╡ f86ef080-8cdf-11eb-3540-59c2bd06a1e5
+md" #### Surface plots in Julia "
 
-# ╔═╡ 7f613bb8-7c58-11eb-259f-512e78668dc9
-
-
-# ╔═╡ 7f7b1022-7c58-11eb-3489-1f1311c1dc44
-
+# ╔═╡ d3d5e292-8cdf-11eb-1a17-8d5ceebaaf91
+md" Let us draw some figures here to illustrate the function in three dimensions. We can look at the function $f_{7}(\textbf{x}) = \sin(x_1) + \cos(x_2)$. This is a relatively easy function to work with. and has a nice three dimensional representation. This part is mostly for fun, to get used to the idea of graphing in Julia. We are using the GR backend in this case, but you can use whatever plotting backend that you prefer. The plotting in Julia is quite similar to Matlab and shares some similarity with Python's `matplotlib` package. "
 
 # ╔═╡ 7f9507f4-7c58-11eb-045d-ad36f4fb184a
-
+x₁ = 8 .* rand(100) .- 4;
 
 # ╔═╡ 7faea394-7c58-11eb-2529-c3881c14b364
+x₂ = 8 .* rand(100) .- 4;
 
+# ╔═╡ 50ad955c-8ce1-11eb-1e93-d7a3cc6a89fe
+f₇ = sin.(x₁) + cos.(x₂); 
+
+# ╔═╡ e1f0ef0a-8ce1-11eb-022b-adfd5162cdc2
+md" Now let us plot our surface plot of the function we defined. I think it looks pretty cool! "
+
+# ╔═╡ 88be634a-8ce1-11eb-0aa3-3f3783bc5eba
+wireframe(x₁, x₂, f₇)
 
 # ╔═╡ Cell order:
 # ╟─1c7f7f74-7c57-11eb-293a-d1be483a7ca0
@@ -264,13 +284,16 @@ md" The gradient is a generalisation of the concept of derivative to multivariat
 # ╠═ca4cf144-8b44-11eb-11a7-9f5b1511f14f
 # ╠═6685b140-8b45-11eb-08b8-6dc1fefab50b
 # ╟─a83a91e8-8b4d-11eb-02f1-0506c0723d00
-# ╠═7ec6d044-7c58-11eb-112d-5d8be6b4288c
-# ╠═7ee10e48-7c58-11eb-2e3b-f5805d4af19c
-# ╠═7efab6f4-7c58-11eb-006e-412089f351a0
-# ╠═7f14d2fa-7c58-11eb-1e88-773a06148b22
+# ╟─7ec6d044-7c58-11eb-112d-5d8be6b4288c
+# ╟─7ee10e48-7c58-11eb-2e3b-f5805d4af19c
+# ╟─7f14d2fa-7c58-11eb-1e88-773a06148b22
 # ╠═7f2f1b06-7c58-11eb-038e-15bd2b4d1dbb
-# ╠═7f495aca-7c58-11eb-0e35-1917e679988c
-# ╠═7f613bb8-7c58-11eb-259f-512e78668dc9
-# ╠═7f7b1022-7c58-11eb-3489-1f1311c1dc44
+# ╟─ef8bc500-8ce0-11eb-380f-618627e4d182
+# ╠═7efab6f4-7c58-11eb-006e-412089f351a0
+# ╟─f86ef080-8cdf-11eb-3540-59c2bd06a1e5
+# ╟─d3d5e292-8cdf-11eb-1a17-8d5ceebaaf91
 # ╠═7f9507f4-7c58-11eb-045d-ad36f4fb184a
 # ╠═7faea394-7c58-11eb-2529-c3881c14b364
+# ╠═50ad955c-8ce1-11eb-1e93-d7a3cc6a89fe
+# ╟─e1f0ef0a-8ce1-11eb-022b-adfd5162cdc2
+# ╠═88be634a-8ce1-11eb-0aa3-3f3783bc5eba

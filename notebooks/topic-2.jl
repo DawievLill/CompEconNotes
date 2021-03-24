@@ -42,9 +42,9 @@ end
 md"# Functions and Differentiation"
 
 # ╔═╡ d88705f0-7c57-11eb-1950-bd54523e4a72
-md" This session draws heavily from a course on computational thinking that is presented at MIT, which can be found [here](https://computationalthinking.mit.edu/Spring21/). Much of what we present here has been taken directly from these notes. We will start with basics on functions and arrays, in order to make sure everyone is one the same page with respect to these fundamental concepts. 
+md" This session draws heavily from a course on computational thinking that is presented at MIT, which can be found [here](https://computationalthinking.mit.edu/Spring21/). Much of what we present here has been taken directly from these notes. We will start with basics on functions, in order to make sure everyone is one the same page with respect to this fundamental concept. 
 
-Once these topics have been covered, we move to a really cool way in which you can take derivatives, which is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
+Once we have explored the idea of a function representation, we move to a really cool way in which you can take derivatives. This method is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
 
 This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. An excellent reference for all things optimisation, which also uses Julia as the main code base, can be found [here](https://algorithmsbook.com/optimization/#). "
 
@@ -242,6 +242,39 @@ md" Now let us plot our surface plot of the function we defined. I think it look
 # ╔═╡ 88be634a-8ce1-11eb-0aa3-3f3783bc5eba
 wireframe(x₁, x₂, f₇)
 
+# ╔═╡ 613e9af6-8ce6-11eb-148f-4b45244613bf
+md" ## Differentiable programming "
+
+# ╔═╡ 6ef45672-8ce6-11eb-0efc-89ebcee0e056
+
+
+# ╔═╡ 6ed8981a-8ce6-11eb-33ae-831097e1e7d3
+
+
+# ╔═╡ 6ebf0b5c-8ce6-11eb-26ac-a1b767ff8a8d
+
+
+# ╔═╡ 6ea89c8c-8ce6-11eb-25a4-ef3add34a0f3
+
+
+# ╔═╡ 6e8e7698-8ce6-11eb-246f-2b56ed168883
+
+
+# ╔═╡ 6e7520fa-8ce6-11eb-0424-b325259d8d2e
+
+
+# ╔═╡ 6e5e1900-8ce6-11eb-0afd-17e0a41e86d1
+
+
+# ╔═╡ 6e44bdd4-8ce6-11eb-3d04-cb8f1b60bf5f
+
+
+# ╔═╡ 6e2b4410-8ce6-11eb-0d1d-27ac1ce699ea
+
+
+# ╔═╡ 6df8832c-8ce6-11eb-09bf-b15a882acc1a
+
+
 # ╔═╡ Cell order:
 # ╟─1c7f7f74-7c57-11eb-293a-d1be483a7ca0
 # ╟─7819e032-7c56-11eb-290b-23dc34edfc58
@@ -297,3 +330,14 @@ wireframe(x₁, x₂, f₇)
 # ╠═50ad955c-8ce1-11eb-1e93-d7a3cc6a89fe
 # ╟─e1f0ef0a-8ce1-11eb-022b-adfd5162cdc2
 # ╠═88be634a-8ce1-11eb-0aa3-3f3783bc5eba
+# ╟─613e9af6-8ce6-11eb-148f-4b45244613bf
+# ╠═6ef45672-8ce6-11eb-0efc-89ebcee0e056
+# ╠═6ed8981a-8ce6-11eb-33ae-831097e1e7d3
+# ╠═6ebf0b5c-8ce6-11eb-26ac-a1b767ff8a8d
+# ╠═6ea89c8c-8ce6-11eb-25a4-ef3add34a0f3
+# ╠═6e8e7698-8ce6-11eb-246f-2b56ed168883
+# ╠═6e7520fa-8ce6-11eb-0424-b325259d8d2e
+# ╠═6e5e1900-8ce6-11eb-0afd-17e0a41e86d1
+# ╠═6e44bdd4-8ce6-11eb-3d04-cb8f1b60bf5f
+# ╠═6e2b4410-8ce6-11eb-0d1d-27ac1ce699ea
+# ╠═6df8832c-8ce6-11eb-09bf-b15a882acc1a

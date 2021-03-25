@@ -307,13 +307,46 @@ md" Now let us plot our surface plot of the function we defined. I think it look
 wireframe(x₁, x₂, f₇)
 
 # ╔═╡ 6df8832c-8ce6-11eb-09bf-b15a882acc1a
-md" Finally, you might have noticed in the construction of the graph that there is this `.` following the $\sin$ and $\cos$ function. You can also see this operator in previous lines of code in front of `*` and `-`. If you enact this operator you are `broadcasting` the operation across all the elements of the array."  
+md" You might have noticed in the construction of the graph that there is this `.` following the $\sin$ and $\cos$ function. You can also see this operator in previous lines of code in front of `*` and `-`. If you enact this operator you are `broadcasting` the operation across all the elements of the array."  
 
 # ╔═╡ 4774616c-8db0-11eb-2368-cd1cc4cc884e
 md" ### Broadcasting "
 
 # ╔═╡ 5891437a-8db0-11eb-0157-8d8f9b77e1fb
+md" If we take a closer look at the first line of code in the plotting section we see that we are taking the value of 8 and multiplying it with `rand(100)`. First, you need to ask yourself, what is `rand(100)` doing. Let's type it in to see. You should also consult the documentation on this command to get a better idea of what is happening when you call this function. " 
 
+# ╔═╡ bbff790e-8db0-11eb-1c0b-4b8eff5e4b5e
+rand(100)
+
+# ╔═╡ e313133e-8db0-11eb-01eb-cd399ba999cb
+typeof(rand(100))
+
+# ╔═╡ bf8478fe-8db0-11eb-2576-45a741c4377d
+md" It appears that it creates an array, in this case a **column vector**, that contains $100$ floating-point values. It chooses these values randomly from a uniform distribution in the interval $[0, 1)$."
+
+# ╔═╡ bf9b99c6-8db0-11eb-0c14-195455bf6f0b
+md" If we wanted to multiply each of the values in this vector by 8 then it seems that we could simply do scalar multiplication. In this case the scalar multiplication will work without using the `.` operator. So we can proceed with or without it. "
+
+# ╔═╡ bfe58446-8db0-11eb-0e8d-51939d21730d
+8 * rand(100)
+
+# ╔═╡ b3f1ab8c-8db1-11eb-3cba-1792c29af5d0
+8 .* rand(100)
+
+# ╔═╡ bfff84e0-8db0-11eb-1a00-dfe087e10c2e
+md" Both of these methods will work with multiplication. However, when we apply subtraction we get an error. It says that if we want element-wise subtraction we need to use broadcasting with dot syntax." 
+
+# ╔═╡ c01b2a2e-8db0-11eb-3422-0b59816077fe
+8 .* rand(100) - 4
+
+# ╔═╡ ca24f6de-8db1-11eb-19bc-f71b8b226c39
+md" This then indicates to us that the broadcasting operation allows us to subtract 4 from each of the components in the vector in an elementwise fashion. "
+
+# ╔═╡ c03422fe-8db0-11eb-34d3-4bf88e1da37e
+8 .* rand(100) .- 4
+
+# ╔═╡ 2700f722-8db2-11eb-3993-4f7392659ef8
+md" In most instances you can use the broadcast operator across all functions without worrying with it too much. Julia is quite good at figuring out when you should be broadcasting.  "
 
 # ╔═╡ Cell order:
 # ╟─1c7f7f74-7c57-11eb-293a-d1be483a7ca0
@@ -385,4 +418,15 @@ md" ### Broadcasting "
 # ╠═88be634a-8ce1-11eb-0aa3-3f3783bc5eba
 # ╟─6df8832c-8ce6-11eb-09bf-b15a882acc1a
 # ╟─4774616c-8db0-11eb-2368-cd1cc4cc884e
-# ╠═5891437a-8db0-11eb-0157-8d8f9b77e1fb
+# ╟─5891437a-8db0-11eb-0157-8d8f9b77e1fb
+# ╠═bbff790e-8db0-11eb-1c0b-4b8eff5e4b5e
+# ╠═e313133e-8db0-11eb-01eb-cd399ba999cb
+# ╟─bf8478fe-8db0-11eb-2576-45a741c4377d
+# ╟─bf9b99c6-8db0-11eb-0c14-195455bf6f0b
+# ╠═bfe58446-8db0-11eb-0e8d-51939d21730d
+# ╠═b3f1ab8c-8db1-11eb-3cba-1792c29af5d0
+# ╟─bfff84e0-8db0-11eb-1a00-dfe087e10c2e
+# ╠═c01b2a2e-8db0-11eb-3422-0b59816077fe
+# ╟─ca24f6de-8db1-11eb-19bc-f71b8b226c39
+# ╠═c03422fe-8db0-11eb-34d3-4bf88e1da37e
+# ╟─2700f722-8db2-11eb-3993-4f7392659ef8

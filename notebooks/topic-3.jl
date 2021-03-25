@@ -67,7 +67,7 @@ typeof(x₂) == Matrix{Float64}
 md" We have established that one-dimensional arrays are a vector type. Similarily, we can view a two-dimensional array as a matrix. Consider the following example."
 
 # ╔═╡ cb7dce80-8d9a-11eb-1f83-fb79238361e1
-x₃ = [1 2 3; 4 5 6; 7 8 9]
+x₃ = [1 2 3; 4 5 6; 7 8 14]
 
 # ╔═╡ 54db62f4-8d9b-11eb-34d6-9f4d16b251de
 typeof(x₃) == Matrix{Int64}
@@ -107,6 +107,9 @@ reshape(x₃, 1, 9)
 
 # ╔═╡ 16efc20a-8d9e-11eb-1819-47dd80edfc9b
 similar(x₃)
+
+# ╔═╡ 08ef44e4-8da0-11eb-3d23-052a692e711f
+rand(Int64, 3, 3)
 
 # ╔═╡ 40b31e3c-8d9e-11eb-0c87-5bf71827d188
 rand(x₃, 3, 3) # This one is actually a bit tricky, you need to think about this. 
@@ -266,6 +269,7 @@ T = shear(1) # Pick a transformation
 # ╠═f29ef44a-8d9d-11eb-0dbe-d5cc7c1080db
 # ╠═fb532bfe-8d9d-11eb-2a10-89d840f835df
 # ╠═16efc20a-8d9e-11eb-1819-47dd80edfc9b
+# ╠═08ef44e4-8da0-11eb-3d23-052a692e711f
 # ╠═40b31e3c-8d9e-11eb-0c87-5bf71827d188
 # ╠═58232b72-8d9e-11eb-0489-cfccbceb1e11
 # ╠═dab8d7f8-8d9e-11eb-0805-c7343db6c32b

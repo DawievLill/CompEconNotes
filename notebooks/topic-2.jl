@@ -106,11 +106,17 @@ md" Consider the following example to see how much better the automatic differen
 Note: Remember from calculus that the derivative of $\sin(x)$ is $\cos(x)$. "
 
 # ╔═╡ bd76ca72-8b39-11eb-0147-252776c0eddf
-md" Finite differences utilises the limit definition of a derivative, namely 
+md" The finite difference method computes the difference between two values that differ by a finite step size. Finite differences utilises the limit definition of a derivative, namely 
 
 $\frac{df_{4}(x)}{dx} \equiv \lim_{\epsilon \rightarrow 0}\frac{\sin(x+\epsilon) - \sin(x)}{\epsilon}$
 
-The finite difference method computes the difference between two values that differ by a finite step size. There are three main approaches. In the case represented above the limit equation showcases the *forward difference* representation.
+However, we cannot use this definition directly, since we can let $t = 1/\epsilon$ and then reframe the problem such it has an infinite limit, which is shown below. 
+
+$\frac{df_{4}(x)}{dx} \equiv \lim_{t \rightarrow \infty}\frac{\sin(x + 1/t) - \sin(x)}{1/t}$
+
+We know from our previous session that the computer only has a finite space to store values for $t$, so to avoid overflow issues, we need to have a finite representation. A **forward difference** representation looks exactly like the formal definition but without the limit component. 
+
+$\frac{df_{4}(x)}{dx} \approx \frac{\sin(x+\epsilon) - \sin(x)}{\epsilon}$
 
 The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation.  
 
@@ -131,6 +137,44 @@ md" The different approaches are finite differences, symbolic differentiation, a
 
 # ╔═╡ a567131a-8b39-11eb-0769-11888a3de6b6
 (sin(1+ϵ)-sin(1))/ϵ , cos(1), ForwardDiff.derivative(sin,1)
+
+# ╔═╡ 9f50c068-8da8-11eb-2017-27fb9a5b87a4
+md" We see that with finite differences the answer is closer to the true value with smaller values of $\epsilon$. There is one thing that we must take into consideration here. Remember our old enemy, catastrophic cancellation!
+
+Since we are taking differences, we can often encounter issues when the values of $\epsilon$ are really small, since this means that $\sin(x+\epsilon)$ will be close to $\sin(x)$. We need to be careful that values don't cancel out in our calculation. Let us illustrate this point further with another example. Let us calculate the derivative of $x^2$ at $x = 2$ with finite differences. "
+
+# ╔═╡ 49de4d34-8da9-11eb-030b-59bb806f26cb
+ds(ϵ, x) = ((x + ϵ)^2 - x^2)/ϵ
+
+# ╔═╡ 78fddcce-8da9-11eb-1acd-eb95a14a2673
+HTML("The deriviative with ϵ = 1e-8 is: $(ds(1e-8, 2.))")
+
+# ╔═╡ b5691a34-8da9-11eb-09ae-af3a5f3746af
+HTML("The deriviative with ϵ = 1e-12 is: $(ds(1e-12, 2.))")
+
+# ╔═╡ b53499da-8da9-11eb-06b9-038a539e6b5a
+HTML("The deriviative with ϵ = 1e-30 is: $(ds(1e-30, 2.))")
+
+# ╔═╡ b5087744-8da9-11eb-027e-4d9008814177
+HTML("The deriviative with ϵ = 1e-1 is: $(ds(1e-1, 2.))")
+
+# ╔═╡ b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
+md" So we see in this case that the derivative with $\epsilon = 10^{-30}$,  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. "
+
+# ╔═╡ a65b9ec6-8daa-11eb-3529-1de77b221d3e
+md" #### Errors and finite differences (optional) "
+
+# ╔═╡ c3a2963a-8daa-11eb-38e5-8198e6c46ac3
+md" We have to ask ourselves whether there is a way to measure the error growth rate in ϵ. In order to do this we have to perform a first order Taylor expansion of our function of interest around the value where the function is to be evaluated. In other words, Taylor expansion of $f(x)$ around $x$."
+
+# ╔═╡ c3867f52-8daa-11eb-1c17-1f51a914b7a1
+
+
+# ╔═╡ c36a38a6-8daa-11eb-3c2e-4d6f14b27ffe
+
+
+# ╔═╡ c32af17a-8daa-11eb-3e69-ddbcc7278b7b
+
 
 # ╔═╡ 3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
 md" #### What about symbolic differentiation? "
@@ -272,6 +316,18 @@ wireframe(x₁, x₂, f₇)
 # ╠═9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
 # ╟─327cf250-8b4f-11eb-16b6-e709eb78504c
 # ╠═a567131a-8b39-11eb-0769-11888a3de6b6
+# ╟─9f50c068-8da8-11eb-2017-27fb9a5b87a4
+# ╠═49de4d34-8da9-11eb-030b-59bb806f26cb
+# ╟─78fddcce-8da9-11eb-1acd-eb95a14a2673
+# ╟─b5691a34-8da9-11eb-09ae-af3a5f3746af
+# ╟─b53499da-8da9-11eb-06b9-038a539e6b5a
+# ╟─b5087744-8da9-11eb-027e-4d9008814177
+# ╟─b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
+# ╟─a65b9ec6-8daa-11eb-3529-1de77b221d3e
+# ╟─c3a2963a-8daa-11eb-38e5-8198e6c46ac3
+# ╠═c3867f52-8daa-11eb-1c17-1f51a914b7a1
+# ╠═c36a38a6-8daa-11eb-3c2e-4d6f14b27ffe
+# ╠═c32af17a-8daa-11eb-3e69-ddbcc7278b7b
 # ╟─3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
 # ╟─1a011e5c-8b4c-11eb-1996-ed9145ec9ee7
 # ╠═57a46a0a-8b4c-11eb-1210-cf6a303f32ac

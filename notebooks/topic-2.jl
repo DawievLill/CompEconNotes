@@ -307,6 +307,12 @@ md" Now let us plot our surface plot of the function we defined. I think it look
 wireframe(x₁, x₂, f₇)
 
 # ╔═╡ 6df8832c-8ce6-11eb-09bf-b15a882acc1a
+md" Finally, you might have noticed in the construction of the graph that there is this `.` following the $\sin$ and $\cos$ function. You can also see this operator in previous lines of code in front of `*` and `-`. If you enact this operator you are `broadcasting` the operation across all the elements of the array."  
+
+# ╔═╡ 4774616c-8db0-11eb-2368-cd1cc4cc884e
+md" ### Broadcasting "
+
+# ╔═╡ 5891437a-8db0-11eb-0157-8d8f9b77e1fb
 
 
 # ╔═╡ Cell order:
@@ -329,7 +335,7 @@ wireframe(x₁, x₂, f₇)
 # ╟─95c81368-8b3a-11eb-27bd-59e48dbc509b
 # ╟─e9c48a0c-8b38-11eb-373e-3fc1ea18d52b
 # ╟─bd76ca72-8b39-11eb-0147-252776c0eddf
-# ╠═75f95eb2-8b39-11eb-211f-512a656e2f36
+# ╟─75f95eb2-8b39-11eb-211f-512a656e2f36
 # ╠═9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
 # ╟─327cf250-8b4f-11eb-16b6-e709eb78504c
 # ╠═a567131a-8b39-11eb-0769-11888a3de6b6
@@ -377,4 +383,6 @@ wireframe(x₁, x₂, f₇)
 # ╠═50ad955c-8ce1-11eb-1e93-d7a3cc6a89fe
 # ╟─e1f0ef0a-8ce1-11eb-022b-adfd5162cdc2
 # ╠═88be634a-8ce1-11eb-0aa3-3f3783bc5eba
-# ╠═6df8832c-8ce6-11eb-09bf-b15a882acc1a
+# ╟─6df8832c-8ce6-11eb-09bf-b15a882acc1a
+# ╟─4774616c-8db0-11eb-2368-cd1cc4cc884e
+# ╠═5891437a-8db0-11eb-0157-8d8f9b77e1fb

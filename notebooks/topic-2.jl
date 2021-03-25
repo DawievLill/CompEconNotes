@@ -159,22 +159,34 @@ HTML("The deriviative with ϵ = 1e-30 is: $(ds(1e-30, 2.))")
 HTML("The deriviative with ϵ = 1e-1 is: $(ds(1e-1, 2.))")
 
 # ╔═╡ b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
-md" So we see in this case that the derivative with $\epsilon = 10^{-30}$,  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. "
+md" So we see in this case that the derivative with $\epsilon = 10^{-30}$,  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. This optimal value can be shown to be $ϵ = \max\{|x|, 1\}\sqrt{ε}$ where ε refers to machine epsilon."
 
 # ╔═╡ a65b9ec6-8daa-11eb-3529-1de77b221d3e
 md" #### Errors and finite differences (optional) "
 
 # ╔═╡ c3a2963a-8daa-11eb-38e5-8198e6c46ac3
-md" We have to ask ourselves whether there is a way to measure the error growth rate in ϵ. In order to do this we have to perform a first order Taylor expansion of our function of interest around the value where the function is to be evaluated. In other words, Taylor expansion of $f(x)$ around $x$."
+md" We have to ask ourselves whether there is a way to measure the error growth rate in ϵ. In order to do this we have to perform a first order Taylor expansion of our function of interest around the value where the function is to be evaluated. In other words, Taylor expansion of $f(x)$ around $x$.
+
+$f(x + ϵ) = f(x) + f'(x)ϵ + \mathcal{O}(ϵ^{2})$
+
+The $\mathcal{O}(ϵ^{2})$ means that our error in the approximation grows at quadratically in ϵ, which seems strange since we took a linear approximation.
+"
 
 # ╔═╡ c3867f52-8daa-11eb-1c17-1f51a914b7a1
+md" To better understand this error approximation, let us rearrange the Taylor expansion. 
 
+$f'(x) = \frac{f(x + ϵ) - f(x)}{ϵ} + \mathcal{O}(ϵ^2)/ϵ$
 
-# ╔═╡ c36a38a6-8daa-11eb-3c2e-4d6f14b27ffe
+This better reflects the fact that forward differences has *linearly* growing errors, since $\mathcal{O}(ϵ^2)/ϵ = \mathcal{O}(ϵ)$. This means that if we halve $ϵ$ we will also halve the error in our approximation. This ignores issues surrounding rounding though. 
 
+"
 
-# ╔═╡ c32af17a-8daa-11eb-3e69-ddbcc7278b7b
+# ╔═╡ 4ec7be62-8dad-11eb-2099-2d76bc183810
+md" There are ways to improve on the accuracy of the finite difference method. One could, as an example, use central differences instead of finite differences. The central difference representation for our equation from before is:
 
+$\frac{df_{4}(x)}{dx} \approx \frac{\sin(x+\epsilon) - \sin(x - \epsilon)}{2\epsilon}$
+
+The error will grow much slower with this representation, as opposed to forward differences, so it seems to be more beneficial to use this. However, one needs to consider that for with central differences there are many more computations to perform, since we need to evaluate the function twice in each iteration. This means that forward differences are computationally more efficient, but less accurate. "
 
 # ╔═╡ 3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
 md" #### What about symbolic differentiation? "
@@ -325,9 +337,8 @@ wireframe(x₁, x₂, f₇)
 # ╟─b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
 # ╟─a65b9ec6-8daa-11eb-3529-1de77b221d3e
 # ╟─c3a2963a-8daa-11eb-38e5-8198e6c46ac3
-# ╠═c3867f52-8daa-11eb-1c17-1f51a914b7a1
-# ╠═c36a38a6-8daa-11eb-3c2e-4d6f14b27ffe
-# ╠═c32af17a-8daa-11eb-3e69-ddbcc7278b7b
+# ╟─c3867f52-8daa-11eb-1c17-1f51a914b7a1
+# ╟─4ec7be62-8dad-11eb-2099-2d76bc183810
 # ╟─3fb7e3e6-8b4d-11eb-308d-f1d31d42e184
 # ╟─1a011e5c-8b4c-11eb-1996-ed9145ec9ee7
 # ╠═57a46a0a-8b4c-11eb-1210-cf6a303f32ac

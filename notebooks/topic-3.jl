@@ -33,8 +33,92 @@ end
 # ╔═╡ 97dca378-8c17-11eb-1a9f-49d299180a72
 md" # Linear Algebra "
 
-# ╔═╡ f9dfcf7a-8c17-11eb-00e5-f3ff9b502b4b
+# ╔═╡ 8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
 md" In this section we will cover some basic foundational concepts in linear algebra, which will be useful for various types of transformations and eventually solutions of linear systems of equations." 
+
+# ╔═╡ cdcc50b0-8c18-11eb-3188-ffb91dcecee8
+md" ## Arrays in Julia "
+
+# ╔═╡ dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
+md" An array is a rectangular grid that is used for storing data of any type. The basic array is constructed in a similar way to the that of Matlab, which can be done as follows: "
+
+# ╔═╡ eea539ae-8d95-11eb-1a13-d704f50969c3
+x₁ = [1.0, 2.0, 3.0]
+
+# ╔═╡ 1eeb8d5c-8d96-11eb-0bc1-0162c420760f
+typeof(x₁) 
+
+# ╔═╡ e9140e2a-8d97-11eb-3a2c-79fad99882ea
+md" You might have encountered arrays in mathematics. An array can be one-dimensional, two-dimensional, three-dimensional and so forth. We can see that our example for `x` is a three element array that contains `Float64` values. The `1` means that this is a one-dimensional array, which is also known as a vector. In Julia it is best to think about these as **column vectors**. "
+
+# ╔═╡ 784d31a8-8d9a-11eb-02bc-a3a24bcb564c
+typeof(x₁) == Vector{Float64} 
+
+# ╔═╡ ce128ae2-8d9b-11eb-0399-cda8550d4524
+md" You will notice if we attempt to create a row vector then it is considered two-dimensional. This means that row vectors are treated as matrices in a sense. This is mainly done for the purposes of multiplication and addition so that dimensions align in the right manner. Multiplying with a column vector is inherently different from multiplying with a row vectors. It is good to take note of these subtleties. " 
+
+# ╔═╡ 98dbd9c8-8d9b-11eb-009d-b93e1b869285
+x₂ = [1.0 2.0 3.0]
+
+# ╔═╡ ff747db4-8d9b-11eb-3a10-3314a843e679
+typeof(x₂) == Matrix{Float64}
+
+# ╔═╡ b386f1dc-8d9a-11eb-2bb8-a58a56b5a85b
+md" We have established that one-dimensional arrays are a vector type. Similarily, we can view a two-dimensional array as a matrix. Consider the following example."
+
+# ╔═╡ cb7dce80-8d9a-11eb-1f83-fb79238361e1
+x₃ = [1 2 3; 4 5 6; 7 8 9]
+
+# ╔═╡ 54db62f4-8d9b-11eb-34d6-9f4d16b251de
+typeof(x₃) == Matrix{Int64}
+
+# ╔═╡ 1b9b6594-8d9d-11eb-375a-79652da9dee1
+ndims(x₃) # Number of dimensions of x₃
+
+# ╔═╡ 2ba16772-8d9d-11eb-0a26-c556fb0240aa
+size(x₃) # Tuple containing the dimensions of x₃
+
+# ╔═╡ 859cee86-8d9d-11eb-2993-bb3f3d748df6
+length(x₃) # Number of elements in x₃
+
+# ╔═╡ dfa715e2-8d9c-11eb-29e3-7dad0fad127f
+md" We see that our $3 \times 3$ matrix is a two-dimensional array. Take note of the difference between dimension and size of the matrix."
+
+# ╔═╡ cd94ab08-8d9c-11eb-2a76-673456a371ef
+md" ### Construction of arrays"
+
+# ╔═╡ 9bd1329e-8d9c-11eb-1751-fd348630580e
+md" There are many important ways to create and initialise arrays automatically in Julia. Some of the most important methods are shown below. See if you can figure out from the output what the functions are doing.  "
+
+# ╔═╡ ae7906d8-8d9c-11eb-3e39-4fcddb18b1d2
+zeros(3)
+
+# ╔═╡ b28764ae-8d9c-11eb-10f7-8f4b2387665f
+zeros(3, 3)
+
+# ╔═╡ b7a8d21a-8d9c-11eb-106d-2f68dc163529
+fill(5.0, 3, 3)
+
+# ╔═╡ f29ef44a-8d9d-11eb-0dbe-d5cc7c1080db
+ones(3, 3)
+
+# ╔═╡ fb532bfe-8d9d-11eb-2a10-89d840f835df
+reshape(x₃, 1, 9)
+
+# ╔═╡ 16efc20a-8d9e-11eb-1819-47dd80edfc9b
+similar(x₃)
+
+# ╔═╡ 40b31e3c-8d9e-11eb-0c87-5bf71827d188
+rand(x₃, 3, 3) # This one is actually a bit tricky, you need to think about this. 
+
+# ╔═╡ 58232b72-8d9e-11eb-0489-cfccbceb1e11
+randn(Float64, 3, 3)
+
+# ╔═╡ dab8d7f8-8d9e-11eb-0805-c7343db6c32b
+Matrix{Float64}(I, 3, 3)
+
+# ╔═╡ e5bee5de-8d9e-11eb-12af-617d270d651a
+range(0, 100, length = 51) # Similar to `linspace` in Matlab
 
 # ╔═╡ a0d17a54-8c18-11eb-0c42-c1553dfc28d5
 md" ## Transformations "
@@ -154,19 +238,38 @@ T = shear(1) # Pick a transformation
 		out_x in LinRange(-f, f, 500)
 ]
 
-# ╔═╡ cdcc50b0-8c18-11eb-3188-ffb91dcecee8
-md" ### Arrays in Julia "
-
-# ╔═╡ cf5d7276-8c18-11eb-0dfe-bf95183d1f7d
-md" An array is a rectangular grid that is used for storing data of any type. We can store and retrieve data within this array by using indexing. You might have encountered arrays in mathematics under the name of matrices. An array can be one-dimensional, two-dimensional, three-dimensional and so forth. The dimension gives us an idea of the number of indices that we need to specify. For array objects we also need to know the length of the data in each of the dimensions. "
-
-# ╔═╡ d0db00f8-8c18-11eb-13a3-6908bc83cede
-md" It might sound arbitrary at first to focus on things like dimension and length of arrays, but take it from me, you will frequently want to know the properties of the arrays that you are working with."
-
 # ╔═╡ Cell order:
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
 # ╟─97dca378-8c17-11eb-1a9f-49d299180a72
-# ╟─f9dfcf7a-8c17-11eb-00e5-f3ff9b502b4b
+# ╟─8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
+# ╟─cdcc50b0-8c18-11eb-3188-ffb91dcecee8
+# ╟─dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
+# ╠═eea539ae-8d95-11eb-1a13-d704f50969c3
+# ╠═1eeb8d5c-8d96-11eb-0bc1-0162c420760f
+# ╟─e9140e2a-8d97-11eb-3a2c-79fad99882ea
+# ╠═784d31a8-8d9a-11eb-02bc-a3a24bcb564c
+# ╟─ce128ae2-8d9b-11eb-0399-cda8550d4524
+# ╠═98dbd9c8-8d9b-11eb-009d-b93e1b869285
+# ╠═ff747db4-8d9b-11eb-3a10-3314a843e679
+# ╟─b386f1dc-8d9a-11eb-2bb8-a58a56b5a85b
+# ╠═cb7dce80-8d9a-11eb-1f83-fb79238361e1
+# ╠═54db62f4-8d9b-11eb-34d6-9f4d16b251de
+# ╠═1b9b6594-8d9d-11eb-375a-79652da9dee1
+# ╠═2ba16772-8d9d-11eb-0a26-c556fb0240aa
+# ╠═859cee86-8d9d-11eb-2993-bb3f3d748df6
+# ╟─dfa715e2-8d9c-11eb-29e3-7dad0fad127f
+# ╟─cd94ab08-8d9c-11eb-2a76-673456a371ef
+# ╟─9bd1329e-8d9c-11eb-1751-fd348630580e
+# ╠═ae7906d8-8d9c-11eb-3e39-4fcddb18b1d2
+# ╠═b28764ae-8d9c-11eb-10f7-8f4b2387665f
+# ╠═b7a8d21a-8d9c-11eb-106d-2f68dc163529
+# ╠═f29ef44a-8d9d-11eb-0dbe-d5cc7c1080db
+# ╠═fb532bfe-8d9d-11eb-2a10-89d840f835df
+# ╠═16efc20a-8d9e-11eb-1819-47dd80edfc9b
+# ╠═40b31e3c-8d9e-11eb-0c87-5bf71827d188
+# ╠═58232b72-8d9e-11eb-0489-cfccbceb1e11
+# ╠═dab8d7f8-8d9e-11eb-0805-c7343db6c32b
+# ╠═e5bee5de-8d9e-11eb-12af-617d270d651a
 # ╟─a0d17a54-8c18-11eb-0c42-c1553dfc28d5
 # ╟─a3cecb9e-8c18-11eb-1ce0-b531dfce4c7f
 # ╟─aff36556-8c18-11eb-1dc1-5d6e8f7f9854
@@ -183,6 +286,3 @@ md" It might sound arbitrary at first to focus on things like dimension and leng
 # ╟─c7356bf4-8c18-11eb-0c16-1b5d1bf0fe9b
 # ╠═c9f20fa2-8c18-11eb-17e0-4386d34e7387
 # ╟─cc076990-8c18-11eb-0bd0-a357f823e14d
-# ╟─cdcc50b0-8c18-11eb-3188-ffb91dcecee8
-# ╟─cf5d7276-8c18-11eb-0dfe-bf95183d1f7d
-# ╟─d0db00f8-8c18-11eb-13a3-6908bc83cede

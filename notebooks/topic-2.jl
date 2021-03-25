@@ -112,7 +112,7 @@ $\frac{df_{4}(x)}{dx} \equiv \lim_{\epsilon \rightarrow 0}\frac{\sin(x+\epsilon)
 
 The finite difference method computes the difference between two values that differ by a finite step size. There are three main approaches. In the case represented above the limit equation showcases the *forward difference* representation.
 
-The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation. 
+The slider below allows us to determine the value for magnitude of $\epsilon$. Smaller values of $\epsilon$ lead to higher precision approximation of the derivative through finite difference approximation.  
 
 "
 
@@ -181,6 +181,9 @@ f₅(1,2,3) # Input is a list of three elements (x, y, z)
 # ╔═╡ abde4208-8b44-11eb-1e72-29ca3336a118
 f₅([1,2,3]) # Input is a vector v (with three elements)
 
+# ╔═╡ ca5cf856-8d70-11eb-1d37-135bdd1a95c7
+md" The fact that the same function name can do different things depending on the type of input is referred to as **multiple dispatch**. Most functions have this feature in Julia."
+
 # ╔═╡ 0903d2fe-8b45-11eb-2700-292eac0f88f7
 md" There is an even more efficient way of coding the portion above. Remember that programmers are lazy and don't want to copy code. You want to reuse code as much as possible. Look at the following code block and see if you can figure out how this abstraction works. I think it is quite elegant. " 
 
@@ -242,36 +245,6 @@ md" Now let us plot our surface plot of the function we defined. I think it look
 # ╔═╡ 88be634a-8ce1-11eb-0aa3-3f3783bc5eba
 wireframe(x₁, x₂, f₇)
 
-# ╔═╡ 613e9af6-8ce6-11eb-148f-4b45244613bf
-md" ## Differentiable programming "
-
-# ╔═╡ 6ef45672-8ce6-11eb-0efc-89ebcee0e056
-
-
-# ╔═╡ 6ed8981a-8ce6-11eb-33ae-831097e1e7d3
-
-
-# ╔═╡ 6ebf0b5c-8ce6-11eb-26ac-a1b767ff8a8d
-
-
-# ╔═╡ 6ea89c8c-8ce6-11eb-25a4-ef3add34a0f3
-
-
-# ╔═╡ 6e8e7698-8ce6-11eb-246f-2b56ed168883
-
-
-# ╔═╡ 6e7520fa-8ce6-11eb-0424-b325259d8d2e
-
-
-# ╔═╡ 6e5e1900-8ce6-11eb-0afd-17e0a41e86d1
-
-
-# ╔═╡ 6e44bdd4-8ce6-11eb-3d04-cb8f1b60bf5f
-
-
-# ╔═╡ 6e2b4410-8ce6-11eb-0d1d-27ac1ce699ea
-
-
 # ╔═╡ 6df8832c-8ce6-11eb-09bf-b15a882acc1a
 
 
@@ -313,6 +286,7 @@ md" ## Differentiable programming "
 # ╟─8711b310-8b44-11eb-3311-0b51038cab72
 # ╠═a3188eb2-8b44-11eb-3043-6faea3ffd81f
 # ╠═abde4208-8b44-11eb-1e72-29ca3336a118
+# ╟─ca5cf856-8d70-11eb-1d37-135bdd1a95c7
 # ╟─0903d2fe-8b45-11eb-2700-292eac0f88f7
 # ╠═ca4cf144-8b44-11eb-11a7-9f5b1511f14f
 # ╠═6685b140-8b45-11eb-08b8-6dc1fefab50b
@@ -330,14 +304,4 @@ md" ## Differentiable programming "
 # ╠═50ad955c-8ce1-11eb-1e93-d7a3cc6a89fe
 # ╟─e1f0ef0a-8ce1-11eb-022b-adfd5162cdc2
 # ╠═88be634a-8ce1-11eb-0aa3-3f3783bc5eba
-# ╟─613e9af6-8ce6-11eb-148f-4b45244613bf
-# ╠═6ef45672-8ce6-11eb-0efc-89ebcee0e056
-# ╠═6ed8981a-8ce6-11eb-33ae-831097e1e7d3
-# ╠═6ebf0b5c-8ce6-11eb-26ac-a1b767ff8a8d
-# ╠═6ea89c8c-8ce6-11eb-25a4-ef3add34a0f3
-# ╠═6e8e7698-8ce6-11eb-246f-2b56ed168883
-# ╠═6e7520fa-8ce6-11eb-0424-b325259d8d2e
-# ╠═6e5e1900-8ce6-11eb-0afd-17e0a41e86d1
-# ╠═6e44bdd4-8ce6-11eb-3d04-cb8f1b60bf5f
-# ╠═6e2b4410-8ce6-11eb-0d1d-27ac1ce699ea
 # ╠═6df8832c-8ce6-11eb-09bf-b15a882acc1a

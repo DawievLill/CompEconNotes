@@ -125,7 +125,7 @@ The slider below allows us to determine the value for magnitude of $\epsilon$. S
 # ╔═╡ 75f95eb2-8b39-11eb-211f-512a656e2f36
 begin
 	md"""
-	$(@bind e Slider(-6:-1, default=-1, show_value=true))
+	$(@bind e Slider(-17:-1, default=-1, show_value=true))
 	"""
 end
 
@@ -141,7 +141,9 @@ md" The different approaches are finite differences, symbolic differentiation, a
 # ╔═╡ 9f50c068-8da8-11eb-2017-27fb9a5b87a4
 md" We see that with finite differences the answer is closer to the true value with smaller values of $\epsilon$. There is one thing that we must take into consideration here. Remember our old enemy, catastrophic cancellation!
 
-Since we are taking differences, we can often encounter issues when the values of $\epsilon$ are really small, since this means that $\sin(x+\epsilon)$ will be close to $\sin(x)$. We need to be careful that values don't cancel out in our calculation. Let us illustrate this point further with another example. Let us calculate the derivative of $x^2$ at $x = 2$ with finite differences. "
+Since we are taking differences, we can often encounter issues when the values of $\epsilon$ are really small, since this means that $\sin(x+\epsilon)$ will be close to $\sin(x)$. We need to be careful that values don't cancel out in our calculation. In fact if you run the slider back far enough you will see the cancellation occur in our example.  
+
+Let us illustrate this point in more detail with another example. Let us calculate the derivative of $x^2$ at $x = 2$ with finite differences. "
 
 # ╔═╡ 49de4d34-8da9-11eb-030b-59bb806f26cb
 ds(ϵ, x) = ((x + ϵ)^2 - x^2)/ϵ
@@ -153,13 +155,16 @@ HTML("The deriviative with ϵ = 1e-8 is: $(ds(1e-8, 2.))")
 HTML("The deriviative with ϵ = 1e-12 is: $(ds(1e-12, 2.))")
 
 # ╔═╡ b53499da-8da9-11eb-06b9-038a539e6b5a
-HTML("The deriviative with ϵ = 1e-30 is: $(ds(1e-30, 2.))")
+HTML("The deriviative with ϵ = 1e-16 is: $(ds(1e-16, 2.))")
 
 # ╔═╡ b5087744-8da9-11eb-027e-4d9008814177
 HTML("The deriviative with ϵ = 1e-1 is: $(ds(1e-1, 2.))")
 
+# ╔═╡ c932e536-8dae-11eb-1cc9-015e3ab7c8ea
+((2 + ϵ)^2 - 2^2)/ϵ
+
 # ╔═╡ b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
-md" So we see in this case that the derivative with $\epsilon = 10^{-30}$,  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. This optimal value can be shown to be $ϵ = \max\{|x|, 1\}\sqrt{ε}$ where ε refers to machine epsilon."
+md" So we see in this case that the derivative with $\epsilon = 10^{-16}$  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. This optimal value can be shown to be $ϵ = \max\{|x|, 1\}\sqrt{\text{eps}}$ where $\text{eps}$ refers to machine epsilon."
 
 # ╔═╡ a65b9ec6-8daa-11eb-3529-1de77b221d3e
 md" #### Errors and finite differences (optional) "
@@ -324,7 +329,7 @@ wireframe(x₁, x₂, f₇)
 # ╟─95c81368-8b3a-11eb-27bd-59e48dbc509b
 # ╟─e9c48a0c-8b38-11eb-373e-3fc1ea18d52b
 # ╟─bd76ca72-8b39-11eb-0147-252776c0eddf
-# ╟─75f95eb2-8b39-11eb-211f-512a656e2f36
+# ╠═75f95eb2-8b39-11eb-211f-512a656e2f36
 # ╠═9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
 # ╟─327cf250-8b4f-11eb-16b6-e709eb78504c
 # ╠═a567131a-8b39-11eb-0769-11888a3de6b6
@@ -334,6 +339,7 @@ wireframe(x₁, x₂, f₇)
 # ╟─b5691a34-8da9-11eb-09ae-af3a5f3746af
 # ╟─b53499da-8da9-11eb-06b9-038a539e6b5a
 # ╟─b5087744-8da9-11eb-027e-4d9008814177
+# ╠═c932e536-8dae-11eb-1cc9-015e3ab7c8ea
 # ╟─b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
 # ╟─a65b9ec6-8daa-11eb-3529-1de77b221d3e
 # ╟─c3a2963a-8daa-11eb-38e5-8198e6c46ac3

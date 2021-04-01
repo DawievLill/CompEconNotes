@@ -26,16 +26,18 @@ begin
 			Pkg.PackageSpec(name="SymEngine"),
 			Pkg.PackageSpec(name="Plots"), 
 			Pkg.PackageSpec(name="GR"),
+			Pkg.PackageSpec(name="Zygote"),
+			Pkg.PackageSpec(name="FiniteDifferences"),
 			])
-
 	using Images
 	using PlutoUI
 	using HypertextLiteral
 	using LinearAlgebra
-	using ForwardDiff  # Automatic differentiation package
-	using SymEngine  # Symbolic differentiation package
-	#using Plots
-	using GR
+	using ForwardDiff  # Automatic differentiation
+	using SymEngine  # Symbolic differentiation
+	using GR # Graphics
+	using Zygote # Reverse mode automatic differentiation
+	using FiniteDifferences # Finite differences
 end
 
 # ╔═╡ 7819e032-7c56-11eb-290b-23dc34edfc58
@@ -46,7 +48,7 @@ md" This session draws heavily from a course on computational thinking that is p
 
 Once we have explored the idea of a function representation, we move to a really cool way in which you can take derivatives. This method is called `autodiff`, which is short for automatic differentiation. With this method we can automatically compute **exact** derivatives (up to floating-point error) given only the function itself.  
 
-This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. An excellent reference for all things optimisation, which also uses Julia as the main code base, can be found [here](https://algorithmsbook.com/optimization/#). "
+This method of taking derivatives is used widely in machine learning and optimisation and has become increasingly popular over the last couple of years. An excellent reference for all things optimisation, which also uses Julia as the main code base, can be found [here](https://algorithmsbook.com/optimization/#). The main message from this session will be to invest some time into understanding the implementation of autodiff, you don't really need to fully understand how it is constructed, just how to use it."
 
 # ╔═╡ 45aed8a2-7c59-11eb-3f69-e701041d6a30
 md" ## Functions (in Julia)"
@@ -64,7 +66,7 @@ In Julia, functions can be written in short form, anonymous form, or long form.
 f₁(x) = x^2 # Short form
 
 # ╔═╡ cb0ac2ce-87e9-11eb-3c26-ed50a59978be
-x -> sin(x) # Anonymous form
+x -> sin(x) # Anonymous form (lambda function)
 
 # ╔═╡ ce2c915c-8b3f-11eb-0c24-5727e31119b7
 md" We can give this anonymous function a name if we really wanted to." 
@@ -79,11 +81,39 @@ function f₃(x, α = 3)
 	x^α  # Julia automatically returns the last line in the code block
 end
 
-# ╔═╡ 6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
-md" In terms of these univariate functions it is easy to perform automatic differentiation. This method of differentiation is different from symbolic differentiaion that you will encounter in calculus or numerical differentition via first differences."
+# ╔═╡ 59934d80-9063-11eb-0956-15e084f8135a
+md" Now that we have established how to think about functions, let us move on to how we can take derivatives of these functions."
 
-# ╔═╡ c0cb6d4a-87ec-11eb-348b-e540882173e3
-md" There are several packages available to perform automatic differentiation in Julia. [Here](https://juliadiff.org/) is a curated list of all actively maintained `autodiff` packages." 
+# ╔═╡ dbafac10-9062-11eb-169e-cf0cbd50df46
+md" ## Differentiation "
+
+# ╔═╡ ea99e100-9062-11eb-22d6-7d295c16f30a
+md" In this section we will cover different forms of differentiation. Traditionally one would do derivatives by hand and input that derivative into the computer. This is called manual differentiation. This method is slow and prone to human error. See the following example.  "
+
+# ╔═╡ ad3c14d0-9063-11eb-153d-e3efee72a8d5
+g(x) = exp(2x) - x^3
+
+# ╔═╡ e21fa9a2-9063-11eb-389e-5f294f5762f0
+g_prime(x) = 2exp(2x) - 3x^2
+
+# ╔═╡ f618e202-9063-11eb-3f97-cb280350cbc9
+md" We can evaluate the function and its derivative at certain points, but once again we want something more automatic than this. "
+
+# ╔═╡ 2622db40-9064-11eb-156c-e9195c13dbd7
+md" #### Automatic differentiation "
+
+# ╔═╡ acf5a080-9064-11eb-0b61-55cf13f599c7
+md" In this section we will quickly mention how to implement automatic differentiation, but we will not go into detail about how it actually works. The video below gives a great overview of the process of automatic differentiation. [Here](https://julia.quantecon.org/more_julia/optimization_solver_packages.html) is a more advanced set of notes on the topic of differentiable programming and automatic differentiation in Julia. "
+
+# ╔═╡ 6a139650-9064-11eb-3f45-41506ea4e0f0
+html"""
+
+<iframe width="680" height="400" src="https://www.youtube.com/embed/wG_nF1awSSY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+"""
+
+# ╔═╡ 6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
+md" In terms of the univariate functions we defined above it is easy to perform automatic differentiation. This method of differentiation is different from symbolic differentiaion that you will encounter in calculus or numerical differentition via first differences."
 
 # ╔═╡ b930ded2-87ea-11eb-3f26-3d4e1597615b
 md" Autodifferentiation is used in many machine learning and scientific computing applications, so it is a useful tool to know. In order to take calculate the derivative of our function $f₁(x)$ and it evaluate it at $x = 10$ we only have to do the following."
@@ -96,6 +126,18 @@ ForwardDiff.derivative( x -> f₃(x, 3), 10) # Derivative of x³ at x = 10
 
 # ╔═╡ 93607132-8b38-11eb-0359-2705eb558814
 md" As observed from the last equation, we could also use the anonymous function notation. In this case with the parameter set to $\alpha = 3$."
+
+# ╔═╡ 347785f0-906f-11eb-08e9-69ba5d3e4bf3
+md" One can repeat the same calculations with a reverse-mode automatic differentiation package called `Zygote.jl`. This is one of the newest and most exciting implementations of automatic differentiation in Julia and is used in the `Flux.jl` package, which is the foundational machine learning package in Julia. "
+
+# ╔═╡ 677fe790-906e-11eb-03b4-c1545d5f7e3c
+f₁'(10) # Using Zygote
+
+# ╔═╡ fcf37cb0-906e-11eb-37f3-5bbec323e815
+f₃'(10) 
+
+# ╔═╡ c0cb6d4a-87ec-11eb-348b-e540882173e3
+md" There are several packages available to perform automatic differentiation in Julia. [Here](https://juliadiff.org/) is a curated list of all actively maintained `autodiff` packages. We were using `ForwardDiff.jl` and `Zygote.jl`. You can read more about how to use `Zygote` at the [website](https://fluxml.ai/Zygote.jl/latest/). " 
 
 # ╔═╡ 95c81368-8b3a-11eb-27bd-59e48dbc509b
 md" #### Finite differences vs autodiff"
@@ -136,10 +178,60 @@ end
 md" The different approaches are finite differences, symbolic differentiation, automatic differentiation. These representations are evaluated at $x = 1$ below." 
 
 # ╔═╡ a567131a-8b39-11eb-0769-11888a3de6b6
-(sin(1+ϵ)-sin(1))/ϵ , cos(1), ForwardDiff.derivative(sin,1)
+(sin(1+ϵ)-sin(1))/ϵ , cos(1), ForwardDiff.derivative(sin,1), sin'(1)
+
+# ╔═╡ 4083acc0-9065-11eb-02d9-83b9411801ec
+md" We see that we get different answers for the different methods. The answer also seems to depend on the value that we choose for $\epsilon$. The reason for this has to do with truncation and rounding error, topics that we mentioned in the previous session. Normally there is a tradeoff between truncation and rounding error and one would like to pick a value for $\epsilon$ that provides the lowest level of truncation and rounding error. Picking the value for $\epsilon$ can be really hard, so we can use the `FiniteDifferences.jl` package in Julia to do it for us."
+
+# ╔═╡ 3d133d20-9070-11eb-0b1d-2533e8ab4355
+forward_fdm(12, 1)(sin, 1) # 5th order forward difference
+
+# ╔═╡ dfc3a550-9070-11eb-0ac2-21fcd1db7a0d
+md" Below is a quick discussion on truncation and rounding error. This gives us an idea of why are getting our particular errors. "
+
+# ╔═╡ 30f39ae0-9065-11eb-3acf-5766f18d038a
+md" ##### Truncation error "
 
 # ╔═╡ 9f50c068-8da8-11eb-2017-27fb9a5b87a4
-md" We see that with finite differences the answer is closer to the true value with smaller values of $\epsilon$. There is one thing that we must take into consideration here. Remember our old enemy, catastrophic cancellation!
+md" With 'large' values of $\epsilon$ our estimate seems to be quite far off from the actual answer. This is due to truncation error. We are trying to emulate the value for $\epsilon$ going to zero, but we are choosing a nonzero value to represent $\epsilon$. Consider the following example to understand the problem.  "
+
+# ╔═╡ 8d7d0710-9065-11eb-3b33-2be258397e78
+h(x) = 5x^3
+
+# ╔═╡ afdfaba0-9065-11eb-2dd0-d9e5380faf3c
+h_prime(x) = 15x^2
+
+# ╔═╡ c1953590-9065-11eb-2e9a-3b9cd59eb1fe
+h(7)
+
+# ╔═╡ c55aa200-9065-11eb-2fe3-dfac936d1a72
+h_prime(7)
+
+# ╔═╡ cd5f65d0-9065-11eb-391d-c3083aba15e1
+h_prime_approx = (h(7 + 0.25) - h(7))/0.25
+
+# ╔═╡ f067c042-9065-11eb-0821-719c6a92b150
+TE = h_prime(7) - h_prime_approx 
+
+# ╔═╡ 616e1e50-9067-11eb-3f55-4310dee68485
+md" The question is why do we get this truncation error. Well the answer can be depicted with the following calculation. This section is optional."
+
+# ╔═╡ 7c3c7420-9067-11eb-1aa3-236072753a44
+md" We can begin with a Taylor series expansion where we have 
+
+$f(x + \epsilon) = f(x) + \epsilon \frac{d f(x)}{dx} + \frac{\epsilon^2}{2!} \frac{d^2 f(x)}{dx^2} + \frac{\epsilon^3}{3!} \frac{d^3 f(x)}{dx^3} + \cdots$
+
+If we use the forward difference representation to approximate our derivative then the Taylor series expansion will give the following
+
+$\frac{f(x + \epsilon) - f(x)}{\epsilon} = \frac{d f(x)}{dx} + \left[\frac{\epsilon}{2!} \frac{d^2 f(x)}{dx^2} + \frac{\epsilon^2}{3!} \frac{d^3 f(x)}{dx^3} + \cdots \right]$
+
+The term on the left hand side is the numerical approximation, then on the right hand side the first term is the true derivative. The component in brackets is the truncation error."
+
+# ╔═╡ 4cc1df10-9066-11eb-0938-e56149d21210
+md" ##### Rouding error "
+
+# ╔═╡ 22188120-9065-11eb-2c2a-e9eddcfab479
+md" We observe that with finite differences the answer is closer to the true value with smaller values of $\epsilon$. There is one thing that we must take into consideration here. Remember our old enemy, catastrophic cancellation!
 
 Since we are taking differences, we can often encounter issues when the values of $\epsilon$ are really small, since this means that $\sin(x+\epsilon)$ will be close to $\sin(x)$. We need to be careful that values don't cancel out in our calculation. In fact if you run the slider back far enough you will see the cancellation occur in our example.  
 
@@ -164,7 +256,7 @@ HTML("The deriviative with ϵ = 1e-1 is: $(ds(1e-1, 2.))")
 ((2 + ϵ)^2 - 2^2)/ϵ
 
 # ╔═╡ b4ed0598-8da9-11eb-3dc1-d39ba25b0aef
-md" So we see in this case that the derivative with $\epsilon = 10^{-16}$  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. This optimal value can be shown to be $ϵ = \max\{|x|, 1\}\sqrt{\text{eps}}$ where $\text{eps}$ refers to machine epsilon."
+md" So we see in this case that the derivative with $\epsilon = 10^{-16}$  actually results in subtractive cancellation and we get an answer that is completely wrong. We can solve these rounding issues by picking an optimal value for ϵ. This optimal value can be shown to be $ϵ = \max\{|x|, 1\}\sqrt{\text{eps}}$ where $\text{eps}$ refers to machine epsilon.  "
 
 # ╔═╡ a65b9ec6-8daa-11eb-3529-1de77b221d3e
 md" #### Errors and finite differences (optional) "
@@ -211,6 +303,9 @@ diff(f₄, s)
 # ╔═╡ 97c0c0a4-8b4c-11eb-218d-6fb509350f95
 md" This seems to give us the answer that we were looking for. The derivative of $\sin(x)$ is $\cos(x)$."
 
+# ╔═╡ 3e4817d0-9069-11eb-0e44-5f73ff9bfc73
+md" Symbolic differentiation works quite well, but there is the problem of *expression swell*. In this case we have that derivative expressions are many times larger than the original function. You can read on the topic [here](http://www-troja.fjfi.cvut.cz/~liska/ca/node53.html). This idea is also nicely described in the video posted above. "
+
 # ╔═╡ f603ce46-8b41-11eb-0d87-99b9c580169e
 md" Next we move into the world of scalar valued multivariate functions. A scalar valued function takes one or more inputs and only retuns a single value. So this means that our function in this setting will take in multiple variables with potentially different values attached to those variables and only return a single value. A general case would be an $n$-variable scalar valued function that maps from the space $\mathbb{R}^{n}$ to $\mathbb{R}$." 
 
@@ -230,7 +325,7 @@ md" There are multiple ways in Julia in which we can write this type of function
 
 begin
 	f₅(x, y, z) = 5sin(x*y) + 2y/4z
-	f₅(v) = 5sin(v[1]*v[2]) + 2*v[2]/4v[3] 
+	f₅(v) = 5*sin(v[1]*v[2]) + 2*v[2]/4v[3] 
 end
 
 # ╔═╡ 8711b310-8b44-11eb-3311-0b51038cab72
@@ -280,10 +375,13 @@ begin
 end
 
 # ╔═╡ ef8bc500-8ce0-11eb-380f-618627e4d182
-md" A better alternative is to simply use automatic differentiation to find the gradient. In fact, most machine learning algorithms that are looking for specific loss functions are using automatic differentiation procedures."
+md" Since the method above requires many evaluations to compute, it is considered to be inefficient. A better alternative is to simply use automatic differentiation to find the gradient. In fact, most machine learning algorithms that are looking for specific loss functions are using automatic differentiation procedures."
 
 # ╔═╡ 7efab6f4-7c58-11eb-006e-412089f351a0
 ForwardDiff.gradient(f₅, [1, 2, 3])
+
+# ╔═╡ d1606590-906e-11eb-1846-1500a526a8a8
+gradient(f₅, [1, 2, 3]) # Using Zygote
 
 # ╔═╡ f86ef080-8cdf-11eb-3540-59c2bd06a1e5
 md" #### Surface plots in Julia "
@@ -359,12 +457,24 @@ md" In most instances you can use the broadcast operator across all functions wi
 # ╟─ce2c915c-8b3f-11eb-0c24-5727e31119b7
 # ╠═dabd966e-8b3f-11eb-3092-b16c6c39b80f
 # ╠═dfcad438-87e9-11eb-0fd2-218a4806a08c
+# ╟─59934d80-9063-11eb-0956-15e084f8135a
+# ╟─dbafac10-9062-11eb-169e-cf0cbd50df46
+# ╟─ea99e100-9062-11eb-22d6-7d295c16f30a
+# ╠═ad3c14d0-9063-11eb-153d-e3efee72a8d5
+# ╠═e21fa9a2-9063-11eb-389e-5f294f5762f0
+# ╟─f618e202-9063-11eb-3f97-cb280350cbc9
+# ╟─2622db40-9064-11eb-156c-e9195c13dbd7
+# ╟─acf5a080-9064-11eb-0b61-55cf13f599c7
+# ╟─6a139650-9064-11eb-3f45-41506ea4e0f0
 # ╟─6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
-# ╟─c0cb6d4a-87ec-11eb-348b-e540882173e3
 # ╟─b930ded2-87ea-11eb-3f26-3d4e1597615b
 # ╠═5e60acc0-8b38-11eb-11be-3bb33c2e8c72
 # ╠═cb201760-8b38-11eb-266a-0572493239ae
 # ╟─93607132-8b38-11eb-0359-2705eb558814
+# ╟─347785f0-906f-11eb-08e9-69ba5d3e4bf3
+# ╠═677fe790-906e-11eb-03b4-c1545d5f7e3c
+# ╠═fcf37cb0-906e-11eb-37f3-5bbec323e815
+# ╟─c0cb6d4a-87ec-11eb-348b-e540882173e3
 # ╟─95c81368-8b3a-11eb-27bd-59e48dbc509b
 # ╟─e9c48a0c-8b38-11eb-373e-3fc1ea18d52b
 # ╟─bd76ca72-8b39-11eb-0147-252776c0eddf
@@ -372,7 +482,21 @@ md" In most instances you can use the broadcast operator across all functions wi
 # ╠═9e029a72-8b39-11eb-0a25-6dc0aa5e1d4e
 # ╟─327cf250-8b4f-11eb-16b6-e709eb78504c
 # ╠═a567131a-8b39-11eb-0769-11888a3de6b6
+# ╟─4083acc0-9065-11eb-02d9-83b9411801ec
+# ╠═3d133d20-9070-11eb-0b1d-2533e8ab4355
+# ╟─dfc3a550-9070-11eb-0ac2-21fcd1db7a0d
+# ╟─30f39ae0-9065-11eb-3acf-5766f18d038a
 # ╟─9f50c068-8da8-11eb-2017-27fb9a5b87a4
+# ╠═8d7d0710-9065-11eb-3b33-2be258397e78
+# ╠═afdfaba0-9065-11eb-2dd0-d9e5380faf3c
+# ╠═c1953590-9065-11eb-2e9a-3b9cd59eb1fe
+# ╠═c55aa200-9065-11eb-2fe3-dfac936d1a72
+# ╠═cd5f65d0-9065-11eb-391d-c3083aba15e1
+# ╠═f067c042-9065-11eb-0821-719c6a92b150
+# ╟─616e1e50-9067-11eb-3f55-4310dee68485
+# ╟─7c3c7420-9067-11eb-1aa3-236072753a44
+# ╟─4cc1df10-9066-11eb-0938-e56149d21210
+# ╟─22188120-9065-11eb-2c2a-e9eddcfab479
 # ╠═49de4d34-8da9-11eb-030b-59bb806f26cb
 # ╟─78fddcce-8da9-11eb-1acd-eb95a14a2673
 # ╟─b5691a34-8da9-11eb-09ae-af3a5f3746af
@@ -390,6 +514,7 @@ md" In most instances you can use the broadcast operator across all functions wi
 # ╠═5da00e52-8b4c-11eb-199c-c1b0fda27cc3
 # ╠═75ed19fa-8b4c-11eb-0873-4b96f4617096
 # ╟─97c0c0a4-8b4c-11eb-218d-6fb509350f95
+# ╟─3e4817d0-9069-11eb-0e44-5f73ff9bfc73
 # ╟─f603ce46-8b41-11eb-0d87-99b9c580169e
 # ╟─cf684c20-8b42-11eb-36e0-c318082f9f4f
 # ╟─e1cca2ee-8b42-11eb-0471-23a6523e7779
@@ -409,6 +534,7 @@ md" In most instances you can use the broadcast operator across all functions wi
 # ╠═7f2f1b06-7c58-11eb-038e-15bd2b4d1dbb
 # ╟─ef8bc500-8ce0-11eb-380f-618627e4d182
 # ╠═7efab6f4-7c58-11eb-006e-412089f351a0
+# ╠═d1606590-906e-11eb-1846-1500a526a8a8
 # ╟─f86ef080-8cdf-11eb-3540-59c2bd06a1e5
 # ╟─d3d5e292-8cdf-11eb-1a17-8d5ceebaaf91
 # ╠═7f9507f4-7c58-11eb-045d-ad36f4fb184a

@@ -785,7 +785,7 @@ On average we expect the errors to partially cancel out. Suppose you define a ra
 # ╟─8598d0ca-7863-11eb-1549-21bc81a5cb1f
 # ╟─e6a2f610-7ac6-11eb-2920-0ba6b5af0ee6
 # ╟─f1f991e0-7864-11eb-1b11-abf2aa055858
-# ╟─e25b1a6a-7b75-11eb-06de-bdfec783caa1
+# ╠═e25b1a6a-7b75-11eb-06de-bdfec783caa1
 # ╟─e6015b5c-7b75-11eb-2671-b19f7e366107
 # ╟─85552d00-7865-11eb-1a94-3d5d52ed1772
 # ╠═84df01a6-7861-11eb-2e3d-bd2e48f379f0

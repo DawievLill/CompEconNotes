@@ -21,7 +21,7 @@ begin
 			Pkg.PackageSpec(name="Images"), 
 			Pkg.PackageSpec(name="ImageMagick"), 
 			Pkg.PackageSpec(name="PlutoUI"), 
-			Pkg.PackageSpec(name="HypertextLiteral"), 		
+			Pkg.PackageSpec(name="HypertextLiteral"),
 			])
 
 	using Images
@@ -34,7 +34,7 @@ end
 md" # Linear Algebra "
 
 # ╔═╡ 8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
-md" In this section we will cover some basic foundational concepts in linear algebra, which will be useful for various types of transformations and eventually solutions of linear systems of equations." 
+md" In this section we will cover some basic foundational concepts in linear algebra, which will be useful for various types of transformations and eventually solutions of linear systems of equations. Our discussion on transformations follows in a sense from our discussion on functions from last time, where a transformation is a mapping from multiple inputs to multiple outputs. " 
 
 # ╔═╡ cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 md" ## Arrays in Julia "
@@ -77,6 +77,12 @@ ndims(x₃) # Number of dimensions of x₃
 
 # ╔═╡ 2ba16772-8d9d-11eb-0a26-c556fb0240aa
 size(x₃) # Tuple containing the dimensions of x₃
+
+# ╔═╡ a1cd647e-92f1-11eb-0ddb-fdc6a622bb8e
+size(x₃, 1) # Number of rows
+
+# ╔═╡ af513998-92f1-11eb-16c2-3bd34fe8a231
+size(x₃, 2) # Number of columns
 
 # ╔═╡ 859cee86-8d9d-11eb-2993-bb3f3d748df6
 length(x₃) # Number of elements in x₃
@@ -122,6 +128,87 @@ Matrix{Float64}(I, 3, 3)
 
 # ╔═╡ e5bee5de-8d9e-11eb-12af-617d270d651a
 range(0, 100, length = 51) # Similar to `linspace` in Matlab
+
+# ╔═╡ e6c21a46-9311-11eb-3655-0dce4406e2c5
+md" The next logical step is to think about indexing of our constructed matrices / arrays. "
+
+# ╔═╡ f03aece2-9311-11eb-1467-c73576cd3184
+md" ### Indexing "
+
+# ╔═╡ 1398128c-9312-11eb-3f28-07be67646964
+md" The indexing will be very familiar to those that use Matlab and R, not so much for Python. Let us work with x₃ here. Recall that that is the following matrix. "
+
+# ╔═╡ ff94ad36-9311-11eb-297d-5192bd1882ec
+x₃
+
+# ╔═╡ 113271b0-9312-11eb-13c2-cd42aaf2ba53
+x₃[:, 1] # Provides us with the first column (all the rows of the first column) 
+
+# ╔═╡ 60e1fce2-9312-11eb-19db-df30cb82005f
+x₃[1, :] # Provides the first row (all the columns of the first row)
+
+# ╔═╡ 44e3c3c2-9312-11eb-34a4-e3a6b4e5d937
+x₃[1:2, 2:3] # Creates a sub-array. Can you figure out how this works?
+
+# ╔═╡ f2d1cce0-9312-11eb-0747-3f0c6f75c1c2
+md" **Important!** Creating subsets of an array creates a copy in Julia! It does not alter the original array. See what happens in the following example: " 
+
+# ╔═╡ 35d91f66-9313-11eb-075c-3ba0a8b38f60
+z₃ = x₃[1:2, 2:3]
+
+# ╔═╡ 47bd69a6-9313-11eb-0aff-0116148e2a69
+z₃[2, 2] = 1.0
+
+# ╔═╡ 551fc65e-9313-11eb-3043-516e2886485f
+z₃
+
+# ╔═╡ 59639cac-9313-11eb-008e-9fd2113271e7
+x₃ # x₃ did not change as a result of the change in z₃. 
+
+# ╔═╡ 6fb12d46-9313-11eb-3755-f75318201c67
+md" This is not standard across programming languages. In other languages the operations performed will alter the original x₃. In order to do this in Julia, we have to use the `views` macro." 
+
+# ╔═╡ 98ada18e-9313-11eb-1b00-a7df44a94629
+@views y₃ = x₃[1:2, 2:3]
+
+# ╔═╡ b4b7fe88-9313-11eb-1360-eda276fd3048
+y₃[2, 2] = 1.0
+
+# ╔═╡ c2ec5cba-9313-11eb-3a7f-45268de96491
+y₃
+
+# ╔═╡ c63186d4-9313-11eb-0c5c-f93db7a91c3d
+x₃ # Look at the value of `1` in the 2nd row and third column. This is different from our original matrix. 
+
+# ╔═╡ 44cd0f9a-9314-11eb-375e-2994eee141b8
+md" Now for the somewhat confusing part. In the case of subsetting we have that a copy is created, but if you use equality between variables (arrays), then we have that both variables point to the same data. They are allocated to the same place in memory. "
+
+# ╔═╡ 81cfcd24-9314-11eb-32ae-55253c36edee
+w₃ = x₃
+
+# ╔═╡ 98f43312-9314-11eb-3442-33b1fecc4542
+pointer(w₃), pointer(x₃) # Points to same data
+
+# ╔═╡ b6647ccc-9314-11eb-3c5e-236ba616007e
+md" If we were to change w₃ in any way, it would also change x₃." 
+
+# ╔═╡ cd203af2-9314-11eb-08a8-a5eb297100d2
+w₃[:, 1] .= 0
+
+# ╔═╡ dd873382-9314-11eb-2890-038d9bb37b5a
+x₃
+
+# ╔═╡ e684a78a-9314-11eb-01cf-d3f8eb0b9129
+md" If we want to create a copy of x₃ so that we can work with the newly created variable and not alter the original value of x₃, then we can use the `copy` function."
+
+# ╔═╡ 12a4536a-9315-11eb-0c2e-0dbf2ba21af1
+v₃ = copy(x₃)
+
+# ╔═╡ 233e7d4a-9315-11eb-38a0-19744474c3e7
+pointer(v₃), pointer(x₃) # Pointing to different data
+
+# ╔═╡ 37862b4c-9315-11eb-3e9e-b36398d242ee
+md" The general lesson is that subsetting creates a `copy`, and setting arrays equal to each other creates a `view`. If you are aware of these then you won't have a problem. "
 
 # ╔═╡ a0d17a54-8c18-11eb-0c42-c1553dfc28d5
 md" ## Transformations "
@@ -259,6 +346,8 @@ T = shear(1) # Pick a transformation
 # ╠═54db62f4-8d9b-11eb-34d6-9f4d16b251de
 # ╠═1b9b6594-8d9d-11eb-375a-79652da9dee1
 # ╠═2ba16772-8d9d-11eb-0a26-c556fb0240aa
+# ╠═a1cd647e-92f1-11eb-0ddb-fdc6a622bb8e
+# ╠═af513998-92f1-11eb-16c2-3bd34fe8a231
 # ╠═859cee86-8d9d-11eb-2993-bb3f3d748df6
 # ╟─dfa715e2-8d9c-11eb-29e3-7dad0fad127f
 # ╟─cd94ab08-8d9c-11eb-2a76-673456a371ef
@@ -274,6 +363,33 @@ T = shear(1) # Pick a transformation
 # ╠═58232b72-8d9e-11eb-0489-cfccbceb1e11
 # ╠═dab8d7f8-8d9e-11eb-0805-c7343db6c32b
 # ╠═e5bee5de-8d9e-11eb-12af-617d270d651a
+# ╟─e6c21a46-9311-11eb-3655-0dce4406e2c5
+# ╟─f03aece2-9311-11eb-1467-c73576cd3184
+# ╟─1398128c-9312-11eb-3f28-07be67646964
+# ╠═ff94ad36-9311-11eb-297d-5192bd1882ec
+# ╠═113271b0-9312-11eb-13c2-cd42aaf2ba53
+# ╠═60e1fce2-9312-11eb-19db-df30cb82005f
+# ╠═44e3c3c2-9312-11eb-34a4-e3a6b4e5d937
+# ╟─f2d1cce0-9312-11eb-0747-3f0c6f75c1c2
+# ╠═35d91f66-9313-11eb-075c-3ba0a8b38f60
+# ╠═47bd69a6-9313-11eb-0aff-0116148e2a69
+# ╠═551fc65e-9313-11eb-3043-516e2886485f
+# ╠═59639cac-9313-11eb-008e-9fd2113271e7
+# ╟─6fb12d46-9313-11eb-3755-f75318201c67
+# ╠═98ada18e-9313-11eb-1b00-a7df44a94629
+# ╠═b4b7fe88-9313-11eb-1360-eda276fd3048
+# ╠═c2ec5cba-9313-11eb-3a7f-45268de96491
+# ╠═c63186d4-9313-11eb-0c5c-f93db7a91c3d
+# ╟─44cd0f9a-9314-11eb-375e-2994eee141b8
+# ╠═81cfcd24-9314-11eb-32ae-55253c36edee
+# ╠═98f43312-9314-11eb-3442-33b1fecc4542
+# ╟─b6647ccc-9314-11eb-3c5e-236ba616007e
+# ╠═cd203af2-9314-11eb-08a8-a5eb297100d2
+# ╠═dd873382-9314-11eb-2890-038d9bb37b5a
+# ╟─e684a78a-9314-11eb-01cf-d3f8eb0b9129
+# ╠═12a4536a-9315-11eb-0c2e-0dbf2ba21af1
+# ╠═233e7d4a-9315-11eb-38a0-19744474c3e7
+# ╟─37862b4c-9315-11eb-3e9e-b36398d242ee
 # ╟─a0d17a54-8c18-11eb-0c42-c1553dfc28d5
 # ╟─a3cecb9e-8c18-11eb-1ce0-b531dfce4c7f
 # ╟─aff36556-8c18-11eb-1dc1-5d6e8f7f9854

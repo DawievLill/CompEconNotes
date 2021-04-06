@@ -22,16 +22,18 @@ begin
 end
 
 # ╔═╡ 97dca378-8c17-11eb-1a9f-49d299180a72
-md" # Linear Algebra "
+md" # Linear Algebra Basics"
 
 # ╔═╡ 8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
-md" In this section we will cover some basic foundational concepts in linear algebra, which will be useful for various types of transformations and eventually solutions of linear systems of equations. Our discussion on transformations follows in a sense from our discussion on functions from last time, where a transformation is a mapping from multiple inputs to multiple outputs. " 
+md" In this section we will cover some foundational concepts in (numerical) linear algebra. Our first section focuses on arrays in Julia. Following that we will move on to solving systems of linear equations.  
+
+For those of you who need a refresher on linear algebra, you can look [here](https://fncbook.github.io/fnc/appendix/linear-algebra.html) and [here](https://julia.quantecon.org/tools_and_techniques/linear_algebra.html). " 
 
 # ╔═╡ cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 md" ## Arrays in Julia "
 
 # ╔═╡ dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
-md" An array is a rectangular grid that is used for storing data of any type. The basic array is constructed in a similar way to the that of Matlab, which can be done as follows: "
+md" In this next section I will be following similar material to that of the [Quantecon](https://julia.quantecon.org/getting_started_julia/fundamental_types.html) website. An array is a rectangular grid that is used for storing data of any type. The basic array is constructed in a similar way to the that of Matlab, which can be done as follows: "
 
 # ╔═╡ eea539ae-8d95-11eb-1a13-d704f50969c3
 x₁ = [1.0, 2.0, 3.0]
@@ -204,12 +206,15 @@ md" The general lesson is that subsetting creates a `copy`, and setting arrays e
 # ╔═╡ 6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 md" # Systems of linear equations"
 
+# ╔═╡ aee53418-96e3-11eb-1da7-11abc19b7d9e
+md" We will be starting with some very elementary numerical linear algebra. The field of numerical linear algebra is immense and one can spend decades trying to learn all the different techniques. For our purposes we will only cover some of the most relevant methods. "  
+
 # ╔═╡ 83ae1458-96d3-11eb-2e21-a3be23f7b874
 md" One of the most basic tasks in numerical analysis is to solve the system of linear equations, which can be represented with the following matrix-vector notation. 
 
 $$\textbf{Ax = b}$$
 
-where $\textbf{A}$ is a $m \times n$ matrix, $\textbf{b}$ is a vector of length $m$ and $\textbf{x}$ is a vector of length $n$."
+where $\textbf{A}$ is a $n \times n$ matrix, $\textbf{b}$ is a vector of length $n$ and $\textbf{x}$ is a vector of length $n$."
 
 # ╔═╡ 45b2161a-96db-11eb-046a-079f3ddfcee9
 md" Judd (1998) states that there are three reasons to solve linear equations.
@@ -219,13 +224,29 @@ md" Judd (1998) states that there are three reasons to solve linear equations.
 3. Many ideas used in this section are applicable to more general problems in later sessions. "
 
 # ╔═╡ 2fbbf6ce-96dc-11eb-28fd-a531a03c2a72
-md" For this session we will first discuss **direct methods** for solving linear equations. We quickly discuss the issue of a condition number for a linear system and then we cover **iterative methods** for solving systems of equations. "
+md" For this session we will first discuss **direct methods** for solving linear equations. We follow that with a quick discussion on the condition number for a linear system and then we cover **iterative methods** for solving systems of equations. "
 
-# ╔═╡ a0d17a54-8c18-11eb-0c42-c1553dfc28d5
-md" ## Transformations "
+# ╔═╡ 67607a1c-96e3-11eb-3acb-55a989e7efb4
+md" ### Direct methods"
 
-# ╔═╡ a3cecb9e-8c18-11eb-1ce0-b531dfce4c7f
-md" In mathematics you will have dealt with matrices and how to multiply them with each other and also with specific scalar values and vectors. Normally we teach you about matrices as tables of numbers while vectors contain columns or rows of values. You then proceed with learning all the rules of multiplication in addition. The good news is that this creates a way of thinking about operations between these mathematical constructs. However, it turns out that we are really bad at calculating these things in practice and that computers can do a much better job. Unfortunately we spend so much time teaching you about the operations of multiplication and addition that we fail to mention the intuition behind these transformations. In this next section we will delve a bit deeper into the intuition behind transformations and let the computer do all the computing. "
+# ╔═╡ 2f46eecc-96f5-11eb-3f35-19de6bd828be
+md" There are several direct methods for solving linear equations. We will focus mostly on Gaussian elimation (GE) and lower-upper (LU) decomposition. However, one can also look at QR decomposition and singular value decomposition (SVD). I don't believe we will have time for the last two methods, but will perhaps in passing mention how they operate. 
+
+These direct methods are best applied to *dense* and relatively small $\textbf{A}$ matrices."  
+
+# ╔═╡ 86606d6e-96f5-11eb-0991-a7ab19525fde
+
+
+# ╔═╡ 7573a640-96e3-11eb-1214-070209074966
+md" ### Norms and condition numbers "
+
+# ╔═╡ 8139e91c-96e3-11eb-1d43-7d9502ac6d91
+md" ### Iterative solvers "
+
+# ╔═╡ ce083a66-96f5-11eb-1e1c-639e4764cc51
+md" There are many different iterative methods, we will focus on the Jacobi method, Gauss-Seidel method and successive over-relaxation (SOR) in this section. Conjugate-gradient methods will also be briefly mentioned. 
+
+These iterative methods are best applied to large, *sparse*, structured linear systems." 
 
 # ╔═╡ Cell order:
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
@@ -290,8 +311,13 @@ md" In mathematics you will have dealt with matrices and how to multiply them wi
 # ╠═233e7d4a-9315-11eb-38a0-19744474c3e7
 # ╟─37862b4c-9315-11eb-3e9e-b36398d242ee
 # ╟─6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
+# ╟─aee53418-96e3-11eb-1da7-11abc19b7d9e
 # ╟─83ae1458-96d3-11eb-2e21-a3be23f7b874
 # ╟─45b2161a-96db-11eb-046a-079f3ddfcee9
 # ╟─2fbbf6ce-96dc-11eb-28fd-a531a03c2a72
-# ╟─a0d17a54-8c18-11eb-0c42-c1553dfc28d5
-# ╟─a3cecb9e-8c18-11eb-1ce0-b531dfce4c7f
+# ╟─67607a1c-96e3-11eb-3acb-55a989e7efb4
+# ╟─2f46eecc-96f5-11eb-3f35-19de6bd828be
+# ╠═86606d6e-96f5-11eb-0991-a7ab19525fde
+# ╟─7573a640-96e3-11eb-1214-070209074966
+# ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
+# ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51

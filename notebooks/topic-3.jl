@@ -204,6 +204,23 @@ md" The general lesson is that subsetting creates a `copy`, and setting arrays e
 # ╔═╡ 6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 md" # Systems of linear equations"
 
+# ╔═╡ 83ae1458-96d3-11eb-2e21-a3be23f7b874
+md" One of the most basic tasks in numerical analysis is to solve the system of linear equations, which can be represented with the following matrix-vector notation. 
+
+$$\textbf{Ax = b}$$
+
+where $\textbf{A}$ is a $m \times n$ matrix, $\textbf{b}$ is a vector of length $m$ and $\textbf{x}$ is a vector of length $n$."
+
+# ╔═╡ 45b2161a-96db-11eb-046a-079f3ddfcee9
+md" Judd (1998) states that there are three reasons to solve linear equations.
+
+1. Important class of problems in themselves. 
+2. Linear equations are almost the only problem we know how to solve directly. 
+3. Many ideas used in this section are applicable to more general problems in later sessions. "
+
+# ╔═╡ 2fbbf6ce-96dc-11eb-28fd-a531a03c2a72
+md" For this session we will first discuss **direct methods** for solving linear equations. We quickly discuss the issue of a condition number for a linear system and then we cover **iterative methods** for solving systems of equations. "
+
 # ╔═╡ a0d17a54-8c18-11eb-0c42-c1553dfc28d5
 md" ## Transformations "
 
@@ -211,7 +228,7 @@ md" ## Transformations "
 md" In mathematics you will have dealt with matrices and how to multiply them with each other and also with specific scalar values and vectors. Normally we teach you about matrices as tables of numbers while vectors contain columns or rows of values. You then proceed with learning all the rules of multiplication in addition. The good news is that this creates a way of thinking about operations between these mathematical constructs. However, it turns out that we are really bad at calculating these things in practice and that computers can do a much better job. Unfortunately we spend so much time teaching you about the operations of multiplication and addition that we fail to mention the intuition behind these transformations. In this next section we will delve a bit deeper into the intuition behind transformations and let the computer do all the computing. "
 
 # ╔═╡ Cell order:
-# ╠═796b0922-8c17-11eb-31e8-59d5b21ee32b
+# ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
 # ╟─97dca378-8c17-11eb-1a9f-49d299180a72
 # ╟─8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
 # ╟─cdcc50b0-8c18-11eb-3188-ffb91dcecee8
@@ -273,5 +290,8 @@ md" In mathematics you will have dealt with matrices and how to multiply them wi
 # ╠═233e7d4a-9315-11eb-38a0-19744474c3e7
 # ╟─37862b4c-9315-11eb-3e9e-b36398d242ee
 # ╟─6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
+# ╟─83ae1458-96d3-11eb-2e21-a3be23f7b874
+# ╟─45b2161a-96db-11eb-046a-079f3ddfcee9
+# ╟─2fbbf6ce-96dc-11eb-28fd-a531a03c2a72
 # ╟─a0d17a54-8c18-11eb-0c42-c1553dfc28d5
 # ╟─a3cecb9e-8c18-11eb-1ce0-b531dfce4c7f

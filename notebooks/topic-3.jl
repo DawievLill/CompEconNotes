@@ -25,15 +25,21 @@ end
 md" # Linear Algebra Basics"
 
 # ╔═╡ 8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
-md" In this section we will cover some foundational concepts in (numerical) linear algebra. Our first section focuses on arrays in Julia. Following that we will move on to solving systems of linear equations.  
+md" In this section we will cover some foundational concepts in (numerical) linear algebra. Our first section focuses on arrays in Julia. Following that we will move on to solving systems of linear equations.  " 
 
-For those of you who need a refresher on linear algebra, you can look [here](https://fncbook.github.io/fnc/appendix/linear-algebra.html) and [here](https://julia.quantecon.org/tools_and_techniques/linear_algebra.html). " 
+# ╔═╡ d3a32206-96ff-11eb-0c21-953e0d446b50
+	md"""
+	!!! info
+	    For those of you who need a refresher on linear algebra, you can look [here](https://fncbook.github.io/fnc/appendix/linear-algebra.html) and [here](https://julia.quantecon.org/tools_and_techniques/linear_algebra.html).
+	"""
 
 # ╔═╡ cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 md" ## Arrays in Julia "
 
 # ╔═╡ dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
-md" In this next section I will be following similar material to that of the [Quantecon](https://julia.quantecon.org/getting_started_julia/fundamental_types.html) website. An array is a rectangular grid that is used for storing data of any type. The basic array is constructed in a similar way to the that of Matlab, which can be done as follows: "
+md" In this next section I will be following similar material to that of the [Quantecon](https://julia.quantecon.org/getting_started_julia/fundamental_types.html) website. An array is a rectangular grid that is used for storing data of any type. However, all of the data in the container should be of the same type!
+
+The basic array is constructed in a similar way to the that of Matlab, which can be done as follows: "
 
 # ╔═╡ eea539ae-8d95-11eb-1a13-d704f50969c3
 x₁ = [1.0, 2.0, 3.0]
@@ -70,6 +76,15 @@ ndims(x₃) # Number of dimensions of x₃
 
 # ╔═╡ 2ba16772-8d9d-11eb-0a26-c556fb0240aa
 size(x₃) # Tuple containing the dimensions of x₃
+
+# ╔═╡ 2f5d84f6-9700-11eb-3dca-799c96c6b609
+typeof(size(x₃)) # Immutable type!!
+
+# ╔═╡ 438e6cba-9700-11eb-2c73-339e72e703cb
+md" It is important to note here that the *tuple* type is immutable. This means that you cannot change the values once you have created the tuple. Observe the error that we get if we want to alter a specific element of a tuple." 
+
+# ╔═╡ 8f86a65a-9700-11eb-1633-95b7ef7e7295
+size(x₃)[1] = 2 # In this case we want to change the first element of the tuple
 
 # ╔═╡ a1cd647e-92f1-11eb-0ddb-fdc6a622bb8e
 size(x₃, 1) # Number of rows
@@ -123,7 +138,7 @@ Matrix{Float64}(I, 3, 3)
 range(0, 100, length = 51) # Similar to `linspace` in Matlab
 
 # ╔═╡ e6c21a46-9311-11eb-3655-0dce4406e2c5
-md" The next logical step is to think about indexing of our constructed matrices / arrays. "
+md" The next step is to think about indexing of our constructed matrices / arrays. In other words, how do we get specific values out of our created arrays.  "
 
 # ╔═╡ f03aece2-9311-11eb-1467-c73576cd3184
 md" ### Indexing "
@@ -203,6 +218,90 @@ pointer(v₃), pointer(x₃) # Pointing to different data
 # ╔═╡ 37862b4c-9315-11eb-3e9e-b36398d242ee
 md" The general lesson is that subsetting creates a `copy`, and setting arrays equal to each other creates a `view`. If you are aware of these then you won't have a problem. "
 
+# ╔═╡ 75f93c78-9707-11eb-06c6-0d03369eaa3a
+md" For the following discussion you can read more about assignments and passing of arrays at the following [page](https://julia.quantecon.org/getting_started_julia/fundamental_types.html). I will only briefly touch on the topic here. " 
+
+# ╔═╡ acd6e89e-9707-11eb-36a6-894060cd078a
+md" #### Assignment and Passing Arrays "
+
+# ╔═╡ b87341aa-9707-11eb-2c38-63cbcca5c9a7
+md" We have seen so far that the left hand of an assignment binds some name / label to a specific value. We also know that it is possible to rebind names. We spoke about the idea of a pointer to a "
+
+# ╔═╡ d8b70622-9707-11eb-0b1b-85b7b9f47ad8
+
+
+# ╔═╡ ad4bc944-96f7-11eb-3c46-1f42cb700c68
+md" #### Special matrices "
+
+# ╔═╡ 70d37008-9705-11eb-17ac-15f8a398eb86
+md" We need to be careful about types in Julia. Consider the creation of a diagonal matrix." 
+
+# ╔═╡ 9ae75b2a-9705-11eb-1e0e-5d2ca6c0407f
+d₁ = [1.0, 2.0]
+
+# ╔═╡ a1cfecfe-9705-11eb-2ea5-2bcdda8c123d
+d₂ = Diagonal(d₁) 
+
+# ╔═╡ b62e71e8-9705-11eb-27d1-2b8e7fd1bf4f
+md" We observe that d₂ is not a 2-dimensional array as we would expect. The type is something completely different. Julia does this because this type is more efficient to store and to use in arithmetic and matrix operations. We can perform the same operations as before, but be careful to note that this is not a **dense** matrix. "
+
+# ╔═╡ 1146394e-9706-11eb-08be-cd9360651d26
+md" Another interesting example is that of the identity matrix. Let us say that we wanted to subtract the identity marix from a 2-dimensional array. We could do it in one of two ways. " 
+
+# ╔═╡ 1e29435e-9706-11eb-1847-9b045e41ac71
+d₃ = [1.0 2.0; 3.0 4.0]
+
+# ╔═╡ 3969bd2e-9706-11eb-3c87-8b4ae3261186
+d₃ - Diagonal([1.0, 1.0])
+
+# ╔═╡ 7b8586a2-9706-11eb-3062-df72a0a683c9
+d₃ - I # Note we didn't specify dimension of I
+
+# ╔═╡ 80e5300c-9706-11eb-393a-6d4dba078567
+typeof(I)
+
+# ╔═╡ 8e1b1ffc-9706-11eb-14d3-73f5ae17f967
+md" The identity matrix is a strange type that we have not encountered before. It is much more general than the method we employed and also more powerful as it can be applied in many different situations."
+
+# ╔═╡ e846ce68-96f7-11eb-37a5-b706a6979c63
+md" ### Linear algebra "
+
+# ╔═╡ 4adb0436-9702-11eb-3583-397161d0d7e7
+md" Before we talk about systems of linear equations it might be useful to specify some of the basic linear algebra operations that we might encounter."
+
+# ╔═╡ 606ed3a4-9702-11eb-1396-6df331c01343
+x₄ = randn(5)
+
+# ╔═╡ 24681522-9703-11eb-33ac-15006eddeb11
+y₄ = randn(5)
+
+# ╔═╡ 6a6690ea-9702-11eb-0ee4-0b7ffb0b982b
+norm(x₄) # Provides the L2 norm
+
+# ╔═╡ 7f529b0c-9702-11eb-083a-71a10e65776c
+sqrt(sum(abs2, x₄)) # This is the L2 norm
+
+# ╔═╡ 96e43f00-9702-11eb-1244-df4c077349c7
+md" We might want to also think about calculating dot products. This can be done in the following way: "
+
+# ╔═╡ 51fc430a-9703-11eb-0595-19e9e6a75785
+dot(x₄, y₄) # x₄' * y₄
+
+# ╔═╡ ffc56698-9702-11eb-3ab8-0baffe0aa914
+x₄'y₄ # Same answer as above
+
+# ╔═╡ b068662e-9703-11eb-13e3-c5898705e274
+md" Below is some other useful information that we might want to gather from a matrix. "
+
+# ╔═╡ 7bdfe3e8-9703-11eb-068d-398708020f10
+tr(x₃) # Computes the trace of the matrix
+
+# ╔═╡ 97061304-9703-11eb-07f0-b14fbf0fc3e6
+det(x₃) # Computes the determinant of the matrix
+
+# ╔═╡ a68db73c-9703-11eb-2bb4-7bbe725c4e3b
+rank(x₃) # Computes the rank of the matrix	
+
 # ╔═╡ 6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 md" # Systems of linear equations"
 
@@ -252,6 +351,7 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
 # ╟─97dca378-8c17-11eb-1a9f-49d299180a72
 # ╟─8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
+# ╟─d3a32206-96ff-11eb-0c21-953e0d446b50
 # ╟─cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 # ╟─dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
 # ╠═eea539ae-8d95-11eb-1a13-d704f50969c3
@@ -266,6 +366,9 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═54db62f4-8d9b-11eb-34d6-9f4d16b251de
 # ╠═1b9b6594-8d9d-11eb-375a-79652da9dee1
 # ╠═2ba16772-8d9d-11eb-0a26-c556fb0240aa
+# ╠═2f5d84f6-9700-11eb-3dca-799c96c6b609
+# ╟─438e6cba-9700-11eb-2c73-339e72e703cb
+# ╠═8f86a65a-9700-11eb-1633-95b7ef7e7295
 # ╠═a1cd647e-92f1-11eb-0ddb-fdc6a622bb8e
 # ╠═af513998-92f1-11eb-16c2-3bd34fe8a231
 # ╠═859cee86-8d9d-11eb-2993-bb3f3d748df6
@@ -310,6 +413,34 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═12a4536a-9315-11eb-0c2e-0dbf2ba21af1
 # ╠═233e7d4a-9315-11eb-38a0-19744474c3e7
 # ╟─37862b4c-9315-11eb-3e9e-b36398d242ee
+# ╟─75f93c78-9707-11eb-06c6-0d03369eaa3a
+# ╟─acd6e89e-9707-11eb-36a6-894060cd078a
+# ╠═b87341aa-9707-11eb-2c38-63cbcca5c9a7
+# ╠═d8b70622-9707-11eb-0b1b-85b7b9f47ad8
+# ╟─ad4bc944-96f7-11eb-3c46-1f42cb700c68
+# ╟─70d37008-9705-11eb-17ac-15f8a398eb86
+# ╠═9ae75b2a-9705-11eb-1e0e-5d2ca6c0407f
+# ╠═a1cfecfe-9705-11eb-2ea5-2bcdda8c123d
+# ╟─b62e71e8-9705-11eb-27d1-2b8e7fd1bf4f
+# ╟─1146394e-9706-11eb-08be-cd9360651d26
+# ╠═1e29435e-9706-11eb-1847-9b045e41ac71
+# ╠═3969bd2e-9706-11eb-3c87-8b4ae3261186
+# ╠═7b8586a2-9706-11eb-3062-df72a0a683c9
+# ╠═80e5300c-9706-11eb-393a-6d4dba078567
+# ╟─8e1b1ffc-9706-11eb-14d3-73f5ae17f967
+# ╟─e846ce68-96f7-11eb-37a5-b706a6979c63
+# ╟─4adb0436-9702-11eb-3583-397161d0d7e7
+# ╠═606ed3a4-9702-11eb-1396-6df331c01343
+# ╠═24681522-9703-11eb-33ac-15006eddeb11
+# ╠═6a6690ea-9702-11eb-0ee4-0b7ffb0b982b
+# ╠═7f529b0c-9702-11eb-083a-71a10e65776c
+# ╟─96e43f00-9702-11eb-1244-df4c077349c7
+# ╠═51fc430a-9703-11eb-0595-19e9e6a75785
+# ╠═ffc56698-9702-11eb-3ab8-0baffe0aa914
+# ╟─b068662e-9703-11eb-13e3-c5898705e274
+# ╠═7bdfe3e8-9703-11eb-068d-398708020f10
+# ╠═97061304-9703-11eb-07f0-b14fbf0fc3e6
+# ╠═a68db73c-9703-11eb-2bb4-7bbe725c4e3b
 # ╟─6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 # ╟─aee53418-96e3-11eb-1da7-11abc19b7d9e
 # ╟─83ae1458-96d3-11eb-2e21-a3be23f7b874

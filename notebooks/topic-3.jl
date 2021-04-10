@@ -325,7 +325,7 @@ These direct methods are best applied to *dense* and relatively small $\textbf{A
 md" #### Triangular systems "
 
 # ╔═╡ e8ce31d0-9056-48c3-a3d8-0aae4b99eb33
-md" We want to solve $\textbf{Ax = b}$ and the idea in this section is to the turn the original problem into one that is easy to solve. We would like to transform our $\textbf{A}$ matrix into a triangular structure. Below is a representation of a lower triangular matrix.  
+md" We want to solve $\textbf{Ax = b}$. In most cases this means solving $\mathbf{x = A^{-1}b}$. This means that we need to find the inverse of a matrix, which is often hard to do. The idea in this section is to the turn the original problem into one that is easy to solve. We would like to transform our $\textbf{A}$ matrix into a structure that can be easily inverted. One such representation is the triangular system. Other matrices that are easy to invert include permutation and orthogonal matrices. Below is a representation of a lower triangular matrix.  
 
 $$\left(\begin{array}{cccc}a_{11} & 0 & \cdots & 0 \\ a_{21} & a_{22} & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ a_{n 1} & a_{n 2} & \cdots & a_{n n}\end{array}\right)\left(\begin{array}{c}x_{1} \\ x_{2} \\ \vdots \\ x_{n}\end{array}\right)=\left(\begin{array}{c}b_{1} \\ b_{2} \\ \vdots \\ b_{n}\end{array}\right)$$
 

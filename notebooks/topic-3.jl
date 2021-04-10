@@ -428,10 +428,16 @@ Gaussian elimination effectively applies a sequence of elementary matrices to tr
 $$\begin{aligned} \mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{A} \mathbf{x} &=\mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{b} \\ \mathbf{U x} &=\mathbf{b}_{\mathrm{new}} \end{aligned}$$"
 
 # ╔═╡ 10e36444-e747-4cde-a51c-1e57d3a6cb9e
-md" To illustrate the procedure, let us show the steps in the proces. For the first column we construct our elementary matrix with the hope of eliminating the `-3.0` in the `(2, 1)` position of the $A_2$ matrix. Using a value of `1.5` in the `(2, 1)` position of the $E_{21}$ elementary matrix provides us with the required result, as we show below. Can you figure out why we use a value of `1.5`?"
+md" To illustrate the procedure, let us show the steps in the proces. For the first column we construct our elementary matrix with the hope of eliminating the `-3.0` in the `(2, 1)` position of the $A_2$ matrix. Using a value of `1.5` in the `(2, 1)` position of the $E_{21}$ elementary matrix provides us with the required result, as we show below."
 
 # ╔═╡ 6e278a30-363d-413b-8c7e-833b9b0d1047
 E21 = [1.0 0.0 0.0; 1.5 1.0 0.0; 0.0 0.0 1.0]
+
+# ╔═╡ 73132b4b-f7b8-4b19-8abe-50bd2844524e
+md" How did we get to this value of `1.5`? Maybe the following bit of code will help. "
+
+# ╔═╡ 2f35943d-311c-4e4f-8b07-1ca9062961a1
+mult21 = A₂[2, 1]/A₂[1, 1] # Can you follow the logic here?
 
 # ╔═╡ d328e1eb-4feb-4e40-9835-bf5e64beb263
 md" We left multiply $E_{21}$ with $A_2$ to replace its second row `[-3.0, -1.0, 2.0]` by `1.5*[2.0, 1.0, -1.0] + [-3.0, -1.0, 2.0]`. This will give us the following."
@@ -467,11 +473,35 @@ M1 = E31 * E21
 # ╔═╡ 8ee0c629-8c1e-4d61-b9fe-d2fe3a9543ed
 M2 = E32
 
-# ╔═╡ 3e1db869-94ab-4db0-8daa-0bacd737e408
-md" In essence Gaussian elimination does $\mathbf{M}_{n-1} \cdots \mathbf{M}_{1} \mathbf{A}=\mathbf{U}$. Next time we will continue with the LU decomposition, but I think this should be enough to keep you busy for a while. "
-
 # ╔═╡ bbfe4b6e-8b72-4f6b-b516-1b8838adbcee
 md" #### LU factorisation "
+
+# ╔═╡ 8f7849aa-6302-4feb-b6c2-a4b27d3d4bd8
+md" In essence Gaussian elimination does $\mathbf{M}_{n-1} \cdots \mathbf{M}_{1} \mathbf{A}=\mathbf{U}$. So if we let $\mathbf{L}=\mathbf{M}_{1}^{-1} \cdots \mathbf{M}_{n-1}^{-1}$ then the elimination process leads to a factorisation $\mathbf{A}=\mathbf{L} \mathbf{U}$ where $\mathbf{L}$ is unit lower triangular and $\mathbf{U}$ is upper triangular. This $\mathbf{L} \mathbf{U}$ factorisation reduces any linear system to two triangular ones. So if we want to to solve $\textbf{Ax = b}$ the steps are as follows.
+
+1. Factor $\mathbf{A}=\mathbf{L} \mathbf{U}$ using Gaussian elimination.
+2. Solve $\textbf{Lz = b}$ for $\textbf{z}$ using forward substitution.
+3. Solve $\textbf{Ux = z}$ for $\textbf{x}$ using backward substitution.
+
+Below we have a function that shows how this factorisation might take place. "
+
+# ╔═╡ eb80ec1a-5728-48e0-9836-2270ce4ed87a
+function lufact(A)
+
+	n = size(A,1)
+	L = Matrix(Diagonal(ones(n)))
+	U = float(copy(A))
+
+	# Gaussian elimination
+	for j = 1:n-1
+  		for i = j+1:n
+    		L[i,j] = U[i,j] / U[j,j]   # row multiplier
+    		U[i,j:n] -= L[i,j]*U[j,j:n]
+  		end
+	end
+
+	return L,triu(U)
+end
 
 # ╔═╡ 7573a640-96e3-11eb-1214-070209074966
 md" ### Norms and condition numbers "
@@ -605,6 +635,8 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─f89e0088-dbc4-43df-8159-39184b735930
 # ╟─10e36444-e747-4cde-a51c-1e57d3a6cb9e
 # ╠═6e278a30-363d-413b-8c7e-833b9b0d1047
+# ╟─73132b4b-f7b8-4b19-8abe-50bd2844524e
+# ╠═2f35943d-311c-4e4f-8b07-1ca9062961a1
 # ╟─d328e1eb-4feb-4e40-9835-bf5e64beb263
 # ╠═fba688bb-a451-450b-bc1a-9002e090412c
 # ╟─30216472-4160-459d-8796-0b2fa1e9b20e
@@ -615,8 +647,9 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─5a3e13a9-78a6-46e0-bec5-5fa18b9db13d
 # ╠═153453d8-2de0-4a40-86b9-24cf83e2d8ee
 # ╠═8ee0c629-8c1e-4d61-b9fe-d2fe3a9543ed
-# ╟─3e1db869-94ab-4db0-8daa-0bacd737e408
 # ╟─bbfe4b6e-8b72-4f6b-b516-1b8838adbcee
+# ╟─8f7849aa-6302-4feb-b6c2-a4b27d3d4bd8
+# ╠═eb80ec1a-5728-48e0-9836-2270ce4ed87a
 # ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51

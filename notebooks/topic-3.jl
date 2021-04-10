@@ -13,9 +13,11 @@ begin
 			Pkg.PackageSpec(name="ImageMagick"), 
 			Pkg.PackageSpec(name="PlutoUI"), 
 			Pkg.PackageSpec(name="HypertextLiteral"),
-			Pkg.PackageSpec(name="Random")
+			Pkg.PackageSpec(name="Random"), 
+			Pkg.PackageSpec(name="BenchmarkTools")
 			])
 	using Random
+	using BenchmarkTools
 	using Images
 	using PlutoUI
 	using HypertextLiteral
@@ -325,48 +327,76 @@ These direct methods are best applied to *dense* and relatively small $\textbf{A
 md" #### Triangular systems "
 
 # ╔═╡ e8ce31d0-9056-48c3-a3d8-0aae4b99eb33
-md" We want to solve $\textbf{Ax = b}$. In most cases this means solving $\mathbf{x = A^{-1}b}$. This means that we need to find the inverse of a matrix, which is often hard to do. The idea in this section is to the turn the original problem into one that is easy to solve. We would like to transform our $\textbf{A}$ matrix into a structure that can be easily inverted. One such representation is the triangular system. Other matrices that are easy to invert include permutation and orthogonal matrices. Below is a representation of a lower triangular matrix.  
+md" We want to solve $\textbf{Ax = b}$. In most cases this means solving $\mathbf{x = A^{-1}b}$. This means that we need to find the inverse of a matrix, which is often hard to do. In the numerical world we **almost never compute an inverse**. The process of finding the solution through an inverse is slower than solving the linear system of equations.
+
+The idea in this section is to the turn the original problem into one that is easy to solve. We would like to transform our $\textbf{A}$ matrix into a structure that can be easily solved. One such representation is the triangular system. Other matrices that are easy to solve include permutation and orthogonal matrices. Below is a representation of a lower triangular matrix.  
 
 $$\left(\begin{array}{cccc}a_{11} & 0 & \cdots & 0 \\ a_{21} & a_{22} & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ a_{n 1} & a_{n 2} & \cdots & a_{n n}\end{array}\right)\left(\begin{array}{c}x_{1} \\ x_{2} \\ \vdots \\ x_{n}\end{array}\right)=\left(\begin{array}{c}b_{1} \\ b_{2} \\ \vdots \\ b_{n}\end{array}\right)$$
 
-The reason we wan this strucuture, is that we can then solve by **forward substitution**, which is represented as follows: 
+The reason we want this strucuture, is that we can then solve by **forward substitution**, which is represented as follows: 
 
 $\begin{aligned} x_{1} &=b_{1} / a_{11} \\ x_{2} &=\left(b_{2}-a_{21} x_{1}\right) / a_{22} \\ x_{3} &=\left(b_{3}-a_{31} x_{1}-a_{32} x_{2}\right) / a_{33} \\ & \quad \vdots \\ x_{n} &=\left(b_{n}-a_{n 1} x_{1}-a_{n 2} x_{2}-\cdots-a_{n, n-1} x_{n-1}\right) / a_{n n} \end{aligned}$"
 
-# ╔═╡ c4d7f459-0926-483e-91d7-55554cb6da59
-md" One can also construct a upper triangular structure and use **backward substitution**." 
+# ╔═╡ 34ad7ce4-0e9f-40eb-9424-c53ee764e5b9
+md" One can code this forward substitution by hand using a `for loop` as follows."
 
-# ╔═╡ 6a23242c-ed7f-4f45-a1fa-3289f86f7156
-md" Given that you have a triangular structure, how would you go about solving this in Julia?  "
+# ╔═╡ f3a02044-f490-4273-8019-8938beba724d
+function forwardsub(a,b)
+
+	n = size(a,1)
+	x = zeros(n)
+	x[1] = b[1]/a[1,1]
+	for i = 2:n
+    	s = sum( a[i,j]*x[j] for j=1:i-1 )
+    	x[i] = ( b[i] - s ) / a[i,i]
+	end
+
+	return x
+end
+
+# ╔═╡ 120cbbfc-94f3-4187-b8ca-d553e943f9a0
+md" Now let us use our function `forwardsub` to solve for a triangular system."
 
 # ╔═╡ fb1c0b79-fd47-4beb-b2cb-0fc671f08164
 begin
 	Random.seed!(123); # Set seed for reproducibility
-	n  = 5;
-	A₁ = randn(n, n);
-	b₁ = randn(n);
+	n₁  = 5;
+	A₁ = randn(n₁, n₁);
+	b₁ = randn(n₁);
 end
 
 # ╔═╡ 19af2999-2502-4782-9396-c7d29b2f59cf
 A₁
 
-# ╔═╡ d5d66ca0-f279-4832-ab90-e03349487577
-b₁
+# ╔═╡ 376f2364-7483-4739-8005-bbaac18d649b
+L₁ = tril(A₁) # Full triangular matrix
 
 # ╔═╡ 7f85de41-ec85-486f-827f-ea08929e9ab5
 md" We can use the `LowerTriangular` command to create a copy of the lower triangular portion of the original $\textbf{A}$ matrix."
 
-# ╔═╡ 50f8bcec-8b60-4f48-acd6-309c097f47c1
-Al = LowerTriangular(A₁)
+# ╔═╡ a15b1ed6-7270-4feb-8fcc-498249e5ff91
+L₂ = LowerTriangular(A₁)
 
-# ╔═╡ 911d51bf-58f7-474e-bb9c-c5d5fdd88aef
-md" Using the `\` operator in Julia will then solve the problem using forward substitution. It detects that there is a lower triangular structure and dispacthes to a basic linear algebra subprogram (BLAS) routine to compute. In this case the subroutine is most likely [trsv](https://www.netlib.org/lapack/explore-html/d6/d96/dtrsv_8f.html)."
+# ╔═╡ c0290bf7-96c7-42ef-80d1-35f6f88f08eb
+b₁
+
+# ╔═╡ 6a23242c-ed7f-4f45-a1fa-3289f86f7156
+md" We have written our function to solve this problem. Now given that you have a triangular structure, how would you go about solving this with some of the included functions in Julia?  Using the `\` operator in Julia will solve the problem using forward substitution. It detects that there is a lower triangular structure and dispacthes to a basic linear algebra subprogram (BLAS) routine to compute. In this case the subroutine is most likely [trsv](https://www.netlib.org/lapack/explore-html/d6/d96/dtrsv_8f.html). Let us compare the two methods."
+
+# ╔═╡ ba9515e2-eb87-441c-ad54-ab018fc74625
+forwardsub(L₂, b₁)
 
 # ╔═╡ c5188bbe-1d2f-4964-aa99-0a151118c4af
-Al \ b₁
+L₂ \ b₁
 
-# ╔═╡ 965e851d-2fb6-4fde-8e41-4f54c9e7830c
-md" This triangular structure makes it conceptually easy to solve and it turns out that it is quite efficient in terms of number of floating points operations (flops). This means that if our matrix is in this structure, we will be able to solve the problem quite quickly. "
+# ╔═╡ ff3d034c-fd35-47e1-819a-c048ea5f2ec4
+md" We get the same answer. So is the Julia routine faster?"
+
+# ╔═╡ b8fb29ee-f244-4060-ba85-6d0518426691
+@benchmark forwardsub(L₂, b₁)
+
+# ╔═╡ e279a91e-5fab-4b73-8f63-610750c2fd1d
+@benchmark L₂ \ b₁
 
 # ╔═╡ af09ca7e-fcab-48fe-b61b-115edaa814d7
 md" #### Gaussian elimination " 
@@ -552,16 +582,21 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─2f46eecc-96f5-11eb-3f35-19de6bd828be
 # ╟─86606d6e-96f5-11eb-0991-a7ab19525fde
 # ╟─e8ce31d0-9056-48c3-a3d8-0aae4b99eb33
-# ╟─c4d7f459-0926-483e-91d7-55554cb6da59
-# ╟─6a23242c-ed7f-4f45-a1fa-3289f86f7156
+# ╟─34ad7ce4-0e9f-40eb-9424-c53ee764e5b9
+# ╠═f3a02044-f490-4273-8019-8938beba724d
+# ╟─120cbbfc-94f3-4187-b8ca-d553e943f9a0
 # ╠═fb1c0b79-fd47-4beb-b2cb-0fc671f08164
 # ╠═19af2999-2502-4782-9396-c7d29b2f59cf
-# ╠═d5d66ca0-f279-4832-ab90-e03349487577
+# ╠═376f2364-7483-4739-8005-bbaac18d649b
 # ╟─7f85de41-ec85-486f-827f-ea08929e9ab5
-# ╠═50f8bcec-8b60-4f48-acd6-309c097f47c1
-# ╟─911d51bf-58f7-474e-bb9c-c5d5fdd88aef
+# ╠═a15b1ed6-7270-4feb-8fcc-498249e5ff91
+# ╠═c0290bf7-96c7-42ef-80d1-35f6f88f08eb
+# ╟─6a23242c-ed7f-4f45-a1fa-3289f86f7156
+# ╠═ba9515e2-eb87-441c-ad54-ab018fc74625
 # ╠═c5188bbe-1d2f-4964-aa99-0a151118c4af
-# ╟─965e851d-2fb6-4fde-8e41-4f54c9e7830c
+# ╟─ff3d034c-fd35-47e1-819a-c048ea5f2ec4
+# ╠═b8fb29ee-f244-4060-ba85-6d0518426691
+# ╠═e279a91e-5fab-4b73-8f63-610750c2fd1d
 # ╟─af09ca7e-fcab-48fe-b61b-115edaa814d7
 # ╟─68582594-c03b-4c1b-ad53-3549cedc1e8b
 # ╠═6b82fef2-e19a-4551-88b4-6093d6d7ff7f

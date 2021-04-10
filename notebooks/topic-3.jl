@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -13,8 +13,9 @@ begin
 			Pkg.PackageSpec(name="ImageMagick"), 
 			Pkg.PackageSpec(name="PlutoUI"), 
 			Pkg.PackageSpec(name="HypertextLiteral"),
+			Pkg.PackageSpec(name="Random")
 			])
-
+	using Random
 	using Images
 	using PlutoUI
 	using HypertextLiteral
@@ -22,7 +23,7 @@ begin
 end
 
 # ╔═╡ 97dca378-8c17-11eb-1a9f-49d299180a72
-md" # Linear Algebra Basics"
+md" # Linear Algebra"
 
 # ╔═╡ 8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
 md" In this section we will cover some foundational concepts in (numerical) linear algebra. Our first section focuses on arrays in Julia. Following that we will move on to solving systems of linear equations.  " 
@@ -30,14 +31,16 @@ md" In this section we will cover some foundational concepts in (numerical) line
 # ╔═╡ d3a32206-96ff-11eb-0c21-953e0d446b50
 	md"""
 	!!! info
-	    For those of you who need a refresher on linear algebra, you can look [here](https://fncbook.github.io/fnc/appendix/linear-algebra.html) and [here](https://julia.quantecon.org/tools_and_techniques/linear_algebra.html).
+	    For those of you who need a refresher on linear algebra, you can look [here](https://fncbook.github.io/fnc/appendix/linear-algebra.html) or [here](https://julia.quantecon.org/tools_and_techniques/linear_algebra.html). There is also a free book on applied linear algebra that has accompanying Julia code, which you can find [here](http://vmls-book.stanford.edu/). 
 	"""
 
 # ╔═╡ cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 md" ## Arrays in Julia "
 
 # ╔═╡ dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
-md" In this next section I will be following similar material to that of the [Quantecon](https://julia.quantecon.org/getting_started_julia/fundamental_types.html) website. An array is a rectangular grid that is used for storing data of any type. However, all of the data in the container should be of the same type!
+md" In this section I will be following similar material to that of the [Quantecon](https://julia.quantecon.org/getting_started_julia/fundamental_types.html) website. In some places the descriptions will be close to (or identical) to their depiction. The purpose of this notebook is to condense all the information into one place. These notes are no substitute for complete coverage on the topic, just a basic introduction.
+
+The first thing we need to consider in this section is our definition for an array. A technical definition is that an array is a rectangular grid that is used for storing data of any type. However, all of the data in the container should be of the same type!
 
 The basic array is constructed in a similar way to the that of Matlab, which can be done as follows: "
 
@@ -227,14 +230,11 @@ md" #### Assignment and Passing Arrays "
 # ╔═╡ b87341aa-9707-11eb-2c38-63cbcca5c9a7
 md" We have seen so far that the left hand of an assignment binds some name / label to a specific value. We also know that it is possible to rebind names. We spoke about the idea of a pointer to a "
 
-# ╔═╡ d8b70622-9707-11eb-0b1b-85b7b9f47ad8
-
-
 # ╔═╡ ad4bc944-96f7-11eb-3c46-1f42cb700c68
 md" #### Special matrices "
 
 # ╔═╡ 70d37008-9705-11eb-17ac-15f8a398eb86
-md" We need to be careful about types in Julia. Consider the creation of a diagonal matrix." 
+md" There are some special arrays in Julia that we need take care in using. As always, we need to be careful about types in Julia. Consider the creation of a diagonal matrix." 
 
 # ╔═╡ 9ae75b2a-9705-11eb-1e0e-5d2ca6c0407f
 d₁ = [1.0, 2.0]
@@ -264,7 +264,7 @@ typeof(I)
 md" The identity matrix is a strange type that we have not encountered before. It is much more general than the method we employed and also more powerful as it can be applied in many different situations."
 
 # ╔═╡ e846ce68-96f7-11eb-37a5-b706a6979c63
-md" ### Linear algebra "
+md" ### Basic operations "
 
 # ╔═╡ 4adb0436-9702-11eb-3583-397161d0d7e7
 md" Before we talk about systems of linear equations it might be useful to specify some of the basic linear algebra operations that we might encounter."
@@ -305,9 +305,6 @@ rank(x₃) # Computes the rank of the matrix
 # ╔═╡ 6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 md" # Systems of linear equations"
 
-# ╔═╡ aee53418-96e3-11eb-1da7-11abc19b7d9e
-md" We will be starting with some very elementary numerical linear algebra. The field of numerical linear algebra is immense and one can spend decades trying to learn all the different techniques. For our purposes we will only cover some of the most relevant methods. "  
-
 # ╔═╡ 83ae1458-96d3-11eb-2e21-a3be23f7b874
 md" One of the most basic tasks in numerical analysis is to solve the system of linear equations, which can be represented with the following matrix-vector notation. 
 
@@ -329,11 +326,95 @@ md" For this session we will first discuss **direct methods** for solving linear
 md" ### Direct methods"
 
 # ╔═╡ 2f46eecc-96f5-11eb-3f35-19de6bd828be
-md" There are several direct methods for solving linear equations. We will focus mostly on Gaussian elimation (GE) and lower-upper (LU) decomposition. However, one can also look at QR decomposition and singular value decomposition (SVD). I don't believe we will have time for the last two methods, but will perhaps in passing mention how they operate. 
+md" There are several direct methods for solving linear equations. We will focus on Gaussian elimation (GE) and lower-upper (LU) decomposition. However, one can also look at QR decomposition and singular value decomposition (SVD). I don't believe we will have time for the last two methods, but will perhaps in passing mention how they operate. 
 
 These direct methods are best applied to *dense* and relatively small $\textbf{A}$ matrices."  
 
 # ╔═╡ 86606d6e-96f5-11eb-0991-a7ab19525fde
+md" #### Triangular systems "
+
+# ╔═╡ e8ce31d0-9056-48c3-a3d8-0aae4b99eb33
+md" We want to solve $\textbf{Ax = b}$ and the idea in this section is to the turn the original problem into one that is easy to solve. We would like to transform our $\textbf{A}$ matrix into a triangular structure. Below is a representation of a lower triangular matrix.  
+
+$$\left(\begin{array}{cccc}a_{11} & 0 & \cdots & 0 \\ a_{21} & a_{22} & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ a_{n 1} & a_{n 2} & \cdots & a_{n n}\end{array}\right)\left(\begin{array}{c}x_{1} \\ x_{2} \\ \vdots \\ x_{n}\end{array}\right)=\left(\begin{array}{c}b_{1} \\ b_{2} \\ \vdots \\ b_{n}\end{array}\right)$$
+
+The reason we wan this strucuture, is that we can then solve by **forward substitution**, which is represented as follows: 
+
+$\begin{aligned} x_{1} &=b_{1} / a_{11} \\ x_{2} &=\left(b_{2}-a_{21} x_{1}\right) / a_{22} \\ x_{3} &=\left(b_{3}-a_{31} x_{1}-a_{32} x_{2}\right) / a_{33} \\ & \quad \vdots \\ x_{n} &=\left(b_{n}-a_{n 1} x_{1}-a_{n 2} x_{2}-\cdots-a_{n, n-1} x_{n-1}\right) / a_{n n} \end{aligned}$"
+
+# ╔═╡ c4d7f459-0926-483e-91d7-55554cb6da59
+md" One can also construct a upper triangular structure and use **backward substitution**." 
+
+# ╔═╡ 6a23242c-ed7f-4f45-a1fa-3289f86f7156
+md" Given that you have a triangular structure, how would you go about solving this in Julia?  "
+
+# ╔═╡ fb1c0b79-fd47-4beb-b2cb-0fc671f08164
+begin
+	Random.seed!(123); # Set seed for reproducibility
+	n  = 5;
+	A₁ = randn(n, n);
+	b₁ = randn(n);
+end
+
+# ╔═╡ 19af2999-2502-4782-9396-c7d29b2f59cf
+A₁
+
+# ╔═╡ d5d66ca0-f279-4832-ab90-e03349487577
+b₁
+
+# ╔═╡ 7f85de41-ec85-486f-827f-ea08929e9ab5
+md" We can use the `LowerTriangular` command to create a copy of the lower triangular portion of the original $\textbf{A}$ matrix."
+
+# ╔═╡ 50f8bcec-8b60-4f48-acd6-309c097f47c1
+Al = LowerTriangular(A₁)
+
+# ╔═╡ 911d51bf-58f7-474e-bb9c-c5d5fdd88aef
+md" Using the `\` operator in Julia will then solve the problem using forward substitution. It detects that there is a lower triangular structure and dispacthes to a basic linear algebra subprogram (BLAS) routine to compute. In this case the subroutine is most likely [trsv](https://www.netlib.org/lapack/explore-html/d6/d96/dtrsv_8f.html)."
+
+# ╔═╡ c5188bbe-1d2f-4964-aa99-0a151118c4af
+Al \ b₁
+
+# ╔═╡ 965e851d-2fb6-4fde-8e41-4f54c9e7830c
+md" This triangular structure makes it conceptually easy to solve and it turns out that it is quite efficient in terms of number of floating points operations (flops). This means that if our matrix is in this structure, we will be able to solve the problem quite quickly. "
+
+# ╔═╡ af09ca7e-fcab-48fe-b61b-115edaa814d7
+md" #### Gaussian elimination " 
+
+# ╔═╡ 68582594-c03b-4c1b-ad53-3549cedc1e8b
+md" We have encountered the `\` operator before in the case of a triangular system. However, what happens when we call this operator on solve a linear equation when the system is not triangular? In other words, what happens when we call `A \ b` to solve a linear equation? "
+
+# ╔═╡ 6b82fef2-e19a-4551-88b4-6093d6d7ff7f
+A₂ = [2.0 1.0 -1.0; -3.0 -1.0 2.0; -2.0 1.0 2.0]
+
+# ╔═╡ f29371ee-4e2e-48bc-95a6-5c52820504ba
+b₂ = [8.0, -11.0, -3.0]
+
+# ╔═╡ b0dd755c-3793-44fe-b6d9-fce3b3289564
+A₂ \ b₂ 
+
+# ╔═╡ f89e0088-dbc4-43df-8159-39184b735930
+md" Gaussian elimination effectively applies a sequence of elementary matrices to transform the linear system that we are provided to an upper triangular structure.
+
+$$\begin{aligned} \mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{A} \mathbf{x} &=\mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{b} \\ \mathbf{U x} &=\mathbf{b}_{\mathrm{new}} \end{aligned}$$
+
+where the $\mathbf{E}_{jk}(c)$ matrices are these [elementary operator matrices](https://en.wikipedia.org/wiki/Elementary_matrix). "
+
+# ╔═╡ 10e36444-e747-4cde-a51c-1e57d3a6cb9e
+md" To illustrate the procedure, let us show one or two of the steps in the process. "
+
+# ╔═╡ 6e278a30-363d-413b-8c7e-833b9b0d1047
+E21 = [1.0 0.0 0.0; 1.5 1.0 0.0; 0.0 0.0 1.0]
+
+# ╔═╡ d328e1eb-4feb-4e40-9835-bf5e64beb263
+md" This elementary matrix has a value of `1.5` in the `(2,1)` position. We left multiply this with the original matrix A₂ to replace its second row `[-3.0, -1.0, 2.0]` by `1.5*[2.0, 1.0, -1.0] + [-3.0, -1.0, 2.0]`. This will give us the following."
+
+# ╔═╡ fba688bb-a451-450b-bc1a-9002e090412c
+E21 * A₂ # This gives us a zero in the (2, 1) position.
+
+# ╔═╡ 30216472-4160-459d-8796-0b2fa1e9b20e
+md" We still need a zero in the `(3, 1)` and `(3, 2)` position. " 
+
+# ╔═╡ d73e2a8d-f2df-4353-a4a8-141d34af93e8
 
 
 # ╔═╡ 7573a640-96e3-11eb-1214-070209074966
@@ -415,8 +496,7 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─37862b4c-9315-11eb-3e9e-b36398d242ee
 # ╟─75f93c78-9707-11eb-06c6-0d03369eaa3a
 # ╟─acd6e89e-9707-11eb-36a6-894060cd078a
-# ╠═b87341aa-9707-11eb-2c38-63cbcca5c9a7
-# ╠═d8b70622-9707-11eb-0b1b-85b7b9f47ad8
+# ╟─b87341aa-9707-11eb-2c38-63cbcca5c9a7
 # ╟─ad4bc944-96f7-11eb-3c46-1f42cb700c68
 # ╟─70d37008-9705-11eb-17ac-15f8a398eb86
 # ╠═9ae75b2a-9705-11eb-1e0e-5d2ca6c0407f
@@ -442,13 +522,35 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═97061304-9703-11eb-07f0-b14fbf0fc3e6
 # ╠═a68db73c-9703-11eb-2bb4-7bbe725c4e3b
 # ╟─6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
-# ╟─aee53418-96e3-11eb-1da7-11abc19b7d9e
 # ╟─83ae1458-96d3-11eb-2e21-a3be23f7b874
 # ╟─45b2161a-96db-11eb-046a-079f3ddfcee9
 # ╟─2fbbf6ce-96dc-11eb-28fd-a531a03c2a72
 # ╟─67607a1c-96e3-11eb-3acb-55a989e7efb4
 # ╟─2f46eecc-96f5-11eb-3f35-19de6bd828be
-# ╠═86606d6e-96f5-11eb-0991-a7ab19525fde
+# ╟─86606d6e-96f5-11eb-0991-a7ab19525fde
+# ╟─e8ce31d0-9056-48c3-a3d8-0aae4b99eb33
+# ╟─c4d7f459-0926-483e-91d7-55554cb6da59
+# ╟─6a23242c-ed7f-4f45-a1fa-3289f86f7156
+# ╠═fb1c0b79-fd47-4beb-b2cb-0fc671f08164
+# ╠═19af2999-2502-4782-9396-c7d29b2f59cf
+# ╠═d5d66ca0-f279-4832-ab90-e03349487577
+# ╟─7f85de41-ec85-486f-827f-ea08929e9ab5
+# ╠═50f8bcec-8b60-4f48-acd6-309c097f47c1
+# ╟─911d51bf-58f7-474e-bb9c-c5d5fdd88aef
+# ╠═c5188bbe-1d2f-4964-aa99-0a151118c4af
+# ╟─965e851d-2fb6-4fde-8e41-4f54c9e7830c
+# ╟─af09ca7e-fcab-48fe-b61b-115edaa814d7
+# ╟─68582594-c03b-4c1b-ad53-3549cedc1e8b
+# ╠═6b82fef2-e19a-4551-88b4-6093d6d7ff7f
+# ╠═f29371ee-4e2e-48bc-95a6-5c52820504ba
+# ╠═b0dd755c-3793-44fe-b6d9-fce3b3289564
+# ╟─f89e0088-dbc4-43df-8159-39184b735930
+# ╟─10e36444-e747-4cde-a51c-1e57d3a6cb9e
+# ╠═6e278a30-363d-413b-8c7e-833b9b0d1047
+# ╟─d328e1eb-4feb-4e40-9835-bf5e64beb263
+# ╠═fba688bb-a451-450b-bc1a-9002e090412c
+# ╟─30216472-4160-459d-8796-0b2fa1e9b20e
+# ╠═d73e2a8d-f2df-4353-a4a8-141d34af93e8
 # ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51

@@ -438,7 +438,10 @@ M1 = E31 * E21
 M2 = E32
 
 # ╔═╡ 3e1db869-94ab-4db0-8daa-0bacd737e408
-md" In essence Gaussian elimination does $\mathbf{M}_{n-1} \cdots \mathbf{M}_{1} \mathbf{A}=\mathbf{U}$."
+md" In essence Gaussian elimination does $\mathbf{M}_{n-1} \cdots \mathbf{M}_{1} \mathbf{A}=\mathbf{U}$. Next time we will continue with the LU decomposition, but I think this should be enough to keep you busy for a while. "
+
+# ╔═╡ bbfe4b6e-8b72-4f6b-b516-1b8838adbcee
+md" #### LU factorisation "
 
 # ╔═╡ 7573a640-96e3-11eb-1214-070209074966
 md" ### Norms and condition numbers "
@@ -578,6 +581,7 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═153453d8-2de0-4a40-86b9-24cf83e2d8ee
 # ╠═8ee0c629-8c1e-4d61-b9fe-d2fe3a9543ed
 # ╟─3e1db869-94ab-4db0-8daa-0bacd737e408
+# ╟─bbfe4b6e-8b72-4f6b-b516-1b8838adbcee
 # ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51

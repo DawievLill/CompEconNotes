@@ -221,15 +221,6 @@ pointer(v₃), pointer(x₃) # Pointing to different data
 # ╔═╡ 37862b4c-9315-11eb-3e9e-b36398d242ee
 md" The general lesson is that subsetting creates a `copy`, and setting arrays equal to each other creates a `view`. If you are aware of these then you won't have a problem. "
 
-# ╔═╡ 75f93c78-9707-11eb-06c6-0d03369eaa3a
-md" For the following discussion you can read more about assignments and passing of arrays at the following [page](https://julia.quantecon.org/getting_started_julia/fundamental_types.html). I will only briefly touch on the topic here. " 
-
-# ╔═╡ acd6e89e-9707-11eb-36a6-894060cd078a
-md" #### Assignment and Passing Arrays "
-
-# ╔═╡ b87341aa-9707-11eb-2c38-63cbcca5c9a7
-md" We have seen so far that the left hand of an assignment binds some name / label to a specific value. We also know that it is possible to rebind names. We spoke about the idea of a pointer to a "
-
 # ╔═╡ ad4bc944-96f7-11eb-3c46-1f42cb700c68
 md" #### Special matrices "
 
@@ -393,29 +384,61 @@ b₂ = [8.0, -11.0, -3.0]
 A₂ \ b₂ 
 
 # ╔═╡ f89e0088-dbc4-43df-8159-39184b735930
-md" Gaussian elimination effectively applies a sequence of elementary matrices to transform the linear system that we are provided to an upper triangular structure.
+md" In order to understand the process of Gaussian elimination, you have to know what an elementary matrix represents. For those who know the procedure feel free to move on to the example. An elementary matrix is an identity matrix with the zero in position $(j, k)$ replaced by a value of $c$. 
 
-$$\begin{aligned} \mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{A} \mathbf{x} &=\mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{b} \\ \mathbf{U x} &=\mathbf{b}_{\mathrm{new}} \end{aligned}$$
+$\mathbf{E}_{j k}(c)=\left(\begin{array}{ccccccc}1 & & & & & & \\ & \ddots & & & & & \\ & & 1 & & & & \\ & & & \ddots & & & \\ & & c & & 1 & & \\ & & & & & \ddots & \\ & & & & & & 1\end{array}\right)=\mathbf{I}+c \mathbf{e}_{j} \mathbf{e}_{k}^{T}$
 
-where the $\mathbf{E}_{jk}(c)$ matrices are these [elementary operator matrices](https://en.wikipedia.org/wiki/Elementary_matrix). "
+
+The term $\mathbf{E}_{j k}(c)$ left multiplies a matrix $\mathbf{X}$ to replace its $j$-th row $\mathbf{x}_{j}$ by $c\mathbf{x_k} + \mathbf{x_j}$:
+
+$\mathbf{E}_{j k}(c) \times \mathbf{X}=\mathbf{E}_{j k}(c) \times\left(\begin{array}{llll}\ldots & \mathbf{x}_{k} & \ldots \\ \cdots & \mathbf{x}_{j} & \cdots\end{array}\right)=\left(\begin{array}{lll}\ldots & \mathbf{x}_{k \cdot} & \ldots \\ \cdots & c \mathbf{x}_{k}+\mathbf{x}_{j} & \ldots\end{array}\right)$
+
+Gaussian elimination effectively applies a sequence of elementary matrices to transform the linear system that we are provided to an upper triangular structure $\mathbf{U}$.
+
+$$\begin{aligned} \mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{A} \mathbf{x} &=\mathbf{E}_{n, n-1}\left(c_{n, n-1}\right) \cdots \mathbf{E}_{21}\left(c_{21}\right) \mathbf{b} \\ \mathbf{U x} &=\mathbf{b}_{\mathrm{new}} \end{aligned}$$"
 
 # ╔═╡ 10e36444-e747-4cde-a51c-1e57d3a6cb9e
-md" To illustrate the procedure, let us show one or two of the steps in the process. "
+md" To illustrate the procedure, let us show the steps in the proces. For the first column we construct our elementary matrix with the hope of eliminating the `-3.0` in the `(2, 1)` position of the $A_2$ matrix. Using a value of `1.5` in the `(2, 1)` position of the $E_{21}$ elementary matrix provides us with the required result, as we show below. Can you figure out why we use a value of `1.5`?"
 
 # ╔═╡ 6e278a30-363d-413b-8c7e-833b9b0d1047
 E21 = [1.0 0.0 0.0; 1.5 1.0 0.0; 0.0 0.0 1.0]
 
 # ╔═╡ d328e1eb-4feb-4e40-9835-bf5e64beb263
-md" This elementary matrix has a value of `1.5` in the `(2,1)` position. We left multiply this with the original matrix A₂ to replace its second row `[-3.0, -1.0, 2.0]` by `1.5*[2.0, 1.0, -1.0] + [-3.0, -1.0, 2.0]`. This will give us the following."
+md" We left multiply $E_{21}$ with $A_2$ to replace its second row `[-3.0, -1.0, 2.0]` by `1.5*[2.0, 1.0, -1.0] + [-3.0, -1.0, 2.0]`. This will give us the following."
 
 # ╔═╡ fba688bb-a451-450b-bc1a-9002e090412c
 E21 * A₂ # This gives us a zero in the (2, 1) position.
 
 # ╔═╡ 30216472-4160-459d-8796-0b2fa1e9b20e
-md" We still need a zero in the `(3, 1)` and `(3, 2)` position. " 
+md" We still need a zero in the `(3, 1)` and `(3, 2)` position. All steps for the process are shown below. " 
 
 # ╔═╡ d73e2a8d-f2df-4353-a4a8-141d34af93e8
+E31 = [1.0 0.0 0.0; 0.0 1.0 0.0; 1.0 0.0 1.0]
 
+# ╔═╡ 3396b7ff-2022-4bda-a5cc-98d330f6b103
+E31 * E21 * A₂ # This gives us a zero in the (2, 1) and (3, 1) position.
+
+# ╔═╡ 222532b1-fdc3-4aa8-ae40-48fdc54c9e26
+E32 = [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 -4.0 1.0]
+
+# ╔═╡ b6cc62b8-1f4b-4fdc-9376-3365908cf428
+E32 * E31 * E21 * A₂ # We have our upper triangular structure. 
+
+# ╔═╡ 5a3e13a9-78a6-46e0-bec5-5fa18b9db13d
+md" We performed our transformation one column at a time. If we combine the elementary matrix operations for each column into one operator, that is referred to as a Gauss transformation. In general for the first column the formula would be: 
+
+$\mathbf{M}_{1}=\mathbf{E}_{n 1}\left(c_{n 1}\right) \cdots \mathbf{E}_{31}\left(c_{31}\right) \mathbf{E}_{21}\left(c_{21}\right)$
+
+In our case we have that $\mathbf{M}_{1} = \mathbf{E}_{31}\left(c_{31}\right) \mathbf{E}_{21}\left(c_{21}\right)$ and $\mathbf{M}_{2} = \mathbf{E}_{32}\left(c_{32}\right)$."
+
+# ╔═╡ 153453d8-2de0-4a40-86b9-24cf83e2d8ee
+M1 = E31 * E21
+
+# ╔═╡ 8ee0c629-8c1e-4d61-b9fe-d2fe3a9543ed
+M2 = E32
+
+# ╔═╡ 3e1db869-94ab-4db0-8daa-0bacd737e408
+md" In essence Gaussian elimination does $\mathbf{M}_{n-1} \cdots \mathbf{M}_{1} \mathbf{A}=\mathbf{U}$."
 
 # ╔═╡ 7573a640-96e3-11eb-1214-070209074966
 md" ### Norms and condition numbers "
@@ -494,9 +517,6 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═12a4536a-9315-11eb-0c2e-0dbf2ba21af1
 # ╠═233e7d4a-9315-11eb-38a0-19744474c3e7
 # ╟─37862b4c-9315-11eb-3e9e-b36398d242ee
-# ╟─75f93c78-9707-11eb-06c6-0d03369eaa3a
-# ╟─acd6e89e-9707-11eb-36a6-894060cd078a
-# ╟─b87341aa-9707-11eb-2c38-63cbcca5c9a7
 # ╟─ad4bc944-96f7-11eb-3c46-1f42cb700c68
 # ╟─70d37008-9705-11eb-17ac-15f8a398eb86
 # ╠═9ae75b2a-9705-11eb-1e0e-5d2ca6c0407f
@@ -551,6 +571,13 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═fba688bb-a451-450b-bc1a-9002e090412c
 # ╟─30216472-4160-459d-8796-0b2fa1e9b20e
 # ╠═d73e2a8d-f2df-4353-a4a8-141d34af93e8
+# ╠═3396b7ff-2022-4bda-a5cc-98d330f6b103
+# ╠═222532b1-fdc3-4aa8-ae40-48fdc54c9e26
+# ╠═b6cc62b8-1f4b-4fdc-9376-3365908cf428
+# ╟─5a3e13a9-78a6-46e0-bec5-5fa18b9db13d
+# ╠═153453d8-2de0-4a40-86b9-24cf83e2d8ee
+# ╠═8ee0c629-8c1e-4d61-b9fe-d2fe3a9543ed
+# ╟─3e1db869-94ab-4db0-8daa-0bacd737e408
 # ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51

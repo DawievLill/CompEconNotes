@@ -29,7 +29,7 @@ begin
 end
 
 # ╔═╡ 97dca378-8c17-11eb-1a9f-49d299180a72
-md" # Linear Algebra"
+md" # Systems of linear equations"
 
 # ╔═╡ 8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
 md" In this section we will cover some foundational concepts in (numerical) linear algebra. Our first section focuses on arrays in Julia. Following that we will move on to solving systems of linear equations.  " 
@@ -372,7 +372,7 @@ scale(5)([1, 2])
 scalex(5)([1, 2])
 
 # ╔═╡ 6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
-md" # Systems of linear equations"
+md" # Solving systems of linear equations"
 
 # ╔═╡ 83ae1458-96d3-11eb-2e21-a3be23f7b874
 md" One of the most basic tasks in numerical analysis is to solve the system of linear equations, which can be represented with the following matrix-vector notation. 
@@ -400,7 +400,7 @@ md" There are several direct methods for solving linear equations. Direct method
 These direct methods are best applied to *dense* and relatively small $\textbf{A}$ matrices."  
 
 # ╔═╡ 86606d6e-96f5-11eb-0991-a7ab19525fde
-md" #### Triangular systems "
+md" #### Exploiting structure --> triangular systems "
 
 # ╔═╡ e8ce31d0-9056-48c3-a3d8-0aae4b99eb33
 md" We want to solve $\textbf{Ax = b}$. In most cases this means solving $\mathbf{x = A^{-1}b}$. This means that we need to find the inverse of a matrix, which is often hard to do. In the numerical world we **almost never compute an inverse**. The process of finding the solution through an inverse is slower than solving the linear system of equations.
@@ -671,9 +671,6 @@ end
 # ╔═╡ 67b3ec44-f9b8-42d6-828b-bb05007aff27
 md" One can also look at other decompositions such as the QR and spectral decomposition. We won't have time to cover these topics, but they are quite important. "
 
-# ╔═╡ 7573a640-96e3-11eb-1214-070209074966
-md" ### Norms and condition numbers "
-
 # ╔═╡ 8139e91c-96e3-11eb-1d43-7d9502ac6d91
 md" ### Iterative solvers "
 
@@ -681,6 +678,18 @@ md" ### Iterative solvers "
 md" There are many different iterative methods, we will focus on the Jacobi method, Gauss-Seidel method and successive over-relaxation (SOR) in this section. Conjugate-gradient methods will also be briefly mentioned. 
 
 These iterative methods are best applied to large, *sparse*, structured linear systems." 
+
+# ╔═╡ c468cc76-97d3-4305-b575-e1aa352ec0ff
+md" #### Jacobi method "
+
+# ╔═╡ d661036f-ea13-4e4d-95da-5cfa4786c786
+md" #### Gauss-Seidel method "
+
+# ╔═╡ e75b1b83-7a97-4b8f-9be0-b72a5d09d713
+md" #### Successive over-relaxation "
+
+# ╔═╡ dbc150ba-c617-4ab4-96b2-f6f6d208a47b
+md" #### Conjugate-gradient methods "
 
 # ╔═╡ f5643e42-9504-4ea9-82d5-fa7574da88b1
 md"### Numerical linear algebra (optional) "
@@ -698,8 +707,11 @@ md" #### Structure in matrices "
 # ╔═╡ a3bb44ae-f745-4cc9-a983-e019ea35c780
 md" #### Computational complexity "
 
+# ╔═╡ 7573a640-96e3-11eb-1214-070209074966
+md" #### Norms and condition numbers "
+
 # ╔═╡ Cell order:
-# ╠═796b0922-8c17-11eb-31e8-59d5b21ee32b
+# ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
 # ╟─97dca378-8c17-11eb-1a9f-49d299180a72
 # ╟─8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
 # ╟─d3a32206-96ff-11eb-0c21-953e0d446b50
@@ -867,10 +879,14 @@ md" #### Computational complexity "
 # ╠═9056fa71-a624-4430-9af6-1c9dbd8df961
 # ╠═557eb079-b812-4fc6-b78a-2d933ef80215
 # ╟─67b3ec44-f9b8-42d6-828b-bb05007aff27
-# ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51
+# ╟─c468cc76-97d3-4305-b575-e1aa352ec0ff
+# ╟─d661036f-ea13-4e4d-95da-5cfa4786c786
+# ╟─e75b1b83-7a97-4b8f-9be0-b72a5d09d713
+# ╟─dbc150ba-c617-4ab4-96b2-f6f6d208a47b
 # ╟─f5643e42-9504-4ea9-82d5-fa7574da88b1
 # ╟─d5f1b957-d9c8-4ad7-aa36-3ff818d69fde
 # ╟─daac8a8b-294c-437a-859d-fe8c613e4b39
 # ╟─a3bb44ae-f745-4cc9-a983-e019ea35c780
+# ╟─7573a640-96e3-11eb-1214-070209074966

@@ -142,11 +142,14 @@ fill(5.0, 3, 3)
 # ╔═╡ f29ef44a-8d9d-11eb-0dbe-d5cc7c1080db
 ones(3, 3)
 
+# ╔═╡ e358ae06-becb-4d26-ab5a-2e3eee274e54
+x₃
+
 # ╔═╡ fb532bfe-8d9d-11eb-2a10-89d840f835df
 reshape(x₃, 1, 9)
 
 # ╔═╡ 16efc20a-8d9e-11eb-1819-47dd80edfc9b
-similar(x₃)
+similar(x₃) # Fills with garbage from memory
 
 # ╔═╡ 08ef44e4-8da0-11eb-3d23-052a692e711f
 rand(Int64, 3, 3)
@@ -159,6 +162,12 @@ randn(Float64, 3, 3)
 
 # ╔═╡ dab8d7f8-8d9e-11eb-0805-c7343db6c32b
 Matrix{Float64}(I, 3, 3)
+
+# ╔═╡ 3c9c9d0a-a13c-4e33-82b3-1d5cfec04c3f
+typeof(I)
+
+# ╔═╡ 72390509-65be-4508-802e-458869d49b23
+x₃ - I
 
 # ╔═╡ e5bee5de-8d9e-11eb-12af-617d270d651a
 range(0, 100, length = 51) # Similar to `linspace` in Matlab
@@ -334,7 +343,7 @@ Below we show the definition of linear transformation and then some other intere
 
 # ╔═╡ 302f0117-3d5d-4d84-b58b-f5b7485489f0
 begin
-	lin(a, b, c, d) = ((x, y),) -> ( a*x + b*y, c*x + d*y )
+	lin(a, b, c, d) = ((x, y),) -> ( a * x + b * y, c * x + d * y )
 	lin(A) = v -> A * [v...]  # linear algebra version using matrix multiplication
 end
 
@@ -663,7 +672,7 @@ begin
 end
 
 # ╔═╡ 9056fa71-a624-4430-9af6-1c9dbd8df961
-@benchmark logpdf_mvn_1($y, $Σ)
+@benchmark logpdf_mvn_1(y, Σ)
 
 # ╔═╡ 557eb079-b812-4fc6-b78a-2d933ef80215
 @benchmark logpdf_mvn_2($y, $Σ)
@@ -744,12 +753,15 @@ md" #### Norms and condition numbers "
 # ╠═b28764ae-8d9c-11eb-10f7-8f4b2387665f
 # ╠═b7a8d21a-8d9c-11eb-106d-2f68dc163529
 # ╠═f29ef44a-8d9d-11eb-0dbe-d5cc7c1080db
+# ╠═e358ae06-becb-4d26-ab5a-2e3eee274e54
 # ╠═fb532bfe-8d9d-11eb-2a10-89d840f835df
 # ╠═16efc20a-8d9e-11eb-1819-47dd80edfc9b
 # ╠═08ef44e4-8da0-11eb-3d23-052a692e711f
 # ╠═40b31e3c-8d9e-11eb-0c87-5bf71827d188
 # ╠═58232b72-8d9e-11eb-0489-cfccbceb1e11
 # ╠═dab8d7f8-8d9e-11eb-0805-c7343db6c32b
+# ╠═3c9c9d0a-a13c-4e33-82b3-1d5cfec04c3f
+# ╠═72390509-65be-4508-802e-458869d49b23
 # ╠═e5bee5de-8d9e-11eb-12af-617d270d651a
 # ╟─e6c21a46-9311-11eb-3655-0dce4406e2c5
 # ╟─f03aece2-9311-11eb-1467-c73576cd3184

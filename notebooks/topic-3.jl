@@ -596,10 +596,25 @@ A₂ ≈ L * U
 md" #### Cholesky decomposition "
 
 # ╔═╡ 6405964a-f5e2-471e-a054-adcf0e5db512
-md" If our matrix is real, symmetric, and positive definite then a Cholesky decomposition is a form of LU decomposition where $L = U'$. This factorisation is used in many application, especially with relation to time series analysis and control theory. However, it is also a efficient factorisation routine when the structure of the matrix is appropriate. "
+md" The LU decomposition is not often used in statistics, because statisticians and econometricians often deal with positive (semi)definite matrices. If our matrix is real, symmetric, and positive definite then a Cholesky decomposition is a form of LU decomposition where $L = U'$. This factorisation is used in many application, especially with relation to time series analysis and control theory. 
 
-# ╔═╡ db96af52-7308-496e-a4d1-d69f6cc1f5ce
+As example, think of linear regression. Our normal equation is 
 
+$\mathbf{X}^{T} \mathbf{X} \beta=\mathbf{X}^{T} \mathbf{y}$
+
+In this case the coefficient matrix $\mathbf{X}^{T} \mathbf{X}$ is symmetric and positive semidefinite. We want to be able to exploit this structure. Let us explore Cholesky decomposition with a few examples. "
+
+# ╔═╡ edd75ea3-84dc-45f7-adec-540b7984aaa9
+x₅ = rand(500, 500);
+
+# ╔═╡ cd83f148-49c2-4eaf-9b4a-629c06aa7183
+x₅_dense = x₅ * x₅;  
+
+# ╔═╡ feebcf59-527e-4b49-87f9-0090002e9454
+A₃ = Symmetric(x₅_dense) # Easy way to get symmetric positive semi-definite matrix
+
+# ╔═╡ 9eb49bae-fbf7-49e1-b8aa-3b939d577dee
+cholesky(A₃)
 
 # ╔═╡ 183f47d8-9a45-4081-8e6c-eb6e0a0e1518
 md" #### QR decomposition "
@@ -785,7 +800,10 @@ md" This section is a bit more advanced and is optional for those who do not car
 # ╠═70ce2499-3b4a-4213-a6de-d3b9454a62fa
 # ╟─bf68439d-d1f8-437b-b851-bcfd65ab13ea
 # ╟─6405964a-f5e2-471e-a054-adcf0e5db512
-# ╠═db96af52-7308-496e-a4d1-d69f6cc1f5ce
+# ╠═edd75ea3-84dc-45f7-adec-540b7984aaa9
+# ╠═cd83f148-49c2-4eaf-9b4a-629c06aa7183
+# ╠═feebcf59-527e-4b49-87f9-0090002e9454
+# ╠═9eb49bae-fbf7-49e1-b8aa-3b939d577dee
 # ╟─183f47d8-9a45-4081-8e6c-eb6e0a0e1518
 # ╟─4d4afbc5-dd1e-4995-87b4-3aa5e8e87821
 # ╟─7573a640-96e3-11eb-1214-070209074966

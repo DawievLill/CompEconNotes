@@ -15,7 +15,8 @@ begin
 			Pkg.PackageSpec(name="HypertextLiteral"),
 			Pkg.PackageSpec(name="Random"), 
 			Pkg.PackageSpec(name="BenchmarkTools"), 
-			Pkg.PackageSpec(name="Plots")
+			Pkg.PackageSpec(name="Plots"), 
+			Pkg.PackageSpec(name="Distributions")
 			])
 	using Random
 	using BenchmarkTools
@@ -24,6 +25,7 @@ begin
 	using HypertextLiteral
 	using LinearAlgebra
 	using Plots
+	using Distributions
 end
 
 # ╔═╡ 97dca378-8c17-11eb-1a9f-49d299180a72
@@ -596,7 +598,7 @@ A₂ ≈ L * U
 md" #### Cholesky decomposition "
 
 # ╔═╡ 6405964a-f5e2-471e-a054-adcf0e5db512
-md" The LU decomposition is not often used in statistics, because statisticians and econometricians often deal with positive (semi)definite matrices. If our matrix is real, symmetric, and positive definite then a Cholesky decomposition is a form of LU decomposition where $L = U'$. This factorisation is used in many application, especially with relation to time series analysis and control theory. 
+md" The LU decomposition is not often used in statistics, because statisticians and econometricians often deal with positive (semi)definite matrices. If our matrix $A$ is real, symmetric, and positive definite then a Cholesky decomposition is a form of LU decomposition where $L = U'$, so that $A = LL'$. This factorisation is used in many application, especially with relation to time series analysis and control theory. 
 
 As example, think of linear regression. Our normal equation is 
 
@@ -605,16 +607,60 @@ $\mathbf{X}^{T} \mathbf{X} \beta=\mathbf{X}^{T} \mathbf{y}$
 In this case the coefficient matrix $\mathbf{X}^{T} \mathbf{X}$ is symmetric and positive semidefinite. We want to be able to exploit this structure. Let us explore Cholesky decomposition with a few examples. "
 
 # ╔═╡ edd75ea3-84dc-45f7-adec-540b7984aaa9
-x₅ = rand(500, 500);
-
-# ╔═╡ cd83f148-49c2-4eaf-9b4a-629c06aa7183
-x₅_dense = x₅ * x₅;  
+x₅ = [4.0 12 -16; 12 37 -43; -16 -43 98];
 
 # ╔═╡ feebcf59-527e-4b49-87f9-0090002e9454
-A₃ = Symmetric(x₅_dense) # Easy way to get symmetric positive semi-definite matrix
+A₃ = Symmetric(x₅) # Attempt to force symmetric positive semi-definite matrix
 
 # ╔═╡ 9eb49bae-fbf7-49e1-b8aa-3b939d577dee
 cholesky(A₃)
+
+# ╔═╡ a42329cc-5a69-4ba2-97e0-8e45b7fd9a67
+md" We won't go into too much detail on Cholesky decomposition in this section, but let us illustrate how much faster the process can be with a real world example. Consider the multivariate normal density where the variance-covariance matrix is positive definite. We want to utilise this structure. The $\text{MVN}(0, \Sigma)$ with $\Sigma$ the variance-covariance matrix, has the following explicit form. 
+
+$-\frac{n}{2} \log (2 \pi)-\frac{1}{2} \log \operatorname{det} \Sigma-\frac{1}{2} \mathbf{y}^{T} \Sigma^{-1} \mathbf{y}$
+
+The costly computations here are the determinant of $\Sigma$, inverse of $\Sigma$ and computation of the quadratic form. If you were not aware of the structure here, you might do the following. 
+
+**Method 1 (naive)**: Compute $\Sigma^{-1}$, compute quadratic form, compute determinant. 
+
+**Method 2 (using structure)**: Compute $\Sigma = \mathbf{LL}'$, solve $\mathbf{Lx = y}$ by forward substitution, compute quadratic form $\mathbf{x'x}$ and compute determinant from Cholesky factor."
+
+
+# ╔═╡ 095f1ce7-e626-453e-9d7e-cf0af284d7ed
+# Method 1
+function logpdf_mvn_1(y::Vector, Σ::Matrix)
+    n = length(y)
+    - (n//2) * log(2π) - (1//2) * logdet(Symmetric(Σ)) - (1//2) * transpose(y) * inv(Σ) * y
+end
+
+# ╔═╡ ac31e2a8-4c91-44f0-85cb-dc4751fd1c62
+# Method 2
+function logpdf_mvn_2(y::Vector, Σ::Matrix)
+    n = length(y)
+    Σchol = cholesky(Symmetric(Σ))
+    - (n//2) * log(2π) - (1//2) * logdet(Σchol) - (1//2) * abs2(norm(Σchol.L \ y))
+end
+
+# ╔═╡ e803605e-c56e-442e-a60f-707a07dc4009
+begin
+	Random.seed!(123); # seed
+	
+	n = 1000;
+	# a pd matrix
+	Σ = convert(Matrix{Float64}, Symmetric([i * (n - j + 1) for i in 1:n, j in 1:n]));
+	y = rand(MvNormal(Σ)); # one random sample from N(0, Σ)
+	
+	# at least they should give the same answer
+	logpdf_mvn_1(y, Σ);
+	logpdf_mvn_2(y, Σ);
+end
+
+# ╔═╡ 9056fa71-a624-4430-9af6-1c9dbd8df961
+@benchmark logpdf_mvn_1($y, $Σ)
+
+# ╔═╡ 557eb079-b812-4fc6-b78a-2d933ef80215
+@benchmark logpdf_mvn_2($y, $Σ)
 
 # ╔═╡ 183f47d8-9a45-4081-8e6c-eb6e0a0e1518
 md" #### QR decomposition "
@@ -801,9 +847,14 @@ md" This section is a bit more advanced and is optional for those who do not car
 # ╟─bf68439d-d1f8-437b-b851-bcfd65ab13ea
 # ╟─6405964a-f5e2-471e-a054-adcf0e5db512
 # ╠═edd75ea3-84dc-45f7-adec-540b7984aaa9
-# ╠═cd83f148-49c2-4eaf-9b4a-629c06aa7183
 # ╠═feebcf59-527e-4b49-87f9-0090002e9454
 # ╠═9eb49bae-fbf7-49e1-b8aa-3b939d577dee
+# ╟─a42329cc-5a69-4ba2-97e0-8e45b7fd9a67
+# ╠═095f1ce7-e626-453e-9d7e-cf0af284d7ed
+# ╠═ac31e2a8-4c91-44f0-85cb-dc4751fd1c62
+# ╠═e803605e-c56e-442e-a60f-707a07dc4009
+# ╠═9056fa71-a624-4430-9af6-1c9dbd8df961
+# ╠═557eb079-b812-4fc6-b78a-2d933ef80215
 # ╟─183f47d8-9a45-4081-8e6c-eb6e0a0e1518
 # ╟─4d4afbc5-dd1e-4995-87b4-3aa5e8e87821
 # ╟─7573a640-96e3-11eb-1214-070209074966

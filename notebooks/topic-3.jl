@@ -607,13 +607,19 @@ $\mathbf{X}^{T} \mathbf{X} \beta=\mathbf{X}^{T} \mathbf{y}$
 In this case the coefficient matrix $\mathbf{X}^{T} \mathbf{X}$ is symmetric and positive semidefinite. We want to be able to exploit this structure. Let us explore Cholesky decomposition with a few examples. "
 
 # ╔═╡ edd75ea3-84dc-45f7-adec-540b7984aaa9
-x₅ = [4.0 12 -16; 12 37 -43; -16 -43 98];
+x₅ = rand(1.0:9.0,4,4) # Very unlikely to be symmetric and positive definite
 
 # ╔═╡ feebcf59-527e-4b49-87f9-0090002e9454
-A₃ = Symmetric(x₅) # Attempt to force symmetric positive semi-definite matrix
+A₃ = Symmetric(x₅) # Easy way to get symmetry, but not always positive definite
 
 # ╔═╡ 9eb49bae-fbf7-49e1-b8aa-3b939d577dee
 cholesky(A₃)
+
+# ╔═╡ eea1458e-7fa1-4772-9dba-246d3eeeda9c
+x₆ = x₅'x₅ # Easy to manufacture an SPD matrix to try Cholesky factorisation
+
+# ╔═╡ b6a10960-4e3c-4fef-93ed-118dbd3493a7
+cholesky(x₆)
 
 # ╔═╡ a42329cc-5a69-4ba2-97e0-8e45b7fd9a67
 md" We won't go into too much detail on Cholesky decomposition in this section, but let us illustrate how much faster the process can be with a real world example. Consider the multivariate normal density where the variance-covariance matrix is positive definite. We want to utilise this structure. The $\text{MVN}(0, \Sigma)$ with $\Sigma$ the variance-covariance matrix, has the following explicit form. 
@@ -849,6 +855,8 @@ md" This section is a bit more advanced and is optional for those who do not car
 # ╠═edd75ea3-84dc-45f7-adec-540b7984aaa9
 # ╠═feebcf59-527e-4b49-87f9-0090002e9454
 # ╠═9eb49bae-fbf7-49e1-b8aa-3b939d577dee
+# ╠═eea1458e-7fa1-4772-9dba-246d3eeeda9c
+# ╠═b6a10960-4e3c-4fef-93ed-118dbd3493a7
 # ╟─a42329cc-5a69-4ba2-97e0-8e45b7fd9a67
 # ╠═095f1ce7-e626-453e-9d7e-cf0af284d7ed
 # ╠═ac31e2a8-4c91-44f0-85cb-dc4751fd1c62

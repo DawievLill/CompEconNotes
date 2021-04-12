@@ -668,11 +668,8 @@ end
 # ╔═╡ 557eb079-b812-4fc6-b78a-2d933ef80215
 @benchmark logpdf_mvn_2($y, $Σ)
 
-# ╔═╡ 183f47d8-9a45-4081-8e6c-eb6e0a0e1518
-md" #### QR decomposition "
-
-# ╔═╡ 4d4afbc5-dd1e-4995-87b4-3aa5e8e87821
-md" #### Spectral decomposition "
+# ╔═╡ 67b3ec44-f9b8-42d6-828b-bb05007aff27
+md" One can also look at other decompositions such as the QR and spectral decomposition. We won't have time to cover these topics, but they are quite important. "
 
 # ╔═╡ 7573a640-96e3-11eb-1214-070209074966
 md" ### Norms and condition numbers "
@@ -694,6 +691,12 @@ md" This section is a bit more advanced and is optional for those who do not car
 1. Identify structure in order to use specialised algorithms
 2. Do not lose structure by appplying wrong numerical linear algebra operations at wrong times. 
 3. Understand the computational complexity of each algorithm, given structure."
+
+# ╔═╡ daac8a8b-294c-437a-859d-fe8c613e4b39
+md" #### Structure in matrices "
+
+# ╔═╡ a3bb44ae-f745-4cc9-a983-e019ea35c780
+md" #### Computational complexity "
 
 # ╔═╡ Cell order:
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
@@ -863,10 +866,11 @@ md" This section is a bit more advanced and is optional for those who do not car
 # ╠═e803605e-c56e-442e-a60f-707a07dc4009
 # ╠═9056fa71-a624-4430-9af6-1c9dbd8df961
 # ╠═557eb079-b812-4fc6-b78a-2d933ef80215
-# ╟─183f47d8-9a45-4081-8e6c-eb6e0a0e1518
-# ╟─4d4afbc5-dd1e-4995-87b4-3aa5e8e87821
+# ╟─67b3ec44-f9b8-42d6-828b-bb05007aff27
 # ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51
 # ╟─f5643e42-9504-4ea9-82d5-fa7574da88b1
 # ╟─d5f1b957-d9c8-4ad7-aa36-3ff818d69fde
+# ╟─daac8a8b-294c-437a-859d-fe8c613e4b39
+# ╟─a3bb44ae-f745-4cc9-a983-e019ea35c780

@@ -14,7 +14,8 @@ begin
 			Pkg.PackageSpec(name="PlutoUI"), 
 			Pkg.PackageSpec(name="HypertextLiteral"),
 			Pkg.PackageSpec(name="Random"), 
-			Pkg.PackageSpec(name="BenchmarkTools")
+			Pkg.PackageSpec(name="BenchmarkTools"), 
+			Pkg.PackageSpec(name="Plots")
 			])
 	using Random
 	using BenchmarkTools
@@ -22,6 +23,7 @@ begin
 	using PlutoUI
 	using HypertextLiteral
 	using LinearAlgebra
+	using Plots
 end
 
 # ╔═╡ 97dca378-8c17-11eb-1a9f-49d299180a72
@@ -58,8 +60,25 @@ md" You might have encountered arrays in mathematics. An array can be one-dimens
 # ╔═╡ 784d31a8-8d9a-11eb-02bc-a3a24bcb564c
 typeof(x₁) == Vector{Float64} 
 
+# ╔═╡ 3329945f-d07f-4aa8-8715-b9cdebb5fd22
+md" One can also think of vectors in a graphical sense. In the following graph we see three different vectors in the three dimensional plane. "
+
+# ╔═╡ 61132429-1e0a-491a-b1e8-66dc45e72110
+begin
+	x_vals = [0 0 0 ; 2 -3 -4]
+	y_vals = [0 0 0 ; 4 3 -3.5]
+	
+	plot(x_vals, y_vals, arrow = true, color = :blue,
+	     legend = :none, xlims = (-5, 5), ylims = (-5, 5),
+	     annotations = [(2.2, 4.4, "[2, 4]"),
+	                    (-3.3, 3.3, "[-3, 3]"),
+	                    (-4.4, -3.85, "[-4, -3.5]")],
+	     xticks = -5:1:5, yticks = -5:1:5,
+	     framestyle = :origin)
+end
+
 # ╔═╡ ce128ae2-8d9b-11eb-0399-cda8550d4524
-md" You will notice if we attempt to create a row vector then it is considered two-dimensional. This means that row vectors are treated as matrices in a sense. This is mainly done for the purposes of multiplication and addition so that dimensions align in the right manner. Multiplying with a column vector is inherently different from multiplying with a row vectors. It is good to take note of these subtleties. " 
+md" You will notice if we attempt to create a row vector then it is considered two-dimensional. This means that row vectors are treated as matrices in a sense. This is mainly done for the purposes of multiplication and addition so that dimensions align in the right manner. Multiplying with a column vector is inherently different from multiplying with a row vector. It is good to take note of these subtleties. " 
 
 # ╔═╡ 98dbd9c8-8d9b-11eb-009d-b93e1b869285
 x₂ = [1.0 2.0 3.0]
@@ -268,6 +287,12 @@ x₄ = randn(5)
 # ╔═╡ 24681522-9703-11eb-33ac-15006eddeb11
 y₄ = randn(5)
 
+# ╔═╡ 6a7d20b6-0909-41dd-bd6b-70ff9c306803
+x₃ * x₃ # Normal matrix multiplication
+
+# ╔═╡ c82fc1d7-96d2-4d7d-90dd-8cd4816d9a1e
+x₃ .* x₃ # Element by element multiplication
+
 # ╔═╡ 6a6690ea-9702-11eb-0ee4-0b7ffb0b982b
 norm(x₄) # Provides the L2 norm
 
@@ -295,6 +320,55 @@ det(x₃) # Computes the determinant of the matrix
 # ╔═╡ a68db73c-9703-11eb-2bb4-7bbe725c4e3b
 rank(x₃) # Computes the rank of the matrix	
 
+# ╔═╡ ce19b2b7-ea03-407b-afd3-ccb9489ff06e
+md" ### Matrices as maps "
+
+# ╔═╡ 29f485ca-9bb5-4444-a6a4-ecb533d4c3d1
+md" Thinking about matrices as maps or transformations is my preferred way to deal with the topic. It is more general, but also more powerful. One can view an $n \times k$ matrix as a function $f(x) = Ax$ that maps $x \in \mathbb{R}^{k}$ into $Ax \in \mathbb{R}^{n}$. This function $f: \mathbb{R}^{k} \rightarrow \mathbb{R}^{n}$ is considered **linear** if for scalars $\alpha, \beta$:
+
+$f(\alpha x + \beta y) = \alpha f(x) + \beta f(y)$
+
+Below we show the definition of linear transformation and then some other interesting linear transformations that are often used in linear algebra. "
+
+# ╔═╡ 302f0117-3d5d-4d84-b58b-f5b7485489f0
+begin
+	lin(a, b, c, d) = ((x, y),) -> ( a*x + b*y, c*x + d*y )
+	lin(A) = v -> A * [v...]  # linear algebra version using matrix multiplication
+end
+
+# ╔═╡ 558bb7fc-d71d-4894-8748-778e9bce7c6f
+lin(x₃)([1, 2, 3])
+
+# ╔═╡ caf7a9d3-3508-42a4-bcfd-a5ce2910f818
+begin
+	 id((x,y)) = [x, y]
+	
+	 scalex(α) = ((x, y),) -> [α*x,  y]
+	 scaley(α) = ((x, y),) -> [x,   α*y]
+	 scale(α)  = ((x, y),) -> [α*x, α*y]
+	
+	 swap((x,y))  = [y, x]
+	 flipy((x,y)) = [x, -y]
+	
+	 rotate(θ) = ((x, y),) -> [cos(θ)*x + sin(θ)*y, -sin(θ)*x + cos(θ)*y]
+	 shear(α)  = ((x, y),) -> [x + α*y, y]
+end
+
+# ╔═╡ 5f9b9510-8e39-4c76-8b4b-4d759e2db60f
+md" You can take some time to play around with the transformations. In this case the input needs to be a vector with two entries. I applied some of these methods to the vector `[1, 2]` below. " 
+
+# ╔═╡ 11d14fe1-ecb3-417a-9299-e0c34b4d64f3
+id([1, 2])
+
+# ╔═╡ 891a5ee7-453e-4c90-9f26-5129f37c568b
+swap([1, 2])
+
+# ╔═╡ 487e7c23-b327-43cf-9daf-1087300cc3ca
+scale(5)([1, 2])
+
+# ╔═╡ 3748bd90-1acd-4411-960e-b25ec2178cc5
+scalex(5)([1, 2])
+
 # ╔═╡ 6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 md" # Systems of linear equations"
 
@@ -319,7 +393,7 @@ md" For this session we will first discuss **direct methods** for solving linear
 md" ### Direct methods"
 
 # ╔═╡ 2f46eecc-96f5-11eb-3f35-19de6bd828be
-md" There are several direct methods for solving linear equations. We will focus on Gaussian elimation (GE) and lower-upper (LU) decomposition. However, one can also look at QR decomposition and singular value decomposition (SVD). I don't believe we will have time for the last two methods, but will perhaps in passing mention how they operate. 
+md" There are several direct methods for solving linear equations. Direct methods involve factorisations of the matrix of interest. We will focus on Gaussian elimation (GE) and lower-upper (LU) decomposition. However, one can also look at QR decomposition and singular value decomposition (SVD). I don't believe we will have time for the last two methods, but will perhaps in passing mention how they operate. 
 
 These direct methods are best applied to *dense* and relatively small $\textbf{A}$ matrices."  
 
@@ -381,7 +455,7 @@ L₂ = LowerTriangular(A₁)
 b₁
 
 # ╔═╡ 6a23242c-ed7f-4f45-a1fa-3289f86f7156
-md" We have written our function to solve this problem. Now given that you have a triangular structure, how would you go about solving this with some of the included functions in Julia?  Using the `\` operator in Julia will solve the problem using forward substitution. It detects that there is a lower triangular structure and dispacthes to a basic linear algebra subprogram (BLAS) routine to compute. In this case the subroutine is most likely [trsv](https://www.netlib.org/lapack/explore-html/d6/d96/dtrsv_8f.html). Let us compare the two methods."
+md" We have written our function to solve this problem. Now given that you have a triangular structure, how would you go about solving this with some of the included functions in Julia?  Using the `\` operator in Julia will solve the problem using forward substitution if the system is lower triangular. It detects that there is a lower triangular structure and dispacthes to a basic linear algebra subprogram (BLAS) routine to compute. In this case the subroutine is most likely [trsv](https://www.netlib.org/lapack/explore-html/d6/d96/dtrsv_8f.html). Let us compare the two methods."
 
 # ╔═╡ ba9515e2-eb87-441c-ad54-ab018fc74625
 forwardsub(L₂, b₁)
@@ -402,7 +476,7 @@ md" We get the same answer. So is the Julia routine faster?"
 md" #### Gaussian elimination " 
 
 # ╔═╡ 68582594-c03b-4c1b-ad53-3549cedc1e8b
-md" We have encountered the `\` operator before in the case of a triangular system. However, what happens when we call this operator on solve a linear equation when the system is not triangular? In other words, what happens when we call `A \ b` to solve a linear equation? "
+md" We have encountered the `\` operator before in the case of a triangular system. However, what happens when we call this operator on solve a linear equation when the system is not triangular? In other words, what happens when we call `A \ b` to solve a linear equation when the matrix `A` is square? Note that when the matrix is **not square** we will get the least squares solution to the problem. "
 
 # ╔═╡ 6b82fef2-e19a-4551-88b4-6093d6d7ff7f
 A₂ = [2.0 1.0 -1.0; -3.0 -1.0 2.0; -2.0 1.0 2.0]
@@ -503,6 +577,36 @@ function lufact(A)
 	return L,triu(U)
 end
 
+# ╔═╡ 7b37c063-8142-473f-9d71-0b5edada4e20
+md" For a dense matrix without any knowledge on its structure (not known to be tridiagonal, symmetric, etc. ) this LU decomposition is the standard procedure that will be used to solve the system. It utilises the speed of forward and backward substitution. Let us take a closer look at how Julia does this. "
+
+# ╔═╡ acd812ce-19f1-42f2-80a0-4b0f4cca006f
+Af = factorize(A₂)
+
+# ╔═╡ 5f459761-faa9-492e-8fe3-b95634a39c0c
+md" Here we have the LU factorisation **with pivoting**. We can also directly call for the L and U components. "
+
+# ╔═╡ 64979eaa-e551-4da3-9203-ee75bc5d64d2
+L, U = lu(A₂, Val(false))
+
+# ╔═╡ 70ce2499-3b4a-4213-a6de-d3b9454a62fa
+A₂ ≈ L * U
+
+# ╔═╡ bf68439d-d1f8-437b-b851-bcfd65ab13ea
+md" #### Cholesky decomposition "
+
+# ╔═╡ 6405964a-f5e2-471e-a054-adcf0e5db512
+md" If our matrix is real, symmetric, and positive definite then a Cholesky decomposition is a form of LU decomposition where $L = U'$. This factorisation is used in many application, especially with relation to time series analysis and control theory. However, it is also a efficient factorisation routine when the structure of the matrix is appropriate. "
+
+# ╔═╡ db96af52-7308-496e-a4d1-d69f6cc1f5ce
+
+
+# ╔═╡ 183f47d8-9a45-4081-8e6c-eb6e0a0e1518
+md" #### QR decomposition "
+
+# ╔═╡ 4d4afbc5-dd1e-4995-87b4-3aa5e8e87821
+md" #### Spectral decomposition "
+
 # ╔═╡ 7573a640-96e3-11eb-1214-070209074966
 md" ### Norms and condition numbers "
 
@@ -513,6 +617,16 @@ md" ### Iterative solvers "
 md" There are many different iterative methods, we will focus on the Jacobi method, Gauss-Seidel method and successive over-relaxation (SOR) in this section. Conjugate-gradient methods will also be briefly mentioned. 
 
 These iterative methods are best applied to large, *sparse*, structured linear systems." 
+
+# ╔═╡ f5643e42-9504-4ea9-82d5-fa7574da88b1
+md"### Numerical linear algebra (optional) "
+
+# ╔═╡ d5f1b957-d9c8-4ad7-aa36-3ff818d69fde
+md" This section is a bit more advanced and is optional for those who do not care much about the topic. However, take note that you will need to invest some time in understanding these ideas at some point if you care about solving linear systems. The notes here follow the structure of [QuantEcon](https://julia.quantecon.org/tools_and_techniques/numerical_linear_algebra.html). There are three key principles when it comes to numerical linear algebra.
+
+1. Identify structure in order to use specialised algorithms
+2. Do not lose structure by appplying wrong numerical linear algebra operations at wrong times. 
+3. Understand the computational complexity of each algorithm, given structure."
 
 # ╔═╡ Cell order:
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
@@ -525,6 +639,8 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═1eeb8d5c-8d96-11eb-0bc1-0162c420760f
 # ╟─e9140e2a-8d97-11eb-3a2c-79fad99882ea
 # ╠═784d31a8-8d9a-11eb-02bc-a3a24bcb564c
+# ╟─3329945f-d07f-4aa8-8715-b9cdebb5fd22
+# ╟─61132429-1e0a-491a-b1e8-66dc45e72110
 # ╟─ce128ae2-8d9b-11eb-0399-cda8550d4524
 # ╠═98dbd9c8-8d9b-11eb-009d-b93e1b869285
 # ╠═ff747db4-8d9b-11eb-3a10-3314a843e679
@@ -595,6 +711,8 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─4adb0436-9702-11eb-3583-397161d0d7e7
 # ╠═606ed3a4-9702-11eb-1396-6df331c01343
 # ╠═24681522-9703-11eb-33ac-15006eddeb11
+# ╠═6a7d20b6-0909-41dd-bd6b-70ff9c306803
+# ╠═c82fc1d7-96d2-4d7d-90dd-8cd4816d9a1e
 # ╠═6a6690ea-9702-11eb-0ee4-0b7ffb0b982b
 # ╠═7f529b0c-9702-11eb-083a-71a10e65776c
 # ╟─96e43f00-9702-11eb-1244-df4c077349c7
@@ -604,6 +722,16 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╠═7bdfe3e8-9703-11eb-068d-398708020f10
 # ╠═97061304-9703-11eb-07f0-b14fbf0fc3e6
 # ╠═a68db73c-9703-11eb-2bb4-7bbe725c4e3b
+# ╟─ce19b2b7-ea03-407b-afd3-ccb9489ff06e
+# ╟─29f485ca-9bb5-4444-a6a4-ecb533d4c3d1
+# ╠═302f0117-3d5d-4d84-b58b-f5b7485489f0
+# ╠═558bb7fc-d71d-4894-8748-778e9bce7c6f
+# ╠═caf7a9d3-3508-42a4-bcfd-a5ce2910f818
+# ╟─5f9b9510-8e39-4c76-8b4b-4d759e2db60f
+# ╠═11d14fe1-ecb3-417a-9299-e0c34b4d64f3
+# ╠═891a5ee7-453e-4c90-9f26-5129f37c568b
+# ╠═487e7c23-b327-43cf-9daf-1087300cc3ca
+# ╠═3748bd90-1acd-4411-960e-b25ec2178cc5
 # ╟─6f0c0bc4-96d1-11eb-1cd9-9172bb9f042c
 # ╟─83ae1458-96d3-11eb-2e21-a3be23f7b874
 # ╟─45b2161a-96db-11eb-046a-079f3ddfcee9
@@ -650,6 +778,18 @@ These iterative methods are best applied to large, *sparse*, structured linear s
 # ╟─bbfe4b6e-8b72-4f6b-b516-1b8838adbcee
 # ╟─8f7849aa-6302-4feb-b6c2-a4b27d3d4bd8
 # ╠═eb80ec1a-5728-48e0-9836-2270ce4ed87a
+# ╟─7b37c063-8142-473f-9d71-0b5edada4e20
+# ╠═acd812ce-19f1-42f2-80a0-4b0f4cca006f
+# ╟─5f459761-faa9-492e-8fe3-b95634a39c0c
+# ╠═64979eaa-e551-4da3-9203-ee75bc5d64d2
+# ╠═70ce2499-3b4a-4213-a6de-d3b9454a62fa
+# ╟─bf68439d-d1f8-437b-b851-bcfd65ab13ea
+# ╟─6405964a-f5e2-471e-a054-adcf0e5db512
+# ╠═db96af52-7308-496e-a4d1-d69f6cc1f5ce
+# ╟─183f47d8-9a45-4081-8e6c-eb6e0a0e1518
+# ╟─4d4afbc5-dd1e-4995-87b4-3aa5e8e87821
 # ╟─7573a640-96e3-11eb-1214-070209074966
 # ╟─8139e91c-96e3-11eb-1d43-7d9502ac6d91
 # ╟─ce083a66-96f5-11eb-1e1c-639e4764cc51
+# ╟─f5643e42-9504-4ea9-82d5-fa7574da88b1
+# ╟─d5f1b957-d9c8-4ad7-aa36-3ff818d69fde

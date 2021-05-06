@@ -44,6 +44,12 @@ md" For this next session I borrow heavily from the excellent notes of Florian O
 
 All the algorithms that are used in this section will rely on some form of an iterative procedure. By this we mean that the algorithms will try and improve the value of some objective function over a succession of steps. The way in which the next step is generated is the distinguishing feature of these algorithms. "
 
+# ╔═╡ c1e1db15-eddb-4535-8d00-c1180a91fdae
+md" ### Optimisation packages in Julia "
+
+# ╔═╡ 3b20c100-ff95-4771-957f-634f43d2ccd6
+md" Before we move to a discussion on the different algorithms, it might be worthwhile to have a broad overview of the packages that are available in Julia that are intended for optimisation."
+
 # ╔═╡ 38a82b17-13d2-435b-85c8-24c2c619d922
 md" ## Algorithms for optimisation"
 
@@ -81,6 +87,8 @@ md" ### Constrained optimisation "
 # ╟─16478345-300b-460b-8198-faccaf7740e9
 # ╟─24d0123f-acc4-4656-b564-d7677bd10cf8
 # ╟─9cf3916d-9436-443e-9ed8-75ce7af69d85
+# ╟─c1e1db15-eddb-4535-8d00-c1180a91fdae
+# ╟─3b20c100-ff95-4771-957f-634f43d2ccd6
 # ╟─38a82b17-13d2-435b-85c8-24c2c619d922
 # ╠═0170f06a-79ba-4ba3-bfe0-db1e63bc7b74
 # ╟─46095078-d68c-4570-b2b5-b8aad3656186

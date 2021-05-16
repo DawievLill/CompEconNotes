@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.1
+# v0.14.5
 
 using Markdown
 using InteractiveUtils
@@ -723,7 +723,7 @@ md" #### Norms and condition numbers "
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
 # ╟─97dca378-8c17-11eb-1a9f-49d299180a72
 # ╟─8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
-# ╟─d3a32206-96ff-11eb-0c21-953e0d446b50
+# ╠═d3a32206-96ff-11eb-0c21-953e0d446b50
 # ╟─cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 # ╟─dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
 # ╠═eea539ae-8d95-11eb-1a13-d704f50969c3

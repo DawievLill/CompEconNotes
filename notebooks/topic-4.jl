@@ -30,7 +30,7 @@ begin
 			Pkg.PackageSpec(name="Distributions"), 
 			Pkg.PackageSpec(name="IntervalRootFinding"),
 			Pkg.PackageSpec(name="Roots"), 
-			Pkg.PackageSpec(name="ForwardDiff"),
+			Pkg.PackageSpec(name="ForwardDiff")
 			])
 	using Random
 	using BenchmarkTools
@@ -71,11 +71,11 @@ $\min _{x \in \mathbb{R}^{n}} f(x) \quad \text{s.t.} \quad x \in \mathscr{X}$
 where $x$ is our choice variable, $\mathscr{X}$ is the feasible set, $f$ is the objective function and $x^{*}$ is the solution vector to this problem if it is feasible and minimises $f$."
 
 # ╔═╡ e6b0edda-43ec-4b87-86d8-1ad183d8ab54
-md" In economics we often work with constrained optimisation problems such as the following:
+md" In economics we often work with constrained optimisation problems where agents need to optimise with regard to some constraint. Firms minimise costs and maximise profits, consumers maximise utility and the social planner maximises social welfare. One such problem relating to utility maximisation given a budget constraint, could be represented as follows:
 
 $\max _{x_{1}, x_{2}} u\left(x_{1}, x_{2}\right) \quad \text{s.t.} \quad p_{1} x_{1}+p_{2} x_{2} \leq y$ 
 
-The constraints define the feasible set. Let us consider the following example with explicitly defined utility function: 
+The constraints define the feasible set. Consider the explicitly defined utility function: 
 
 $\min _{x_{1}, x_{2}}-\exp \left(-\left(x_{1} x_{2}-3 / 2\right)^{2}-\left(x_{2}-3 / 2\right)^{2}\right) \quad \text{s.t.} \quad x_{2} \leq \sqrt{x_{1}}$"
 
@@ -100,14 +100,12 @@ begin
 end
 
 # ╔═╡ 90157f5a-f352-4bf7-994f-ee6b1b9ef710
-md" #### Critical points "
+md" #### Optimisation methods "
 
 # ╔═╡ dd6d6b21-5219-4a8e-952b-5446f94d20c1
-md" Univariate functions can have several critical points, those where the derivative is zero. We would like to find the global minimum, but this is not always easy to do. Most of the time we will only be finding the **local minimum**.
+md" All numerical optimisation methods search through the space of feasible choices, generating guesses that should converge to the true solution. However, methods differ in the information that they use. We have derivative free, comparison methods. Then there are another class of methods that utilise gradients. Thirdly, there are methods that use both the gradient and curvarture about objectives and constraints. 
 
-We have necesarry and sufficient conditions for optimisation. Here we point out the necesarry conditions. In terms of the minimisation problem, for the univariate case we know that the first order derivative needs to be equal to zero, while the second order derivative is required to be non-negative for local optima. For the multivariate case we turn to conditions on gradients instead of derivatives. In this case the graadient is zero and Hessian is positive semidefinite for a local minima.
-
-In order to calculate derivates and gradients we can use numerical, symbolic or automatic differentiation. See our previous lecture on these topics. "
+In order to calculate gradients and curvature we can use numerical, symbolic or automatic differentiation. See our previous lecture on these topics. "
 
 # ╔═╡ c1e1db15-eddb-4535-8d00-c1180a91fdae
 md" ### Optimisation packages in Julia "
@@ -163,6 +161,14 @@ md" All the algorithms that are used in this section will rely on some form of a
 # ╔═╡ af5cd2a0-eeac-48e3-aff4-a21d2669c75d
 md" **Side note**: We will take a look at how to evaluate algorithms in terms of robustness, efficiency and accuracy at a later stage. The best would be if everyone could take a course on algorithms and data structures in the computer science department, but this is perhaps a bit much to ask. "
 
+# ╔═╡ e56bf336-7b20-4724-83d9-6322a0b49e2e
+md" ### Solving non-linear systems of equations "
+
+# ╔═╡ 038a5068-7629-4c91-96f4-081b1e0c6d19
+md" We have seen that there are many tools to solve systems of linear equations. However, once the equations become non-linear then things become less obvious. Most of our solution methods for these types of equations work by reducing non-linear equations to sequences of linear equations. We can often approximate our non-linear function by a linear one to get a solution. We can iteratively repeat the process to get better solutions. This is what is known as an iterative algorithm. One example of this is Newton's method, but this requires calculation of derivatives (which can easily be done these days with automatic differentiation).
+
+One of the most basic numerical operations in computational economics is to find the solution to a system of non-linear equations. These non-linear equations can arise in one of two forms. The root finding problem or the non-linear fixed point problem.  The two forms of problems are equivalent, as we specify below. "
+
 # ╔═╡ 0170f06a-79ba-4ba3-bfe0-db1e63bc7b74
 md" #### Root finding algorithms"
 
@@ -173,17 +179,21 @@ Given a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^n$, find the $x \in \
 
 **Example:** If you think about the first model you did in first-year economics, you were solving for the prices and quantities. Clearing markets in a general equilibrium model entails finding the prices such that excess demand functions are zero. 
 
-We also know that fixed point problems are root finding problems, so these seem quite important. This means if we are given an equation $g(x) = h(x)$ we can define $f = g -h$ and find the root of $f$
+We also know that fixed point problems are root finding problems, since we can have a non-linear fixed point problem specified as $x = g(x)$, where $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{n}$ is given and must compute an $n$-vector $x$ called the fixed point of $g$ that satisfies $x = g(x)$. 
 
-Unlike with linear problems from our earlier discussion, the root will often not be produced in a finite number of steps. So we will need a sequence of approximations that converge to the root, which stops when some member of the sequence is `good enough`. "
+This means we can view the root finding problem as a fixed point problem by setting $g(x) = x - f(x)$. Conversely, the fixed point problem can be recast as a root finding problem by letting $f(x) = x - g(x)$.
+
+We encounter root finding problems in **optimisation problems** when the first derivative of the function is a zero. It is also possible to see observe non-linear equations in dynamic optimisation, when we consider collocation methods in the solution of Euler functional equations.  
+
+We start our discussion with one dimensional problems and then move on to higher dimensions. The reason for starting with one dimensional problems is that many multivariate methods reduce to solving sequence of one-dimensional problems. "
 
 # ╔═╡ 6ff4383c-2f61-4e8c-b585-844d0b57543c
-md" ##### Bracketing methods: Bisection "
+md" ##### Bracketing methods: Bisection (1D) "
 
 # ╔═╡ c458576d-e3bb-40ea-bb63-0d3690d220d4
 md" The simplest version of a root-finding algorithm is the bisection method. This is a gradient free method. The bisection method maintains a bracket $[a, b]$ in which at least one root is known to exist. From the intermediate value theorem we know that we can find a root of the function. 
 
-The intermediate value theorem states that if $f$ is a continuous function whose domain contains the interval $[a, b]$, then it takes on any given value between $f(a)$ and $f(b)$ at some point within the interval.
+The **intermediate value theorem** states that if $f$ is a continuous function whose domain contains the interval $[a, b]$, then it takes on any given value between $f(a)$ and $f(b)$ at some point within the interval.
 
 This means that if $f$ is continuous on $[a, b]$, and there is some $y \in [f(a), f(b)]$, then the intermediate value theorem stipulates that there exists at least one $x \in [a, b]$, such that $f(x) = y$. It follows that a bracket $[a, b]$ is gauranteed to contain a zero if $f(a)$ and $f(b)$ have opposite signs. 
 
@@ -246,7 +256,22 @@ md" Some of the benefits of the bisection method is that it is relatively fast, 
 md" ##### Iterative methods: Newton's method in 1D "
 
 # ╔═╡ 51d7f59a-9958-4401-9ff5-b7874fc48188
-md" Newton's method uses information about derivatives by linearising and finds zeros of the newly linearised version. Before moving on to the math, let us look at the idea of Newton's method. The following graph provides a function, of which we want to find the zero / root."
+md" Newton's method uses information about derivatives by linearising and finds zeros of the newly linearised version. This method is based on the idea of successive linearisation. This method calls for hard non-linear problems to be replaced with a sequence of simpler linear problems, whose solution converges to the solution of the non-linear problem. This problem is normally formulated as a root finding technique, but may be used to solve a fixed point problem by recasting it."
+
+# ╔═╡ e150a318-60ca-428d-9e9c-4c06ef37e231
+md" If we have a root approximation $x_k$, we can construct a linear model of $f(x)$ using the formual for the tangent line of a differentiable function (Taylor expansion of the function $f$ around the point $x$): 
+
+$f(x) ≈ f\left(x_{k}\right)+f^{\prime}\left(x_{k}\right)\left(x -x_{k}\right)$
+
+Since $x$ is a zero of the function, we have that,
+
+$0 =  f\left(x_{k}\right)+f^{\prime}\left(x_{k}\right)\left(x -x_{k}\right)$
+
+Our next approximation $f(x_{k+1}) = 0$ means replacing $x = x_{k+1}$, which yields an iteration rule,  
+
+$x_{k+1} \leftarrow x_{k} - \frac{f(x_{k})}{f^{\prime}(x_{k})}$
+
+Starting with an initial estimate $x_1$, this formula produces a sequence of estimates $x_2, x_3, x_4, \ldots$"
 
 # ╔═╡ fd5842db-c6b5-44d5-b60b-eadb51913247
 begin
@@ -397,17 +422,6 @@ let
 	standard_Newton(f, n, -10:0.01:10, x0, -10, 70)
 end
 
-# ╔═╡ e150a318-60ca-428d-9e9c-4c06ef37e231
-md" If we have a root approximation $x_k$, we can construct a linear model of $f(x)$ using the formual for the tangent line of a differentiable function: 
-
-$q(x) = f\left(x_{k}\right)+f^{\prime}\left(x_{k}\right)\left(x -x_{k}\right)$
-
-Finding the root of $q(x) = 0$ is easy. We define the next approximation by the condition $q(x_{k+1}) = 0$ or stated in another way,  
-
-$x_{k+1} = x_{k} - \frac{f(x_{k})}{f^{\prime}(x_{k})}$
-
-Starting with an initial estimate $x_1$, this formula produces a sequence of estimates $x_2, x_3, x_4, \ldots$"
-
 # ╔═╡ 3a9f8b1f-bc71-4ae1-93ba-601553d1f4bb
 md" One way in which we could code up Newton's method is the following: "
 
@@ -443,7 +457,7 @@ md" A much easier way is to use automatic differentiation. "
 # ╔═╡ 6005e783-2f1b-42a8-9771-cd29ca264e0f
 function newton1D(f, x0)
 	
-	f′(x) = ForwardDiff.derivative(f, x)   # \prime<TAB>
+	f′(x) = ForwardDiff.derivative(f, x)   
 	
 	x0 = 37.0  # starting point
 	sequence = [x0]
@@ -504,6 +518,8 @@ md" In terms of convergence of our methods, the bisection method illustrates lin
 # ╟─38a82b17-13d2-435b-85c8-24c2c619d922
 # ╟─9f559408-6f48-4eca-aa6f-1b3adabd6f06
 # ╟─af5cd2a0-eeac-48e3-aff4-a21d2669c75d
+# ╟─e56bf336-7b20-4724-83d9-6322a0b49e2e
+# ╟─038a5068-7629-4c91-96f4-081b1e0c6d19
 # ╟─0170f06a-79ba-4ba3-bfe0-db1e63bc7b74
 # ╟─46095078-d68c-4570-b2b5-b8aad3656186
 # ╟─6ff4383c-2f61-4e8c-b585-844d0b57543c
@@ -518,6 +534,7 @@ md" In terms of convergence of our methods, the bisection method illustrates lin
 # ╟─d3cf3296-7ba5-4a82-a3a8-b8ac83b6e27d
 # ╟─518e561e-9db1-48dd-aa53-f5a55b2c1ca3
 # ╟─51d7f59a-9958-4401-9ff5-b7874fc48188
+# ╟─e150a318-60ca-428d-9e9c-4c06ef37e231
 # ╠═fd5842db-c6b5-44d5-b60b-eadb51913247
 # ╟─3f1d4727-0f5e-4513-abb9-945eed7f9874
 # ╠═d2ca4b6c-b82a-4ca7-8b7f-9274ace2c628
@@ -542,7 +559,6 @@ md" In terms of convergence of our methods, the bisection method illustrates lin
 # ╟─8d02a306-7ba5-4513-a2e4-103c5637a1ac
 # ╟─947f1f04-5d95-4047-8f14-1947b3178b30
 # ╠═a6f17a60-2251-427b-b6b3-bacf01927ed0
-# ╟─e150a318-60ca-428d-9e9c-4c06ef37e231
 # ╟─3a9f8b1f-bc71-4ae1-93ba-601553d1f4bb
 # ╠═5fa580cd-93fd-4a40-b816-544e7c2acf7e
 # ╟─3bcbb714-2b8b-44c7-83c3-568e903a64fe

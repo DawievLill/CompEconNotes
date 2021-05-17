@@ -150,7 +150,7 @@ md" We can specify automatic differentiation as alternative to the default centr
 optimize(rosenbrock, zeros(2), LBFGS(); autodiff = :forward)
 
 # ╔═╡ 99960cca-a855-4afb-a61a-efefbf53ba90
-md" It is worhtwhile to go through the Tutorials in for Optim.jl, they have some great advice about when to use which algorithm. Some other package that are used for optimisation are [JUMP.jl](https://github.com/jump-dev/JuMP.jl), [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl), [Roots.jl](https://github.com/JuliaMath/Roots.jl) and [NLsolve.jl](https://github.com/JuliaNLSolvers/NLsolve.jl/). We will reference these packages as they are required for our purposes. "
+md" It is worhtwhile to go through the Tutorials in for Optim.jl, they have some great advice about when to use which algorithm. Some other package that are used for optimisation are [JUMP.jl](https://github.com/jump-dev/JuMP.jl), [Roots.jl](https://github.com/JuliaMath/Roots.jl) and [NLsolve.jl](https://github.com/JuliaNLSolvers/NLsolve.jl/). We will reference these packages as they are required for our purposes. "
 
 # ╔═╡ 38a82b17-13d2-435b-85c8-24c2c619d922
 md" ## Algorithms for optimisation"
@@ -195,7 +195,7 @@ md" The simplest version of a root-finding algorithm is the bisection method. Th
 
 The **intermediate value theorem** states that if $f$ is a continuous function whose domain contains the interval $[a, b]$, then it takes on any given value between $f(a)$ and $f(b)$ at some point within the interval.
 
-This means that if $f$ is continuous on $[a, b]$, and there is some $y \in [f(a), f(b)]$, then the intermediate value theorem stipulates that there exists at least one $x \in [a, b]$, such that $f(x) = y$. It follows that a bracket $[a, b]$ is gauranteed to contain a zero if $f(a)$ and $f(b)$ have opposite signs. 
+This means that if $f$ is continuous on $[a, b]$, and there is some $y \in [f(a), f(b)]$, then the intermediate value theorem stipulates that there exists at least one $x \in [a, b]$, such that $f(x) = y$. It follows that a bracket $[a, b]$ is guaranteed to contain a zero if $f(a)$ and $f(b)$ have opposite signs. 
 
 This method cuts the bracketed region in half with every iteration. The midpoint is then evaluated, and the new bracket is formed from the midpoint and whichever side that continues to bracket a zero. 
 "

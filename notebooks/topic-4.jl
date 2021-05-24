@@ -87,7 +87,7 @@ begin
 	
 	gr()
 	
-	xx = 0:0.01:3.5 # Domain of x values from 0 to 3.5. Incremented by 0.01. 
+	xx = 0:0.01:3.5 # Range of x values from 0 to 3.5. Incremented by 0.01. 
 	f0(x1, x2) = -exp.(-(x1.*x2 - 3/2).^2 - (x2-3/2).^2) # Specification of the function as defined above
 	c(z) = sqrt(z) # Constraint function 
 	
@@ -247,7 +247,7 @@ plot(g, 8, 9, label = "g")
 find_zero(g, (8,9)) # Bisection is the default method.
 
 # ╔═╡ c9a5f2ea-5aec-4214-95b2-ea15d922a1dc
-bisection(g, 8, 9, 0.1) # Result is quite close that of the Roots package. .
+bisection(g, 8, 9, 0.000001) # Result is quite close that of the Roots package. .
 
 # ╔═╡ d3cf3296-7ba5-4a82-a3a8-b8ac83b6e27d
 md" Some of the benefits of the bisection method is that it is relatively fast, simple and guaranteed to find a solution if the function satisfies the conditions for the intermediate value theorem. However, this method is difficult to extend to more than one dimension. "
@@ -491,6 +491,12 @@ md" The benfit for Newton's method is that it is even faster than bisection and 
 # ╔═╡ 3f62345e-6359-4e2a-89f0-9680798c5f30
 md" In terms of convergence of our methods, the bisection method illustrates linear convergence while Newton's method has quadratic convergence. Broadly speaking convergence refers to how fast the solution method converges to the root of the equation. The rate of convergence is the rate of decrease of the bias."
 
+# ╔═╡ a09b11cc-e0f9-4722-b655-b2ebb49b5b83
+md" ##### Secant method "
+
+# ╔═╡ ff9c9daf-874a-4a81-9250-0d1fa7261a93
+md" One of the biggest problems with Newton's method is the fact that you have to calculate $f^{\prime}$. However, this has become easier in recent years with automatic differentiation advances. "
+
 # ╔═╡ Cell order:
 # ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
 # ╟─1f4407d0-9b73-11eb-0e91-cd0de83535aa
@@ -568,3 +574,5 @@ md" In terms of convergence of our methods, the bisection method illustrates lin
 # ╠═ceb9c187-d67b-48f2-ade0-46744eda2f4d
 # ╟─ffd22348-7c3a-4832-a0e4-47bc44dd54be
 # ╟─3f62345e-6359-4e2a-89f0-9680798c5f30
+# ╟─a09b11cc-e0f9-4722-b655-b2ebb49b5b83
+# ╟─ff9c9daf-874a-4a81-9250-0d1fa7261a93

@@ -161,16 +161,13 @@ md" All the algorithms that are used in this section will rely on some form of a
 # ╔═╡ af5cd2a0-eeac-48e3-aff4-a21d2669c75d
 md" **Side note**: We will take a look at how to evaluate algorithms in terms of robustness, efficiency and accuracy at a later stage. The best would be if everyone could take a course on algorithms and data structures in the computer science department, but this is perhaps a bit much to ask. "
 
-# ╔═╡ e56bf336-7b20-4724-83d9-6322a0b49e2e
-md" ### Solving non-linear systems of equations "
-
 # ╔═╡ 038a5068-7629-4c91-96f4-081b1e0c6d19
 md" We have seen that there are many tools to solve systems of linear equations. However, once the equations become non-linear then things become less obvious. Most of our solution methods for these types of equations work by reducing non-linear equations to sequences of linear equations. We can often approximate our non-linear function by a linear one to get a solution. We can iteratively repeat the process to get better solutions. This is what is known as an iterative algorithm. One example of this is Newton's method, but this requires calculation of derivatives (which can easily be done these days with automatic differentiation).
 
 One of the most basic numerical operations in computational economics is to find the solution to a system of non-linear equations. These non-linear equations can arise in one of two forms. The root finding problem or the non-linear fixed point problem.  The two forms of problems are equivalent, as we specify below. "
 
 # ╔═╡ 0170f06a-79ba-4ba3-bfe0-db1e63bc7b74
-md" #### Root finding algorithms"
+md" ### One-dimensional algorithms"
 
 # ╔═╡ 46095078-d68c-4570-b2b5-b8aad3656186
 md" The goal of the root finding problem can be stated as follows: 
@@ -188,7 +185,7 @@ We encounter root finding problems in **optimisation problems** when the first d
 We start our discussion with one dimensional problems and then move on to higher dimensions. The reason for starting with one dimensional problems is that many multivariate methods reduce to solving sequence of one-dimensional problems. "
 
 # ╔═╡ 6ff4383c-2f61-4e8c-b585-844d0b57543c
-md" ##### Bracketing methods: Bisection (1D) "
+md" #### Bracketing methods: Bisection (1D) "
 
 # ╔═╡ c458576d-e3bb-40ea-bb63-0d3690d220d4
 md" The simplest version of a root-finding algorithm is the bisection method. This is a gradient free method. The bisection method maintains a bracket $[a, b]$ in which at least one root is known to exist. From the intermediate value theorem we know that we can find a root of the function. 
@@ -253,7 +250,7 @@ bisection(g, 8, 9, 0.000001) # Result is quite close that of the Roots package. 
 md" Some of the benefits of the bisection method is that it is relatively fast, simple and guaranteed to find a solution if the function satisfies the conditions for the intermediate value theorem. However, this method is difficult to extend to more than one dimension. "
 
 # ╔═╡ 518e561e-9db1-48dd-aa53-f5a55b2c1ca3
-md" ##### Iterative methods: Newton's method in 1D "
+md" #### Iterative methods: Newton's method in 1D "
 
 # ╔═╡ 51d7f59a-9958-4401-9ff5-b7874fc48188
 md" Newton's method uses information about derivatives by linearising and finds zeros of the newly linearised version. This method is based on the idea of successive linearisation. This method calls for hard non-linear problems to be replaced with a sequence of simpler linear problems, whose solution converges to the solution of the non-linear problem. This problem is normally formulated as a root finding technique, but may be used to solve a fixed point problem by recasting it."
@@ -492,10 +489,85 @@ md" The benfit for Newton's method is that it is even faster than bisection and 
 md" In terms of convergence of our methods, the bisection method illustrates linear convergence while Newton's method has quadratic convergence. Broadly speaking convergence refers to how fast the solution method converges to the root of the equation. The rate of convergence is the rate of decrease of the bias."
 
 # ╔═╡ a09b11cc-e0f9-4722-b655-b2ebb49b5b83
-md" ##### Secant method "
+md" #### Quasi-Newton methods: Secant method "
 
 # ╔═╡ ff9c9daf-874a-4a81-9250-0d1fa7261a93
-md" One of the biggest problems with Newton's method is the fact that you have to calculate $f^{\prime}$. However, this has become easier in recent years with automatic differentiation advances. "
+md" One of the biggest problems with Newton's method is the fact that you have to calculate $f^{\prime}$. However, this has become easier in recent years with automatic differentiation advances. We can circumvent this problem by making the observation that when a step produces and approximate result we are allowed to carry it out approximately. In our case this means we can use a linear approximation of $f^{\prime}$ in the iteration procedure of Newton's method.
+
+With this method you find the root of the linear approximation through the two most recent root estimates. In other words, 
+
+$f(x) ≈ f\left(x_{k}\right)+\frac{f\left(x_{k}\right)-f\left(x_{k-1}\right)}{x_{k}-x_{k-1}}\left(x_{k}\right)\left(x -x_{k}\right)$
+
+which then means that from our discussion of Newton's method, 
+
+$x_{k+1} \leftarrow x_{k}-\frac{f\left(x_{k}\right)\left(x_{k}-x_{k-1}\right)}{f\left(x_{k}\right)-f\left(x_{k-1}\right)}$
+
+Below is an implementation of the secant method."
+
+# ╔═╡ b21182ad-1806-47b1-9fd4-917308cbfbab
+function secant(f,x1,x2)
+    # Operating parameters.
+    funtol = 100*eps();  xtol = 100*eps();  maxiter = 40;
+
+    x = [x1,x2]
+    y1 = f(x1); y2 = 100;
+    dx = Inf   # for initial pass below
+    k = 2
+
+    while (abs(dx) > xtol) && (abs(y2) > funtol) && (k < maxiter)
+        y2 = f(x[k])
+        dx = -y2 * (x[k]-x[k-1]) / (y2-y1)   # secant step
+        push!(x,x[k]+dx)        # append new estimate
+
+        k = k+1
+        y1 = y2    # current f-value becomes the old one next time
+    end
+
+    if k==maxiter
+        @warn "Maximum number of iterations reached."
+    end
+
+    return x
+end
+
+# ╔═╡ 32e9ca4d-a60e-4269-b60e-9ac524e1850d
+md" If you consider some of our examples above, if the initial value is ill-advised then Newton's method may not converge. One can combine the Newton's method (and its variants) with bracketing to guarantee covergence. The best algorithms use a combination of methods with fast convergence properties and the guarantee on convergence provided by bracketing methods. 
+
+**Brent's method** is an example of such an algorithm and is used in many rootfinding applications. 
+
+Next we consider multidimensional unconstrained optimisation problems. "
+
+# ╔═╡ 93fbb5ea-440f-4095-b3d2-998133930fd6
+md" ### Multidimensional unconstrained optimisation"
+
+# ╔═╡ 8a238a48-5a0c-4687-a7e6-125575f74720
+md" We move to problems that ivolve optimisation with mutlivariate functions. We start with local models, which is then followed by first and second order models. "
+
+# ╔═╡ 005b33ac-16e0-4813-b22f-53498642d600
+md" #### Local descent methods "
+
+# ╔═╡ 9a6e7a48-de02-44dd-8bfb-4ba737f472eb
+md" With these methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
+
+The steps for local descent are as follows:
+
+1. Check whether $\mathbf{x}^{(k)}$ satisfies termination conditions. If it does terminate, otherwise proceed.  
+2. Determine descent direction $\mathbf{d}^{(k)}$ using local information (gradient or Hessian). 
+3. Determine step size or learning rate $\alpha^{(k)}$. 
+4. Compute next design point according to:
+
+$\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)} + \alpha^{(k)}\mathbf{d}^{(k+)}$
+
+There are many ways in whcih we can go about determining descent directions. One of these methods is the line search strategy. "
+
+# ╔═╡ d31a48dc-05bf-41ce-819a-a57c70b30e65
+md" ##### Line search"
+
+# ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
+md" #### First-order methods "
+
+# ╔═╡ fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
+md" #### Second-order methods "
 
 # ╔═╡ Cell order:
 # ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
@@ -524,7 +596,6 @@ md" One of the biggest problems with Newton's method is the fact that you have t
 # ╟─38a82b17-13d2-435b-85c8-24c2c619d922
 # ╟─9f559408-6f48-4eca-aa6f-1b3adabd6f06
 # ╟─af5cd2a0-eeac-48e3-aff4-a21d2669c75d
-# ╟─e56bf336-7b20-4724-83d9-6322a0b49e2e
 # ╟─038a5068-7629-4c91-96f4-081b1e0c6d19
 # ╟─0170f06a-79ba-4ba3-bfe0-db1e63bc7b74
 # ╟─46095078-d68c-4570-b2b5-b8aad3656186
@@ -576,3 +647,12 @@ md" One of the biggest problems with Newton's method is the fact that you have t
 # ╟─3f62345e-6359-4e2a-89f0-9680798c5f30
 # ╟─a09b11cc-e0f9-4722-b655-b2ebb49b5b83
 # ╟─ff9c9daf-874a-4a81-9250-0d1fa7261a93
+# ╠═b21182ad-1806-47b1-9fd4-917308cbfbab
+# ╟─32e9ca4d-a60e-4269-b60e-9ac524e1850d
+# ╟─93fbb5ea-440f-4095-b3d2-998133930fd6
+# ╟─8a238a48-5a0c-4687-a7e6-125575f74720
+# ╟─005b33ac-16e0-4813-b22f-53498642d600
+# ╟─9a6e7a48-de02-44dd-8bfb-4ba737f472eb
+# ╟─d31a48dc-05bf-41ce-819a-a57c70b30e65
+# ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
+# ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f

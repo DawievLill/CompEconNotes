@@ -580,7 +580,9 @@ In general it is too costly to calculate the exact value for $\alpha$, so trial 
 md" ##### Trust regions: Finding $\alpha$ contd. "
 
 # ╔═╡ 32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
-md" An alternative to linear search is the trust region method. "
+md" An alternative to linear search is the trust region method. This method looks at a local model that is believed to be reliable. Limits the step taken by line search and predicts improvement associated with taking a step. If we see that the improvement matches the predicted value then we expand the trust region, otherwise the region contracts. 
+
+With trust region methods we first choose the maximum step size and then the step direction. Once this done, we optimise the step size. The next step is found in this approzh by minimising a model of the objective function $f$ over a trust region centered at $\mathbf{x}$"
 
 # ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 md" #### First-order methods "

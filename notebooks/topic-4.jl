@@ -558,10 +558,29 @@ The steps for local descent are as follows:
 
 $\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)} + \alpha^{(k)}\mathbf{d}^{(k+)}$
 
-There are many ways in whcih we can go about determining descent directions. One of these methods is the line search strategy. "
+There are many ways in whcih we can go about determining descent directions and step sizes. Let us consider some strategies for choosing $\alpha$ and $\mathbf{d}$."
 
 # ╔═╡ d31a48dc-05bf-41ce-819a-a57c70b30e65
 md" ##### Line search"
+
+# ╔═╡ ec78165c-1908-4bd8-aabe-44d238902a27
+md" With this line search method we assume that we have already chosen a specific descent direction $\mathbf{d}$. The line search method helps us determine the value for $\alpha$ using the following minimisation:
+
+$\underset{\alpha}{\operatorname{min}} f(\mathbf{x}+\alpha \mathbf{d})$
+
+This is a univariate optimisation problem and we can therefore choose from our selection of univariate methods discussed above. Brent-Dekker is most often used to solve this type of problem. "
+
+# ╔═╡ b525b892-470d-4a6a-ad6f-09baca60785b
+md" As an example, consider a line search on $f(x_1, x_2, x_3) = \sin (x_1 x_2) + \exp(x_2 + x_3) - x_3$ in the direction $\mathbf{d} = [0, -1, -1]$. Our optimisation problem is then, 
+
+$\underset{\alpha}{\operatorname{min}} \left[((1+0\alpha)(2-\alpha)) + \exp((2-\alpha) + (3-\alpha)) - (3-\alpha)\right]$
+
+which simplifies to, 
+
+$\underset{\alpha}{\operatorname{min}} \left[\sin(2-\alpha) + \exp(5- 2\alpha) + \alpha - 3\right]$"
+
+# ╔═╡ 2347dbc6-84e3-4bb8-a523-1c595edfe404
+
 
 # ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 md" #### First-order methods "
@@ -654,5 +673,8 @@ md" #### Second-order methods "
 # ╟─005b33ac-16e0-4813-b22f-53498642d600
 # ╟─9a6e7a48-de02-44dd-8bfb-4ba737f472eb
 # ╟─d31a48dc-05bf-41ce-819a-a57c70b30e65
+# ╟─ec78165c-1908-4bd8-aabe-44d238902a27
+# ╟─b525b892-470d-4a6a-ad6f-09baca60785b
+# ╠═2347dbc6-84e3-4bb8-a523-1c595edfe404
 # ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f

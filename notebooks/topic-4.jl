@@ -27,6 +27,8 @@ begin
 			Pkg.PackageSpec(name="Plots"), 
 			Pkg.PackageSpec(name="LaTeXStrings"), 
 			Pkg.PackageSpec(name="Optim"),
+			Pkg.PackageSpec(name="OptimTestProblems"),
+			Pkg.PackageSpec(name="LineSearches"),
 			Pkg.PackageSpec(name="Distributions"), 
 			Pkg.PackageSpec(name="IntervalRootFinding"),
 			Pkg.PackageSpec(name="Roots"), 
@@ -41,10 +43,12 @@ begin
 	using Plots
 	using LaTeXStrings
 	using Optim
+	using OptimTestProblems
 	using Distributions
 	using IntervalRootFinding
 	using Roots
 	using ForwardDiff
+	using LineSearches
 end
 
 # ╔═╡ 1f4407d0-9b73-11eb-0e91-cd0de83535aa
@@ -489,7 +493,7 @@ md" The benfit for Newton's method is that it is even faster than bisection and 
 md" In terms of convergence of our methods, the bisection method illustrates linear convergence while Newton's method has quadratic convergence. Broadly speaking convergence refers to how fast the solution method converges to the root of the equation. The rate of convergence is the rate of decrease of the bias."
 
 # ╔═╡ a09b11cc-e0f9-4722-b655-b2ebb49b5b83
-md" #### Quasi-Newton methods: Secant method "
+md" #### Secant method "
 
 # ╔═╡ ff9c9daf-874a-4a81-9250-0d1fa7261a93
 md" One of the biggest problems with Newton's method is the fact that you have to calculate $f^{\prime}$. However, this has become easier in recent years with automatic differentiation advances. We can circumvent this problem by making the observation that when a step produces and approximate result we are allowed to carry it out approximately. In our case this means we can use a linear approximation of $f^{\prime}$ in the iteration procedure of Newton's method.
@@ -541,13 +545,13 @@ Next we consider multidimensional unconstrained optimisation problems. "
 md" ### Multidimensional unconstrained optimisation"
 
 # ╔═╡ 8a238a48-5a0c-4687-a7e6-125575f74720
-md" We move to problems that ivolve optimisation with mutlivariate functions. We start with local models, which is then followed by first and second order models. "
+md" We move to problems that involve optimisation with mutlivariate functions. We start with local models, which is then followed by first and second order models. As we will see, the general approach for unconstrained optimisation problems is to start at some initial value and work through a series of iterates until we have converged with sufficient accuracy. If our function is smooth we can take advantage of information about the function's shape to figure out where we need to move on the next iteration. "
 
 # ╔═╡ 005b33ac-16e0-4813-b22f-53498642d600
 md" #### Local descent methods "
 
 # ╔═╡ 9a6e7a48-de02-44dd-8bfb-4ba737f472eb
-md" With these methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
+md" With local descent methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
 
 The steps for local descent are as follows:
 
@@ -561,32 +565,49 @@ $\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)} + \alpha^{(k)}\mathbf{d}^{(k+)}$
 There are many ways in whcih we can go about determining descent directions and step sizes. Let us consider some strategies for choosing $\alpha$ and $\mathbf{d}$."
 
 # ╔═╡ d31a48dc-05bf-41ce-819a-a57c70b30e65
-md" ##### Line search"
+md" ##### Line search: Finding $\alpha$"
 
 # ╔═╡ ec78165c-1908-4bd8-aabe-44d238902a27
-md" With this line search method we assume that we have already chosen a specific descent direction $\mathbf{d}$. The line search method helps us determine the value for $\alpha$ using the following minimisation:
+md" One approach for determining the value for $\alpha$ is the line search method. Remember that $\alpha$ tells us how far to move (step length). Here we assume that we have already chosen a specific descent direction $\mathbf{d}$. The line search method helps us determine the value for $\alpha$ using the following minimisation:
 
 $\underset{\alpha}{\operatorname{min}} f(\mathbf{x}+\alpha \mathbf{d})$
 
-This is a univariate optimisation problem and we can therefore choose from our selection of univariate methods discussed above. Brent-Dekker is most often used to solve this type of problem. "
+We are finding the distance to move, $\alpha$ in direction $\mathbf{d}$ that minimises the objective function $f$. This is a univariate optimisation problem and we can therefore choose from our selection of univariate methods discussed above. Brent-Dekker is most often used to solve this type of problem.
 
-# ╔═╡ b525b892-470d-4a6a-ad6f-09baca60785b
-md" As an example, consider a line search on $f(x_1, x_2, x_3) = \sin (x_1 x_2) + \exp(x_2 + x_3) - x_3$ in the direction $\mathbf{d} = [0, -1, -1]$. Our optimisation problem is then, 
+In general it is too costly to calculate the exact value for $\alpha$, so trial values are chosen and the one that generates the lowest value for $f$ is chosen."
 
-$\underset{\alpha}{\operatorname{min}} \left[((1+0\alpha)(2-\alpha)) + \exp((2-\alpha) + (3-\alpha)) - (3-\alpha)\right]$
+# ╔═╡ 8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
+md" ##### Trust regions: Finding $\alpha$ contd. "
 
-which simplifies to, 
-
-$\underset{\alpha}{\operatorname{min}} \left[\sin(2-\alpha) + \exp(5- 2\alpha) + \alpha - 3\right]$"
-
-# ╔═╡ 2347dbc6-84e3-4bb8-a523-1c595edfe404
-
+# ╔═╡ 32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
+md" An alternative to linear search is the trust region method. "
 
 # ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 md" #### First-order methods "
 
+# ╔═╡ 9676b7d5-5e54-4660-8aac-7c79940478f7
+md" ##### Gradient descent "
+
+# ╔═╡ 6673f432-6368-4455-bf46-dad3cc813901
+md" ##### Conjugate gradient "
+
 # ╔═╡ fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
 md" #### Second-order methods "
+
+# ╔═╡ 799314f0-7f66-45d5-8798-5227155ce0bc
+md" ##### Newton's method "
+
+# ╔═╡ 7727d19e-6911-4056-92c9-8ef76bb5d87a
+md" ##### Secant method "
+
+# ╔═╡ 4030d783-6dd1-45b4-97e0-e361d4bbf477
+md" ##### Quasi-Newton methods "
+
+# ╔═╡ 9715ec3c-0477-4cc0-8a58-b76e8f886895
+md" #### Stochastic methods "
+
+# ╔═╡ f25f23c0-1436-4744-a05c-a92b10ad25b9
+md" ### Multidimensional constrained optimisation"
 
 # ╔═╡ Cell order:
 # ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
@@ -664,7 +685,7 @@ md" #### Second-order methods "
 # ╠═ceb9c187-d67b-48f2-ade0-46744eda2f4d
 # ╟─ffd22348-7c3a-4832-a0e4-47bc44dd54be
 # ╟─3f62345e-6359-4e2a-89f0-9680798c5f30
-# ╟─a09b11cc-e0f9-4722-b655-b2ebb49b5b83
+# ╠═a09b11cc-e0f9-4722-b655-b2ebb49b5b83
 # ╟─ff9c9daf-874a-4a81-9250-0d1fa7261a93
 # ╠═b21182ad-1806-47b1-9fd4-917308cbfbab
 # ╟─32e9ca4d-a60e-4269-b60e-9ac524e1850d
@@ -674,7 +695,14 @@ md" #### Second-order methods "
 # ╟─9a6e7a48-de02-44dd-8bfb-4ba737f472eb
 # ╟─d31a48dc-05bf-41ce-819a-a57c70b30e65
 # ╟─ec78165c-1908-4bd8-aabe-44d238902a27
-# ╟─b525b892-470d-4a6a-ad6f-09baca60785b
-# ╠═2347dbc6-84e3-4bb8-a523-1c595edfe404
+# ╟─8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
+# ╟─32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
 # ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
+# ╟─9676b7d5-5e54-4660-8aac-7c79940478f7
+# ╟─6673f432-6368-4455-bf46-dad3cc813901
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
+# ╟─799314f0-7f66-45d5-8798-5227155ce0bc
+# ╟─7727d19e-6911-4056-92c9-8ef76bb5d87a
+# ╟─4030d783-6dd1-45b4-97e0-e361d4bbf477
+# ╟─9715ec3c-0477-4cc0-8a58-b76e8f886895
+# ╟─f25f23c0-1436-4744-a05c-a92b10ad25b9

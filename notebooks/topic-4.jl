@@ -577,12 +577,35 @@ We are finding the distance to move, $\alpha$ in direction $\mathbf{d}$ that min
 In general it is too costly to calculate the exact value for $\alpha$, so trial values are chosen and the one that generates the lowest value for $f$ is chosen."
 
 # ╔═╡ 8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
-md" ##### Trust regions: Finding $\alpha$ contd. "
+md" ##### Trust regions: Another way to find $\alpha$. "
 
 # ╔═╡ 32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
 md" An alternative to linear search is the trust region method. This method looks at a local model that is believed to be reliable. Limits the step taken by line search and predicts improvement associated with taking a step. If we see that the improvement matches the predicted value then we expand the trust region, otherwise the region contracts. 
 
-With trust region methods we first choose the maximum step size and then the step direction. Once this done, we optimise the step size. The next step is found in this approzh by minimising a model of the objective function $f$ over a trust region centered at $\mathbf{x}$"
+With trust region methods we first choose the maximum step size and then the step direction. Once this done, we optimise the step size. The next step is found in this approach by minimising a model of the objective function $\hat{f}$ over a trust region centered at $\mathbf{x}$
+
+Radius of the trust region is expanded and contracted based on how well the model predicts function evaluations. The next design point $\mathbf{x}^{\prime}$ is obtained by solving
+
+$\begin{array}{cc}\underset{\mathbf{x}^{\prime}}{\operatorname{min}} & \hat{f}\left(\mathbf{x}^{\prime}\right) \\ \text { subject to } & \left\|\mathbf{x}-\mathbf{x}^{\prime}\right\| \leq \delta\end{array}$
+
+where the trust region is defined by the positive radius $\delta$ and the vector norm. This is a constrained optimisation problem, something that we will take a look at during another session. "
+
+# ╔═╡ 72c5d5a5-da1b-4bbe-ac82-e957d0758d25
+begin
+	struct Wow
+	filename
+	end
+	
+	function Base.show(io::IO, ::MIME"image/png", w::Wow)
+		write(io, read(w.filename))
+	end
+end
+
+# ╔═╡ b388bb10-5f68-49fb-ad9a-526987d35244
+Wow("/home/dawie/Desktop/wheeler/trust.jpg")
+
+# ╔═╡ f3178cb8-1ac4-486a-8bea-c51d3052f5e3
+md" The figure above illustrates the idea behid the trust region method. With this mehtod we constrain the next step to lie within a local region. The trsuted region is expanded or contracted based on the predictive performance of models of the objective function."
 
 # ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 md" #### First-order methods "
@@ -687,7 +710,7 @@ md" ### Multidimensional constrained optimisation"
 # ╠═ceb9c187-d67b-48f2-ade0-46744eda2f4d
 # ╟─ffd22348-7c3a-4832-a0e4-47bc44dd54be
 # ╟─3f62345e-6359-4e2a-89f0-9680798c5f30
-# ╠═a09b11cc-e0f9-4722-b655-b2ebb49b5b83
+# ╟─a09b11cc-e0f9-4722-b655-b2ebb49b5b83
 # ╟─ff9c9daf-874a-4a81-9250-0d1fa7261a93
 # ╠═b21182ad-1806-47b1-9fd4-917308cbfbab
 # ╟─32e9ca4d-a60e-4269-b60e-9ac524e1850d
@@ -699,6 +722,9 @@ md" ### Multidimensional constrained optimisation"
 # ╟─ec78165c-1908-4bd8-aabe-44d238902a27
 # ╟─8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
 # ╟─32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
+# ╟─72c5d5a5-da1b-4bbe-ac82-e957d0758d25
+# ╟─b388bb10-5f68-49fb-ad9a-526987d35244
+# ╟─f3178cb8-1ac4-486a-8bea-c51d3052f5e3
 # ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 # ╟─9676b7d5-5e54-4660-8aac-7c79940478f7
 # ╟─6673f432-6368-4455-bf46-dad3cc813901

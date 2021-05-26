@@ -547,11 +547,17 @@ md" ### Multidimensional unconstrained optimisation"
 # ╔═╡ 8a238a48-5a0c-4687-a7e6-125575f74720
 md" We move to problems that involve optimisation with mutlivariate functions. We start with local models, which is then followed by first and second order models. As we will see, the general approach for unconstrained optimisation problems is to start at some initial value and work through a series of iterates until we have converged with sufficient accuracy. If our function is smooth we can take advantage of information about the function's shape to figure out where we need to move on the next iteration. "
 
+# ╔═╡ 61d235f5-eefe-43ee-9d8d-59de96cbe539
+md" #### Comparison methods "
+
+# ╔═╡ 37d802a0-4157-4448-8bc1-ca50d33e16c2
+md" The simplest class of derivative free optimisation algorithms are comparison methods. They are super simple and often times a good starting point. In essence they simply **compare function values**. These are are also known as heuristic (direct) search algorithms. The most popular algorithms include grid search, Nelder-Mead simplex, simulated annealing and particle swarm. "
+
 # ╔═╡ 005b33ac-16e0-4813-b22f-53498642d600
 md" #### Local descent methods "
 
 # ╔═╡ 9a6e7a48-de02-44dd-8bfb-4ba737f472eb
-md" With local descent methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
+md" A more modern approach to derivative free optimisation is through local descent methods. With local descent methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
 
 The steps for local descent are as follows:
 
@@ -575,6 +581,24 @@ $\underset{\alpha}{\operatorname{min}} f(\mathbf{x}+\alpha \mathbf{d})$
 We are finding the distance to move, $\alpha$ in direction $\mathbf{d}$ that minimises the objective function $f$. This is a univariate optimisation problem and we can therefore choose from our selection of univariate methods discussed above. Brent-Dekker is most often used to solve this type of problem.
 
 In general it is too costly to calculate the exact value for $\alpha$, so trial values are chosen and the one that generates the lowest value for $f$ is chosen."
+
+# ╔═╡ f372e288-6535-404b-ab18-aa3f475de4dd
+# Rosenbrock example from the Optim package
+
+begin
+	prob = UnconstrainedProblems.examples["Rosenbrock"]
+	ro = prob.f
+	g! = prob.g!
+	h! = prob.h!
+end
+
+# ╔═╡ d0855f4a-a182-4c12-99ba-598f1ea1d746
+# Newton's method with line-search
+
+begin
+	algo_hz = Optim.Newton(linesearch = HagerZhang())    # Both Optim.jl and IntervalRootFinding.jl export `Newton`
+	res_hz = Optim.optimize(ro, g!, h!, prob.initial_x, method=algo_hz)
+end
 
 # ╔═╡ 8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
 md" ##### Trust regions: Another way to find $\alpha$. "
@@ -606,6 +630,19 @@ Wow("/home/dawie/Desktop/wheeler/trust.jpg")
 
 # ╔═╡ f3178cb8-1ac4-486a-8bea-c51d3052f5e3
 md" The figure above illustrates the idea behid the trust region method. With this mehtod we constrain the next step to lie within a local region. The trsuted region is expanded or contracted based on the predictive performance of models of the objective function."
+
+# ╔═╡ 3bc8fa22-c86a-48b2-8fb7-69f9a680ce73
+begin
+	# Optim.jl has a TrustRegion for Newton (see below for our discussion on Newton's Method)
+	
+	NewtonTrustRegion(; initial_delta = 1.0, # The starting trust region radius
+	                    delta_hat = 100.0, # The largest allowable trust region radius
+	                    eta = 0.1, # When rho is at least eta, accept the step.
+	                    rho_lower = 0.25, # When rho is less than rho_lower, shrink the trust region.
+	                    rho_upper = 0.75) # When rho is greater than rho_upper, grow the trust region (though no greater than delta_hat).
+	
+	res = Optim.optimize(ro, g!, h!, prob.initial_x, method=NewtonTrustRegion())
+end
 
 # ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 md" #### First-order methods "
@@ -716,15 +753,20 @@ md" ### Multidimensional constrained optimisation"
 # ╟─32e9ca4d-a60e-4269-b60e-9ac524e1850d
 # ╟─93fbb5ea-440f-4095-b3d2-998133930fd6
 # ╟─8a238a48-5a0c-4687-a7e6-125575f74720
+# ╟─61d235f5-eefe-43ee-9d8d-59de96cbe539
+# ╟─37d802a0-4157-4448-8bc1-ca50d33e16c2
 # ╟─005b33ac-16e0-4813-b22f-53498642d600
 # ╟─9a6e7a48-de02-44dd-8bfb-4ba737f472eb
 # ╟─d31a48dc-05bf-41ce-819a-a57c70b30e65
 # ╟─ec78165c-1908-4bd8-aabe-44d238902a27
+# ╠═f372e288-6535-404b-ab18-aa3f475de4dd
+# ╠═d0855f4a-a182-4c12-99ba-598f1ea1d746
 # ╟─8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
 # ╟─32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
 # ╟─72c5d5a5-da1b-4bbe-ac82-e957d0758d25
 # ╟─b388bb10-5f68-49fb-ad9a-526987d35244
 # ╟─f3178cb8-1ac4-486a-8bea-c51d3052f5e3
+# ╠═3bc8fa22-c86a-48b2-8fb7-69f9a680ce73
 # ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 # ╟─9676b7d5-5e54-4660-8aac-7c79940478f7
 # ╟─6673f432-6368-4455-bf46-dad3cc813901

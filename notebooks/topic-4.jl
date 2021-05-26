@@ -32,7 +32,9 @@ begin
 			Pkg.PackageSpec(name="Distributions"), 
 			Pkg.PackageSpec(name="IntervalRootFinding"),
 			Pkg.PackageSpec(name="Roots"), 
-			Pkg.PackageSpec(name="ForwardDiff")
+			Pkg.PackageSpec(name="ForwardDiff"),
+			Pkg.PackageSpec(name="Convex"),
+			Pkg.PackageSpec(name="SCS")
 			])
 	using Random
 	using BenchmarkTools
@@ -49,6 +51,8 @@ begin
 	using Roots
 	using ForwardDiff
 	using LineSearches
+	using Convex
+	using SCS
 end
 
 # ╔═╡ 1f4407d0-9b73-11eb-0e91-cd0de83535aa
@@ -157,7 +161,7 @@ optimize(rosenbrock, zeros(2), LBFGS(); autodiff = :forward)
 md" It is worhtwhile to go through the Tutorials in for Optim.jl, they have some great advice about when to use which algorithm. Some other package that are used for optimisation are [JUMP.jl](https://github.com/jump-dev/JuMP.jl), [Roots.jl](https://github.com/JuliaMath/Roots.jl) and [NLsolve.jl](https://github.com/JuliaNLSolvers/NLsolve.jl/). We will reference these packages as they are required for our purposes. "
 
 # ╔═╡ 38a82b17-13d2-435b-85c8-24c2c619d922
-md" ## Algorithms for optimisation"
+md" # Algorithms for optimisation"
 
 # ╔═╡ 9f559408-6f48-4eca-aa6f-1b3adabd6f06
 md" All the algorithms that are used in this section will rely on some form of an iterative procedure. By this we mean that the algorithms will try and improve the value of some objective function over a succession of steps. The way in which the next step is generated is the distinguishing feature of these algorithms. Some algorithms use only objective functions, others include gradients while Hessians are introduced in other methods. "
@@ -171,7 +175,7 @@ md" We have seen that there are many tools to solve systems of linear equations.
 One of the most basic numerical operations in computational economics is to find the solution to a system of non-linear equations. These non-linear equations can arise in one of two forms. The root finding problem or the non-linear fixed point problem.  The two forms of problems are equivalent, as we specify below. "
 
 # ╔═╡ 0170f06a-79ba-4ba3-bfe0-db1e63bc7b74
-md" ### One-dimensional algorithms"
+md" ## One-dimensional algorithms"
 
 # ╔═╡ 46095078-d68c-4570-b2b5-b8aad3656186
 md" The goal of the root finding problem can be stated as follows: 
@@ -542,22 +546,143 @@ md" If you consider some of our examples above, if the initial value is ill-advi
 Next we consider multidimensional unconstrained optimisation problems. "
 
 # ╔═╡ 93fbb5ea-440f-4095-b3d2-998133930fd6
-md" ### Multidimensional unconstrained optimisation"
+md" ## Multidimensional unconstrained optimisation"
 
 # ╔═╡ 8a238a48-5a0c-4687-a7e6-125575f74720
 md" We move to problems that involve optimisation with mutlivariate functions. We start with local models, which is then followed by first and second order models. As we will see, the general approach for unconstrained optimisation problems is to start at some initial value and work through a series of iterates until we have converged with sufficient accuracy. If our function is smooth we can take advantage of information about the function's shape to figure out where we need to move on the next iteration. "
 
 # ╔═╡ 61d235f5-eefe-43ee-9d8d-59de96cbe539
-md" #### Comparison methods "
+md" ### Direct methods (gradient free) "
 
 # ╔═╡ 37d802a0-4157-4448-8bc1-ca50d33e16c2
-md" The simplest class of derivative free optimisation algorithms are comparison methods. They are super simple and often times a good starting point. In essence they simply **compare function values**. These are are also known as heuristic (direct) search algorithms. The most popular algorithms include grid search, Nelder-Mead simplex, simulated annealing and particle swarm. "
+md" The simplest class of derivative free optimisation algorithms are direct methods. They are super simple and often times a good starting point. In essence they simply **compare function values**. These are are also known as heuristic search algorithms. The most popular algorithms include grid search, Nelder-Mead simplex, simulated annealing and particle swarm. We will mention simulated annealing and particle swarm when we talk about methods that instroduce some degree of randomness in the section on stochastic methods.
+
+The basic idea behind these algorithms are then as follows: 
+
+1. Evaluate $f$ at a collection of points.
+2. Generate new candidate point $\mathbf{x}^{k}$. Replace the current point with $\mathbf{x}^{k}$ if $f(\mathbf{x}^{k})$ is small enough.
+3. Stop when function value stops decreasing. "
+
+
+# ╔═╡ 41181d84-274d-49c1-99a0-8c3155be8257
+md" ##### Random Search "
+
+# ╔═╡ e07068c0-da2c-41b4-8d04-655dd31da954
+md" Below is an example of a random search algorithm that implements this general algorithmic idea on the Rosenbrock function "
+
+# ╔═╡ 97d6bbee-7bcb-417b-8626-fe71bd84c773
+random_search_url = "https://i.imgur.com/rK1RUKL.gif";
+
+# ╔═╡ 0970a83c-b7f3-4ca3-a29e-eb2e47106026
+md""" 
+$(Resource(random_search_url, :width => 500))
+"""
+
+# ╔═╡ 9a8be602-88b4-4c71-94dc-7a6db978e2f3
+md" The code used to generate this random search is provided below."
+
+
+# ╔═╡ aadfa1a8-22b4-4476-9ffa-4be77bc16d8a
+function minrandomsearch(f, x0, npoints; var0=1.0, ftol = 1e-6,
+                         vtol = 1e-4, maxiter = 1000,
+                         vshrink=0.9, xrange=[-2., 3.],
+                         yrange=[-2.,6.], animate=true)
+  var = var0     # current variance for search
+  oldbest = Inf  # smallest function value
+  xbest = x0     # x with smallest function vale
+  newbest = f(xbest) 
+  iter = 0       # number of iterations
+  noimprove = 0  # number of iterations with no improvement
+  
+  while ((oldbest - newbest > ftol || var > vtol) && iter<=maxiter)
+    oldbest = newbest
+    x = rand(MvNormal(xbest, var),npoints)
+
+    if animate
+      # plot the search points
+      p = deepcopy(c)
+      scatter!(p, x[1,:], x[2,:], markercolor=:black, markeralpha=0.5, legend=false, xlims=xrange, ylims=yrange)
+    end
+    
+    fval = mapslices(f,x, dims=[1])
+    (newbest, i) = findmin(fval)
+    if (newbest > oldbest)
+      noimprove+=1
+      newbest=oldbest
+    else
+      xbest = x[:,i[2]]
+      noimprove = 0
+    end
+    
+    if (noimprove > 10) # shrink var
+      var *= vshrink
+    end
+    
+    iter += 1
+  end
+  if (iter>maxiter)
+    info = "Maximum iterations reached"
+  else
+    info = "Convergence."
+  end
+  return(newbest, xbest, iter, info)
+end
+
+# ╔═╡ e4c81c30-7c6e-4a96-8be8-061093989429
+begin
+	function banana(a,b)
+	  x->(a-x[1])^2+b*(x[2]-x[1]^2)^2
+	end
+	ff = banana(1.0,1.0)
+	
+	x_0 = [1.0, 3.0]
+	result = minrandomsearch(ff, x_0, 20, var0=0.1, vshrink=0.5, vtol=1e-3 )
+end
+
+# ╔═╡ 23e88b42-bfbc-474a-bdc1-3fae1f060829
+md" ##### Grid search "
+
+# ╔═╡ 3bab6ddf-8a7c-4774-8e76-cbe51b3f8002
+md" With this method we simply compare the objective function at a selection of grid points and pick the gihest function value. This method is often a good place to start, but it is quite slow and often requires a large number of grid points to be effective. It is quite robust though and if you evaluate along a large enough number of points you will find a global optimiser! Let us attempt the grid search on our Rosenbrock function."
+
+# ╔═╡ f372e288-6535-404b-ab18-aa3f475de4dd
+# Rosenbrock example from the Optim package
+
+begin
+	prob = UnconstrainedProblems.examples["Rosenbrock"]
+	ro = prob.f
+	g! = prob.g!
+	h! = prob.h!
+end
+
+# ╔═╡ 2e6c4e41-3262-45f2-a87c-48df3b1b6273
+begin
+	grid = collect(-1.0:0.1:3);  # grid spacing is important!
+	grid2D = [[i;j] for i in grid,j in grid];
+	val2D = map(ro,grid2D);
+	r = findmin(val2D);
+	grid2D[r[2]] # This is the minimiser from the grid search process.  
+end
+
+# ╔═╡ 5bd99323-8ab3-46f1-8860-15a9cb9876c5
+md" ##### Nelder-Mead "
+
+# ╔═╡ 742e6f2f-bdab-41b8-8496-d243db501b01
+md" Read the following comment from Lagarias et al. (1999) about the Nelder-Mead algorithm. 
+
+> At present there is no function in any dimension greater than one, for which the original Nelder-Mead algorithm has been proved to converge to a minimizer. Given all the known inefficiencies and failures of the Nelder-Mead algorithm [...], one might wonder why it is used at all, let alone why it is so extraordinarily popular. 
+
+When Nelder-Mead works it is quite fast and some important Matlab functions such as `fmincon` and `fminsearch` use it. It is quite popular, but I am not sure why. Even Judd is very sarcastic about the method in his book. I will not spend any time trying to explain it.
+
+There are many other types of direct methods, but our focus for this session will be more on methods that incorporate information about gradients and Hessians. "
 
 # ╔═╡ 005b33ac-16e0-4813-b22f-53498642d600
-md" #### Local descent methods "
+md" ### Local descent methods "
 
 # ╔═╡ 9a6e7a48-de02-44dd-8bfb-4ba737f472eb
-md" A more modern approach to derivative free optimisation is through local descent methods. With local descent methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
+md" Central question of this section: How can we incrementally improve a design point until some convergence criterion is met?
+
+With local descent methods we are looking for a **local model** that provides some guidance in a certain region of $f$ on where to go next. Local models can be obtained from first- or second-order Taylor approximation. These algorithms are referred to as *descent direction methods*. These methods start with a point $\mathbf{x}^{(1)}$ and generate iterates to converge to a local minimum. 
 
 The steps for local descent are as follows:
 
@@ -568,7 +693,7 @@ The steps for local descent are as follows:
 
 $\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)} + \alpha^{(k)}\mathbf{d}^{(k+)}$
 
-There are many ways in whcih we can go about determining descent directions and step sizes. Let us consider some strategies for choosing $\alpha$ and $\mathbf{d}$."
+There are many ways in whcih we can go about determining descent directions and step sizes. Let us consider some strategies for choosing $\alpha$."
 
 # ╔═╡ d31a48dc-05bf-41ce-819a-a57c70b30e65
 md" ##### Line search: Finding $\alpha$"
@@ -582,15 +707,38 @@ We are finding the distance to move, $\alpha$ in direction $\mathbf{d}$ that min
 
 In general it is too costly to calculate the exact value for $\alpha$, so trial values are chosen and the one that generates the lowest value for $f$ is chosen."
 
-# ╔═╡ f372e288-6535-404b-ab18-aa3f475de4dd
-# Rosenbrock example from the Optim package
+# ╔═╡ 8193ff1e-8f99-4426-b0f6-8d08b92aa436
+md" If one were to try and code up the line search method this is one approach from the Algorithms for Optimisation textbook."
 
-begin
-	prob = UnconstrainedProblems.examples["Rosenbrock"]
-	ro = prob.f
-	g! = prob.g!
-	h! = prob.h!
+# ╔═╡ 600476d6-d73c-47e1-a303-6e8a0a72e14b
+function bracket_minimum(f, x=0; s=1e-2, k=2.0)
+    a, ya = x, f(x)
+    b, yb = a + s, f(a + s)
+    if yb > ya
+        a, b = b, a
+        ya, yb = yb, ya
+        s = -s
+    end
+    while true
+        c, yc = b + s, f(b + s)
+        if yc > yb
+            return a < c ? (a, c) : (c, a)
+        end
+        a, ya, b, yb = b, yb, c, yc
+        s *= k
+    end
 end
+
+# ╔═╡ 46291d46-6af7-4f73-95e1-957232ecc316
+function line_search(f, x, d)
+    if norm(d) ≈ 0; return x; end; objective = α -> f(x + α*d)
+    a, b = bracket_minimum(objective)
+    α = minimize(objective, a, b)
+    return x + α*d
+end
+
+# ╔═╡ aae464a0-9853-43c7-9f12-4b3566ecb30d
+md" In the Optim.jl package we find the line search option combined with Newton's method. "
 
 # ╔═╡ d0855f4a-a182-4c12-99ba-598f1ea1d746
 # Newton's method with line-search
@@ -614,22 +762,68 @@ $\begin{array}{cc}\underset{\mathbf{x}^{\prime}}{\operatorname{min}} & \hat{f}\l
 
 where the trust region is defined by the positive radius $\delta$ and the vector norm. This is a constrained optimisation problem, something that we will take a look at during another session. "
 
-# ╔═╡ 72c5d5a5-da1b-4bbe-ac82-e957d0758d25
-begin
-	struct Wow
-	filename
-	end
-	
-	function Base.show(io::IO, ::MIME"image/png", w::Wow)
-		write(io, read(w.filename))
-	end
-end
+# ╔═╡ 4805770c-631e-4dd3-8570-857ef7565012
+trust_url = "https://i.imgur.com/Mmwb8Nx.jpg";
 
 # ╔═╡ b388bb10-5f68-49fb-ad9a-526987d35244
-Wow("/home/dawie/Desktop/wheeler/trust.jpg")
+md""" 
+$(Resource(trust_url, :width => 450))
+"""
 
 # ╔═╡ f3178cb8-1ac4-486a-8bea-c51d3052f5e3
 md" The figure above illustrates the idea behid the trust region method. With this mehtod we constrain the next step to lie within a local region. The trsuted region is expanded or contracted based on the predictive performance of models of the objective function."
+
+# ╔═╡ 9fb15232-7863-4919-a38f-cba715433b44
+md" The trust region radius is expanded or contracted based on the local model's predictive performance.These methods compare predicted improvement $\Delta y_{\text {pred }}=f(\mathbf{x})-\hat{f}\left(\mathbf{x}^{\prime}\right)$ to actual improvement $\Delta y_{\mathrm{act}}=f(\mathbf{x})-f\left(\mathbf{x}^{\prime}\right)$:
+
+$\eta=\frac{\text { actual improvement }}{\text { predicted improvement }}=\frac{f(\mathbf{x})-f\left(\mathbf{x}^{\prime}\right)}{f(\mathbf{x})-\hat{f}\left(\mathbf{x}^{\prime}\right)}$
+
+The ratio $\eta$ is close to 1 when the predicted step size matches the actual step size. If the ratio is too small then improvement is considered less than expected and trust region radius is scaled down by factor $\gamma_1 < 1$. The argument runs the other way is the improvement is sufficiently large, and region is scaled up by $\gamma_2 > 1$."
+
+# ╔═╡ 64e694f6-9749-4566-a426-a0ce2f766ff5
+md" Below is a graphical representation of the trust region optimisation on the Rosenbrock function. "
+
+# ╔═╡ 5f84ade3-fcd4-43c5-a890-cf7b0b176704
+trust_2_url = "https://i.imgur.com/z8y02G2.jpg";
+
+# ╔═╡ f298ae15-eb9f-4506-aca6-9999b71cde49
+md""" 
+$(Resource(trust_2_url, :width => 400))
+"""
+
+# ╔═╡ ab859715-2186-4e5d-8c6c-978140b51f1c
+md" If you were to code this up on your own, the algorithm would look something as follows. "
+
+# ╔═╡ 76e3ae4e-de78-484f-8529-51740cf4f659
+function solve_trust_region_subproblem(∇f, H, x0, δ)
+	x = Variable(length(x0))
+	p = Convex.minimize(∇f(x0)⋅(x-x0) + quadform(x-x0, H(x0))/2)
+	p.constraints += norm(x-x0) <= δ
+	solve!(p, SCSSolver(verbose=false), verbose=false)
+	return (x.value, p.optval)
+end
+
+# ╔═╡ c01ca185-53f7-401a-a1b7-58b76a19d20f
+function trust_region_descent(f, ∇f, H, x, k_max;
+	η1=0.25, η2=0.5, γ1=0.5, γ2=2.0, δ=1.0)
+	y = f(x)
+	for k in 1 : k_max
+		x′, y′ = solve_trust_region_subproblem(∇f, H, x, δ)
+		r = (y - f(x′)) / (y - y′)
+		if r < η1
+			δ *= γ1
+		else
+			x, y = x′, y′
+			if r > η2
+				δ *= γ2
+			end
+		end
+	end
+	return x
+end
+
+# ╔═╡ ab954e13-c86e-4d6c-a4f4-9471a1efd15a
+md" Trust region methodology is also used in the Optim.jl package together with Newton's method. An example is provided below. "
 
 # ╔═╡ 3bc8fa22-c86a-48b2-8fb7-69f9a680ce73
 begin
@@ -644,8 +838,14 @@ begin
 	res = Optim.optimize(ro, g!, h!, prob.initial_x, method=NewtonTrustRegion())
 end
 
+# ╔═╡ 07bca67f-d9e0-4bb2-98a2-59a44af7708a
+md" In the following sections we need to think about how we will find the descent direction $\mathbf{d}$ for these type of models. "
+
 # ╔═╡ 769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 md" #### First-order methods "
+
+# ╔═╡ c07acf72-b729-4364-bfcc-9662ff36489b
+md" Here we discuss first order methods to select the appropriate descent direction. "
 
 # ╔═╡ 9676b7d5-5e54-4660-8aac-7c79940478f7
 md" ##### Gradient descent "
@@ -755,19 +955,45 @@ md" ### Multidimensional constrained optimisation"
 # ╟─8a238a48-5a0c-4687-a7e6-125575f74720
 # ╟─61d235f5-eefe-43ee-9d8d-59de96cbe539
 # ╟─37d802a0-4157-4448-8bc1-ca50d33e16c2
+# ╟─41181d84-274d-49c1-99a0-8c3155be8257
+# ╟─e07068c0-da2c-41b4-8d04-655dd31da954
+# ╟─97d6bbee-7bcb-417b-8626-fe71bd84c773
+# ╟─0970a83c-b7f3-4ca3-a29e-eb2e47106026
+# ╟─9a8be602-88b4-4c71-94dc-7a6db978e2f3
+# ╠═aadfa1a8-22b4-4476-9ffa-4be77bc16d8a
+# ╠═e4c81c30-7c6e-4a96-8be8-061093989429
+# ╟─23e88b42-bfbc-474a-bdc1-3fae1f060829
+# ╟─3bab6ddf-8a7c-4774-8e76-cbe51b3f8002
+# ╠═f372e288-6535-404b-ab18-aa3f475de4dd
+# ╠═2e6c4e41-3262-45f2-a87c-48df3b1b6273
+# ╟─5bd99323-8ab3-46f1-8860-15a9cb9876c5
+# ╟─742e6f2f-bdab-41b8-8496-d243db501b01
 # ╟─005b33ac-16e0-4813-b22f-53498642d600
 # ╟─9a6e7a48-de02-44dd-8bfb-4ba737f472eb
 # ╟─d31a48dc-05bf-41ce-819a-a57c70b30e65
 # ╟─ec78165c-1908-4bd8-aabe-44d238902a27
-# ╠═f372e288-6535-404b-ab18-aa3f475de4dd
+# ╟─8193ff1e-8f99-4426-b0f6-8d08b92aa436
+# ╠═600476d6-d73c-47e1-a303-6e8a0a72e14b
+# ╠═46291d46-6af7-4f73-95e1-957232ecc316
+# ╟─aae464a0-9853-43c7-9f12-4b3566ecb30d
 # ╠═d0855f4a-a182-4c12-99ba-598f1ea1d746
 # ╟─8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
 # ╟─32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
-# ╟─72c5d5a5-da1b-4bbe-ac82-e957d0758d25
-# ╟─b388bb10-5f68-49fb-ad9a-526987d35244
+# ╟─4805770c-631e-4dd3-8570-857ef7565012
+# ╠═b388bb10-5f68-49fb-ad9a-526987d35244
 # ╟─f3178cb8-1ac4-486a-8bea-c51d3052f5e3
+# ╟─9fb15232-7863-4919-a38f-cba715433b44
+# ╟─64e694f6-9749-4566-a426-a0ce2f766ff5
+# ╟─5f84ade3-fcd4-43c5-a890-cf7b0b176704
+# ╟─f298ae15-eb9f-4506-aca6-9999b71cde49
+# ╟─ab859715-2186-4e5d-8c6c-978140b51f1c
+# ╠═c01ca185-53f7-401a-a1b7-58b76a19d20f
+# ╠═76e3ae4e-de78-484f-8529-51740cf4f659
+# ╟─ab954e13-c86e-4d6c-a4f4-9471a1efd15a
 # ╠═3bc8fa22-c86a-48b2-8fb7-69f9a680ce73
+# ╟─07bca67f-d9e0-4bb2-98a2-59a44af7708a
 # ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
+# ╟─c07acf72-b729-4364-bfcc-9662ff36489b
 # ╟─9676b7d5-5e54-4660-8aac-7c79940478f7
 # ╟─6673f432-6368-4455-bf46-dad3cc813901
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f

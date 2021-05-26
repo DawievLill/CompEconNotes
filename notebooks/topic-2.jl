@@ -465,7 +465,7 @@ md" In most instances you can use the broadcast operator across all functions wi
 # ╟─f618e202-9063-11eb-3f97-cb280350cbc9
 # ╟─2622db40-9064-11eb-156c-e9195c13dbd7
 # ╟─acf5a080-9064-11eb-0b61-55cf13f599c7
-# ╟─6a139650-9064-11eb-3f45-41506ea4e0f0
+# ╠═6a139650-9064-11eb-3f45-41506ea4e0f0
 # ╟─6ad1feb0-87ea-11eb-14fb-2b73c5bacf7d
 # ╟─b930ded2-87ea-11eb-3f26-3d4e1597615b
 # ╠═5e60acc0-8b38-11eb-11be-3bb33c2e8c72

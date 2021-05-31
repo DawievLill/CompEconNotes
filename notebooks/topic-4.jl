@@ -590,9 +590,9 @@ md" With this method we simply compare the objective function at a selection of 
 
 begin
 	prob = UnconstrainedProblems.examples["Rosenbrock"]
-	ro = prob.f
-	g! = prob.g!
-	h! = prob.h!
+	ro = prob.f  # Function
+	g! = prob.g! # Gradient (analytical)
+	h! = prob.h! # Hessian (analytical)
 end
 
 # ╔═╡ 2e6c4e41-3262-45f2-a87c-48df3b1b6273
@@ -808,7 +808,7 @@ md" It will later become clear that gradient descent is a type of quasi-Newton s
 
 $x^{(k+1)}=x^{(k)}-P^{-1} \nabla f\left(x^{(k)}\right)$
 
-where $P$ is a positive definite matrix. If $P$ is the Hessian then we get Newton's method. In gradient descent $P$ is simply an appropriately dimensioned identity matrix, such that we go in the opposite direction of the gradient. No curvature information is used. However, as we stated before, this can be quite slow going if the problem is ill-conditioned. One can use preconditioners to resolve some of these issues. One can also introduce the idea of line search with this method, as with any quasi-Newton method. This means the introduction of a scalar $\alpha$ such that the problem becomes, 
+where $P$ is a positive definite matrix. It is clear to see that the direction for this class of problem $\mathbf{d}^{(k)}$ is $P^{-1} \nabla f\left(x^{(k)}\right)$. If $P$ is the Hessian then we get Newton's method. In gradient descent $P$ is simply an appropriately dimensioned identity matrix, such that we go in the opposite direction of the gradient. No curvature information is used. However, as we stated before, this can be quite slow going if the problem is ill-conditioned. One can use preconditioners to resolve some of these issues. One can also introduce the idea of line search with this method, as with any quasi-Newton method. This means the introduction of a scalar $\alpha$ such that the problem becomes, 
 
 $x^{(k+1)}=x^{(k)}- \alpha P^{-1} \nabla f\left(x^{(k)}\right)$
 
@@ -818,7 +818,7 @@ The value for $\alpha$ needs to be determined by the line search algorithm."
 GradientDescent(; alphaguess = LineSearches.InitialPrevious(),
                   linesearch = LineSearches.HagerZhang(),
                   P = nothing,
-                  precondprep = (P, x) -> nothing)
+                  precondprep = (P, x) -> nothing);
 
 # ╔═╡ e6077548-5eaa-46ae-abcb-aee09252e01e
 md"""
@@ -871,7 +871,11 @@ end
 md" ##### (L-)BFGS "
 
 # ╔═╡ 509776fd-a055-4f90-9dba-e68f42f61347
+md" Technically this method is a first order method, since it only requires gradient information. This quasi-Newton method utilises the same iteration scheme as most quasi-Newton solvers, 
 
+$x^{(k+1)}=x^{(k)}- P^{-1} \nabla f\left(x^{(k)}\right)$
+
+In this case an approximation to the Hessian is built using differences in gradient across iterations. There are two versions of BFGS in the Optim.jl package, namely: BFGS and L-BFGS. The latter method does not use the complete history of the iterative procedure to construct $P$, but only the latest $m$ steps. This method is more suitable for large scale problems as the memory requirement to store relevant vectors grow quickly in large problems. "
 
 # ╔═╡ fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
 md" #### Second-order methods "
@@ -881,6 +885,9 @@ md" In this section we discuss the gold standard with respect to multivariate un
 
 # ╔═╡ 799314f0-7f66-45d5-8798-5227155ce0bc
 md" ##### Newton's method "
+
+# ╔═╡ a0ce61ac-2478-46ce-b430-9ad5a67888d2
+md" Main advantage of this method is that it has quadratic convergence near the local optimum. However, one needs to provide the Hessian with this method, which could be quite costly to do. This method for optimisation consists of applying Newton's method for solving systems of equations, where the equations are now first order conditions. This is a root-finding problem on the first order conditions. This equivalent to saying that the gradient should equal the zero vector."
 
 # ╔═╡ 978de32a-7975-4d85-8c3e-36e7c2efdd83
 md"""
@@ -1024,7 +1031,7 @@ md" ### Multidimensional constrained optimisation"
 # ╟─8a4d3dbe-d241-481b-b946-dd43e2e8fc6f
 # ╟─32cc3726-241a-4c3f-b9f2-f7d8c8a07c88
 # ╟─4805770c-631e-4dd3-8570-857ef7565012
-# ╠═b388bb10-5f68-49fb-ad9a-526987d35244
+# ╟─b388bb10-5f68-49fb-ad9a-526987d35244
 # ╟─f3178cb8-1ac4-486a-8bea-c51d3052f5e3
 # ╟─9fb15232-7863-4919-a38f-cba715433b44
 # ╟─64e694f6-9749-4566-a426-a0ce2f766ff5
@@ -1041,18 +1048,19 @@ md" ### Multidimensional constrained optimisation"
 # ╟─9676b7d5-5e54-4660-8aac-7c79940478f7
 # ╟─c8482288-04fb-4150-809b-db8d09af0e24
 # ╟─5367cec2-9f7e-48e0-a955-5fd00a69ee87
-# ╠═431ddad6-1b19-4d6e-8a43-755673c77c33
+# ╟─431ddad6-1b19-4d6e-8a43-755673c77c33
 # ╟─e6077548-5eaa-46ae-abcb-aee09252e01e
-# ╟─4ab6f872-e504-4753-8a75-72ffb91c3d6c
+# ╠═4ab6f872-e504-4753-8a75-72ffb91c3d6c
 # ╟─6673f432-6368-4455-bf46-dad3cc813901
 # ╟─6053a895-b063-42bb-b30b-9e11597059eb
 # ╟─515efb25-c1d2-4b52-b2d1-64a1c91a6be7
-# ╟─53386bd3-9e26-47c0-86ba-9d5683082523
+# ╠═53386bd3-9e26-47c0-86ba-9d5683082523
 # ╟─9852d394-32b8-4936-9f73-c5921bb1f31d
-# ╠═509776fd-a055-4f90-9dba-e68f42f61347
+# ╟─509776fd-a055-4f90-9dba-e68f42f61347
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
 # ╟─b6a7fe10-8fe3-4a4a-a8c1-1c0e918aeed0
 # ╟─799314f0-7f66-45d5-8798-5227155ce0bc
+# ╟─a0ce61ac-2478-46ce-b430-9ad5a67888d2
 # ╟─978de32a-7975-4d85-8c3e-36e7c2efdd83
 # ╠═4d1e8b43-1d74-4100-9eaf-c3923c0e269e
 # ╟─0a37a8a2-b56f-4c30-9abd-5b4472307388

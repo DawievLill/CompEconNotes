@@ -887,7 +887,38 @@ md" In this section we discuss the gold standard with respect to multivariate un
 md" ##### Newton's method "
 
 # ╔═╡ a0ce61ac-2478-46ce-b430-9ad5a67888d2
-md" Main advantage of this method is that it has quadratic convergence near the local optimum. However, one needs to provide the Hessian with this method, which could be quite costly to do. This method for optimisation consists of applying Newton's method for solving systems of equations, where the equations are now first order conditions. This is a root-finding problem on the first order conditions. This equivalent to saying that the gradient should equal the zero vector."
+md" Main advantage of this method is that it has quadratic convergence near the local optimum. However, one needs to provide the Hessian with this method, which could be quite costly to do. This method for optimisation consists of applying Newton's method for solving systems of equations, where the equations are now first order conditions. This is a root-finding problem on the first order conditions. This equivalent to saying that the gradient should equal the zero vector.
+
+In the univariate case quadratic optimisation about the point $x^{(k)}$ came from the second-order Taylor expansion 
+
+$q(x)=f\left(x^{(k)}\right)+\left(x-x^{(k)}\right) f^{\prime}\left(x^{(k)}\right)+\frac{\left(x-x^{(k)}\right)^{2}}{2} f^{\prime \prime}\left(x^{(k)}\right)$
+
+Setting the derivative to zero and solving for the root gives us the update equation for Newton's method:
+
+$\begin{aligned} \frac{\partial}{\partial x} q(x) &=f^{\prime}\left(x^{(k)}\right)+\left(x-x^{(k)}\right) f^{\prime \prime}\left(x^{(k)}\right)=0 \\ x^{(k+1)} &=x^{(k)}-\frac{f^{\prime}\left(x^{(k)}\right)}{f^{\prime \prime}\left(x^{(k)}\right)} \end{aligned}$
+
+This can be extended to multivariate optimisation, with Taylor expansion at $\mathbf{x}^{(k)}$ being
+
+$f(\mathbf{x}) \approx q(\mathbf{x})=f\left(\mathbf{x}^{(k)}\right)+\left(\mathbf{g}^{(k)}\right)^{\top}\left(\mathbf{x}-\mathbf{x}^{(k)}\right)+\frac{1}{2}\left(\mathbf{x}-\mathbf{x}^{(k)}\right)^{\top} \mathbf{H}^{(k)}\left(\mathbf{x}-\mathbf{x}^{(k)}\right)$
+
+Evaluate the gradient and set it to zero:
+
+$\nabla q\left(\mathbf{x}^{(k)}\right)=\mathbf{g}^{(k)}+\mathbf{H}^{(k)}\left(\mathbf{x}-\mathbf{x}^{(k)}\right)=\mathbf{0}$
+
+Solve for the next iterate and obtain Newton's method in multivariate form, 
+
+$\mathbf{x}^{(k+1)}=\mathbf{x}^{(k)}-\left(\mathbf{H}^{(k)}\right)^{-1} \mathbf{g}^{(k)}$
+
+We can also write this more generally as, 
+
+$\mathbf{x}^{(k+1)}=\mathbf{x}^{(k)}- P^{-1} \nabla f\left(\mathbf{x}^{(k)}\right)$
+
+where $P$ is the Hessian and $\nabla f\left(x^{(k)}\right)$ is the gradient. Newton's method can also be used to supply a descent direction to line search. The descent direction is,
+
+$\mathbf{d}^{(k)}=-\left(\mathbf{H}^{(k)}\right)^{-1} \mathbf{g}^{(k)}$
+
+Below we provide an example of the different speeds of convergence of gradient descent, conjugate gradient and Newton's method. 
+"
 
 # ╔═╡ 978de32a-7975-4d85-8c3e-36e7c2efdd83
 md"""
@@ -1056,7 +1087,7 @@ md" ### Multidimensional constrained optimisation"
 # ╟─515efb25-c1d2-4b52-b2d1-64a1c91a6be7
 # ╠═53386bd3-9e26-47c0-86ba-9d5683082523
 # ╟─9852d394-32b8-4936-9f73-c5921bb1f31d
-# ╟─509776fd-a055-4f90-9dba-e68f42f61347
+# ╠═509776fd-a055-4f90-9dba-e68f42f61347
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
 # ╟─b6a7fe10-8fe3-4a4a-a8c1-1c0e918aeed0
 # ╟─799314f0-7f66-45d5-8798-5227155ce0bc

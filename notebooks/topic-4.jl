@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.5
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -34,7 +34,8 @@ begin
 			Pkg.PackageSpec(name="Roots"), 
 			Pkg.PackageSpec(name="ForwardDiff"),
 			Pkg.PackageSpec(name="Convex"),
-			Pkg.PackageSpec(name="SCS")
+			Pkg.PackageSpec(name="SCS"), 
+			Pkg.PackageSpec(name="Interact")
 			])
 	using Random
 	using BenchmarkTools
@@ -53,7 +54,17 @@ begin
 	using LineSearches
 	using Convex
 	using SCS
+	using Interact
 end
+
+# ╔═╡ b214155c-17ca-4479-886e-14a09bc1e14c
+html"""
+<style>
+  main {
+    max-width: 900px;
+  }
+</style>
+"""
 
 # ╔═╡ 1f4407d0-9b73-11eb-0e91-cd0de83535aa
 md" # Optimisation "
@@ -92,9 +103,7 @@ md" The graph for this constrained optimisation problem is showcased below. The 
 
 # ╔═╡ 9475434f-37bd-413c-85dd-f24f1dd8e504
 begin
-	
 	gr()
-	
 	xx = 0:0.01:3.5 # Range of x values from 0 to 3.5. Incremented by 0.01. 
 	f0(x1, x2) = -exp.(-(x1.*x2 - 3/2).^2 - (x2-3/2).^2) # Specification of the function as defined above
 	c(z) = sqrt(z) # Constraint function 
@@ -132,11 +141,13 @@ md" Let us consider the Rosenbrock function (which we will refer to often in the
 
 # ╔═╡ 442bf711-122b-476f-9695-74e94b8f4df7
 begin
+
+	plotly()
 	function rosenbrock(t::Vector)
 	  return (1.0 - t[1])^2 + 100.0 * (t[2] - t[1]^2)^2
 	end
 	
-	default(size=(600,400), fc=:heat)
+	default(size=(600,400), fc=:heat, palette = :Dark2_5)
 	t, s = -1.5:0.1:1.5, -1.5:0.1:1.5
 	v = Surface((t,s)->rosenbrock([t,s]), t, s)
 	surface(t,s,v, linealpha = 0.4)
@@ -278,81 +289,8 @@ $x_{k+1} \leftarrow x_{k} - \frac{f(x_{k})}{f^{\prime}(x_{k})}$
 
 Starting with an initial estimate $x_1$, this formula produces a sequence of estimates $x_2, x_3, x_4, \ldots$"
 
-# ╔═╡ fd5842db-c6b5-44d5-b60b-eadb51913247
-begin
-	h = x -> x*exp(x) - 2
-	
-	plot(h,0,1.5,label="function",grid=:y,xlabel="x",ylabel="y",legend=:topleft)
-end
-
-# ╔═╡ 3f1d4727-0f5e-4513-abb9-945eed7f9874
-md" We can clearly see that the root is somewhere near $x = 1$, so we make an initial guess at that point." 
-
-# ╔═╡ d2ca4b6c-b82a-4ca7-8b7f-9274ace2c628
-begin
-	x1 = 1
-	h1 = h(x1)
-	scatter!([x1],[h1],label="initial point")
-end
-
-# ╔═╡ 7e9a56d5-b169-4cfa-afc3-276743615327
-md" Next, we compute the tangent line at the point $(x_1, h(x_1))$ using the derivative."
-
-# ╔═╡ 2a1e1787-d850-4ef0-b7c7-3682d0cc8881
-begin
-	dhdx = x -> exp(x)*(x+1)
-	slope1 = dhdx(x1)
-	tangent1 = x -> h1 + slope1*(x-x1)
-	
-	plot!(tangent1,0,1.5,l=:dash,label="tangent line",ylim=[-2,4])
-end
-
-# ╔═╡ 62c6879b-e609-45d6-affd-c82e69356919
-md" This does not provide the root of $f$, so we settle for finding the root of the tangent line approximation, which is trivial. Call this $x_2$, our next approximation to the root."
-
-# ╔═╡ 91ca8fdc-d3e7-4d9a-8613-f67505805b21
-begin
-	x2 = x1 - h1/slope1
-	scatter!([x2],[0],label="tangent root")
-end
-
-# ╔═╡ 812e6f4b-c266-4e29-a5f8-465f46c1b1d2
-x2
-
-# ╔═╡ 6a50c48b-e41c-4028-a05f-e4b001dcd786
-h2 = h(x2)
-
-# ╔═╡ 749d1d8a-4dd6-4509-81c0-a880d95cb8e1
-md" The residual (value of $h$) is smaller than before, but not zero. So we repeat the process with a new tangent line based on the latest point on the curve."
-
-# ╔═╡ ff385d11-7916-4a68-b4d0-2ade41f252e0
-begin
-	begin
-		plot(h,0.8,0.9,label="function",
-		    xlabel="x", ylabel="y", title="Second iteration", legend=:topleft)
-		
-		scatter!([x2],[h2],label="starting point")
-		
-		slope2 = dhdx(x2)
-		tangent2 = x -> h2 + slope2*(x-x2)
-		plot!(tangent2,0.8,0.9,l=:dash,label="tangent line")
-		
-		x3 = x2 - h2/slope2
-		scatter!([x3],[0],label="tangent root")
-	end
-end
-
-# ╔═╡ eb76d4e7-f3a7-425e-9c4c-300e294face3
-x3
-
-# ╔═╡ b469a288-a02b-480b-93e0-b848fdb8dc06
-h3 = h(x3)
-
-# ╔═╡ 728479a2-afc1-4dd7-9156-39bdc64da9fe
-md" We are getting closer and closer to the true root at each iteration. "
-
 # ╔═╡ a103d9a0-332d-4032-9644-de961f36dd8a
-md" Let us look at a fancier version of our example using sliders... "
+md" Let us look at a graphical example to get a feeling for what the algorithm does. "
 
 # ╔═╡ bc9bfd83-b3b2-4f66-aaa3-0f9edf0e651a
 straight(x0, y0, x, m) = y0 + m * (x - x0)
@@ -402,6 +340,7 @@ x₀ = $(@bind x02 Slider(-10:10, show_value=true, default=6))
 
 # ╔═╡ 59372abe-baf4-45f2-b7bd-339ae4dba2bb
 let
+	gr()
 	f(x) = x^2 - 2
 
 	standard_Newton(f, n2, -1:0.01:10, x02, -10, 70)
@@ -422,6 +361,7 @@ x₀ = $(@bind x0 Slider(-10:10, show_value=true, default=6))
 
 # ╔═╡ a6f17a60-2251-427b-b6b3-bacf01927ed0
 let
+	gr()
 	f(x) = 0.2x^3 - 4x + 1
 	
 	standard_Newton(f, n, -10:0.01:10, x0, -10, 70)
@@ -691,7 +631,7 @@ The steps for local descent are as follows:
 3. Determine step size or learning rate $\alpha^{(k)}$. 
 4. Compute next design point according to:
 
-$\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)} + \alpha^{(k)}\mathbf{d}^{(k+)}$
+$\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)} + \alpha^{(k)}\mathbf{d}^{(k)}$
 
 There are many ways in whcih we can go about determining descent directions and step sizes. Let us consider some strategies for choosing $\alpha$."
 
@@ -850,20 +790,137 @@ md" Here we discuss first order methods to select the appropriate descent direct
 # ╔═╡ 9676b7d5-5e54-4660-8aac-7c79940478f7
 md" ##### Gradient descent "
 
+# ╔═╡ c8482288-04fb-4150-809b-db8d09af0e24
+md" An obvious choice for the direction is steepest descent. Steepest descent is the opposite of the gradient. Gradient is defined by:
+
+$\mathbf{g}^{(k)}=\nabla f\left(\mathbf{x}^{(k)}\right)$
+
+and the descent becomes,
+
+$\mathbf{d}^{(k)}=-\frac{\mathbf{g}^{(k)}}{\left\|\mathbf{g}^{(k)}\right\|}$
+
+The method searches along the steepest descent direction at every iteration. Minimising with respect to step size results in a jagged path. In this method each direction is orthogonal to the previous direction. This can easily be proved. 
+
+The benefit of this algorithm is that is only requires the gradient of the function, so no Hessian. However, it can be very slow to converge. There are many first order alternatives to steepest descent that converge much faster. One such an example is the conjugate gradient method, which we will discuss next."
+
+# ╔═╡ 5367cec2-9f7e-48e0-a955-5fd00a69ee87
+md" It will later become clear that gradient descent is a type of quasi-Newton solver that takes steps according to,
+
+$x^{(k+1)}=x^{(k)}-P^{-1} \nabla f\left(x^{(k)}\right)$
+
+where $P$ is a positive definite matrix. If $P$ is the Hessian then we get Newton's method. In gradient descent $P$ is simply an appropriately dimensioned identity matrix, such that we go in the opposite direction of the gradient. No curvature information is used. However, as we stated before, this can be quite slow going if the problem is ill-conditioned. One can use preconditioners to resolve some of these issues. One can also introduce the idea of line search with this method, as with any quasi-Newton method. This means the introduction of a scalar $\alpha$ such that the problem becomes, 
+
+$x^{(k+1)}=x^{(k)}- \alpha P^{-1} \nabla f\left(x^{(k)}\right)$
+
+The value for $\alpha$ needs to be determined by the line search algorithm."
+
+# ╔═╡ 431ddad6-1b19-4d6e-8a43-755673c77c33
+GradientDescent(; alphaguess = LineSearches.InitialPrevious(),
+                  linesearch = LineSearches.HagerZhang(),
+                  P = nothing,
+                  precondprep = (P, x) -> nothing)
+
+# ╔═╡ e6077548-5eaa-46ae-abcb-aee09252e01e
+md"""
+steps = $(@bind ixx1 Slider(1:1000, show_value=true, default=0))
+"""
+
+# ╔═╡ 4ab6f872-e504-4753-8a75-72ffb91c3d6c
+begin
+	plotly()
+	xx1 = [-1,1.]
+	res2 = optimize(ro, xx1, GradientDescent(), Optim.Options(store_trace=true, extended_trace=true))
+	contour(-2.5:0.01:2, -1.5:0.01:2, (xx1,y)->sqrt(ro([xx1, y])), fill=true, color=:deep, legend=false)
+	xxtracemat1 = hcat(Optim.x_trace(res2)...)
+	plot!(xxtracemat1[1, 1:ixx1], xxtracemat1[2, 1:ixx1], mc = :white, lab="")
+	scatter!(xxtracemat1[1:1,ixx1], xxtracemat1[2:2,ixx1], mc=:black, msc=:red, lab="")
+	scatter!([1.], [1.], mc=:red, msc=:red, lab="")
+	scatter!(xx1[1:1], xx1[2:2], mc=:yellow, msc=:black, label="start", legend=true)
+end
+
 # ╔═╡ 6673f432-6368-4455-bf46-dad3cc813901
 md" ##### Conjugate gradient "
+
+# ╔═╡ 6053a895-b063-42bb-b30b-9e11597059eb
+md" As we have seen in the example above, gradient descent can perform poorly in narrow valeys. The conjugate gradient method tries to overcome this jagged path problem. Combines several methods. Essentially minimises a quadratic form of $f$. Next descent direction uses gradient plus some additional information from the previous step. We won't go into detail on the method as the mathematics becomes a bit complex and the intuition is not obvious. We will simply depict the movement in the value in comparison to gradient descent below. "
+
+# ╔═╡ 515efb25-c1d2-4b52-b2d1-64a1c91a6be7
+md"""
+steps = $(@bind ix1 Slider(1:40, show_value=true, default=0))
+"""
+
+# ╔═╡ 53386bd3-9e26-47c0-86ba-9d5683082523
+begin
+		plotly()
+		xx2 = [-1,1.]
+		res3 = optimize(ro, xx2, ConjugateGradient(), Optim.Options(store_trace=true, extended_trace=true))
+	    contour(-2.5:0.01:2, -1.5:0.01:2, (xx2,y)->sqrt(ro([xx2, y])), fill=true, color=:deep, legend=false)
+	
+		xtracemat3 = hcat(Optim.x_trace(res2)...)
+		plot!(xtracemat3[1, 1:ix1], xtracemat3[2, 1:ix1], mc = :white,  label="Gradient Descent", legend=true)
+		scatter!(xtracemat3[1:1,ix1], xtracemat3[2:2,ix1], mc=:black, msc=:red, label="")	
+	
+	    xtracemat1 = hcat(Optim.x_trace(res3)...)
+	    plot!(xtracemat1[1, 1:ix1], xtracemat1[2, 1:ix1], mc = :white, lab="Conjugate Gradient")
+	    scatter!(xtracemat1[1:1,ix1], xtracemat1[2:2,ix1], mc=:black, msc=:red, lab="")
+	    scatter!([1.], [1.], mc=:red, msc=:red, lab="")
+	    scatter!(xx2[1:1], xx2[2:2], mc=:black, msc=:black, label="start", legend=true, alpha = 0.3)
+end
+
+# ╔═╡ 9852d394-32b8-4936-9f73-c5921bb1f31d
+md" ##### (L-)BFGS "
+
+# ╔═╡ 509776fd-a055-4f90-9dba-e68f42f61347
+
 
 # ╔═╡ fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
 md" #### Second-order methods "
 
+# ╔═╡ b6a7fe10-8fe3-4a4a-a8c1-1c0e918aeed0
+md" In this section we discuss the gold standard with respect to multivariate unconstrained optimisation, Newton's method. Newton's method and its many variations are often the most efficient algorithms for optimisation. These methods update by minimising a second order approximation to the function."
+
 # ╔═╡ 799314f0-7f66-45d5-8798-5227155ce0bc
 md" ##### Newton's method "
 
-# ╔═╡ 7727d19e-6911-4056-92c9-8ef76bb5d87a
-md" ##### Secant method "
+# ╔═╡ 978de32a-7975-4d85-8c3e-36e7c2efdd83
+md"""
+steps = $(@bind ix2 Slider(1:22, show_value=true, default=0))
+"""
 
-# ╔═╡ 4030d783-6dd1-45b4-97e0-e361d4bbf477
-md" ##### Quasi-Newton methods "
+# ╔═╡ 4d1e8b43-1d74-4100-9eaf-c3923c0e269e
+begin
+	plotly()
+	xx3 = [-1., 1.]
+	res4 = optimize(ro, g!, h!, xx3, Optim.Newton(), Optim.Options(store_trace=true, extended_trace=true))
+	contour(-2.5:0.01:2, -1.5:0.01:2, (xx3,y)->sqrt(ro([xx3, y])), fill=true, color=:deep, legend=false)
+	
+	xxtracemat2 = hcat(Optim.x_trace(res2)...)
+	plot!(xxtracemat2[1, 1:ix2], xxtracemat2[2, 1:ix2], mc = :white,  label="Gradient Descent", legend=true)
+	scatter!(xxtracemat2[1:1,ix2], xxtracemat2[2:2,ix2], mc=:black, msc=:red, label="")
+	
+	xxtracemat3 = hcat(Optim.x_trace(res3)...)
+    plot!(xxtracemat3[1, 1:ix2], xxtracemat3[2, 1:ix2], mc = :white,  label="Conjugate Gradient", legend=true)
+    scatter!(xxtracemat3[1:1,ix2], xxtracemat3[2:2,ix2], mc=:red, msc=:black, label="")
+	
+	xtracemat2 = hcat(Optim.x_trace(res4)...)
+	plot!(xtracemat2[1, 1:ix2], xtracemat2[2, 1:ix2], c=:blue, label="Newton")
+	scatter!(xtracemat2[1:1,ix2], xtracemat2[2:2,ix2], mc=:black, msc=:blue, label="")
+	scatter!([1.], [1.], mc=:red, msc=:red, label="")
+	scatter!(xx3[1:1], xx3[2:2], mc=:black, msc=:black, label="start", alpha = 0.3)
+	
+end
+
+# ╔═╡ 0a37a8a2-b56f-4c30-9abd-5b4472307388
+md" Newton's method tends to take relatively few iterations to converge in the case of well-behaved functions. The biggest concern is calculation of Hessians and their inverses. Another area of concern is where functions are not well approximated by their second expansions. Normally we deal with this problem by combining Newton's method with trust regions or line searches."
+
+# ╔═╡ 41babb68-bf77-4679-a3db-dd85c207ee68
+@benchmark optimize(ro, [0.0, 0.0], Optim.Newton(),Optim.Options(show_trace=false))
+
+# ╔═╡ 35ec71a1-eb61-4e31-a3bb-6e48d790496f
+@benchmark optimize(ro, g!, h!,  [-1.0, 3.0], BFGS())
+
+# ╔═╡ e1696385-ba74-4c5e-85c6-2bf410dc3c70
+@benchmark optimize(ro, g!, h!,  [0.0, 0.0], LBFGS())
 
 # ╔═╡ 9715ec3c-0477-4cc0-8a58-b76e8f886895
 md" #### Stochastic methods "
@@ -873,6 +930,7 @@ md" ### Multidimensional constrained optimisation"
 
 # ╔═╡ Cell order:
 # ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
+# ╟─b214155c-17ca-4479-886e-14a09bc1e14c
 # ╟─1f4407d0-9b73-11eb-0e91-cd0de83535aa
 # ╟─16478345-300b-460b-8198-faccaf7740e9
 # ╟─24d0123f-acc4-4656-b564-d7677bd10cf8
@@ -914,29 +972,15 @@ md" ### Multidimensional constrained optimisation"
 # ╟─518e561e-9db1-48dd-aa53-f5a55b2c1ca3
 # ╟─51d7f59a-9958-4401-9ff5-b7874fc48188
 # ╟─e150a318-60ca-428d-9e9c-4c06ef37e231
-# ╠═fd5842db-c6b5-44d5-b60b-eadb51913247
-# ╟─3f1d4727-0f5e-4513-abb9-945eed7f9874
-# ╠═d2ca4b6c-b82a-4ca7-8b7f-9274ace2c628
-# ╟─7e9a56d5-b169-4cfa-afc3-276743615327
-# ╠═2a1e1787-d850-4ef0-b7c7-3682d0cc8881
-# ╟─62c6879b-e609-45d6-affd-c82e69356919
-# ╠═91ca8fdc-d3e7-4d9a-8613-f67505805b21
-# ╠═812e6f4b-c266-4e29-a5f8-465f46c1b1d2
-# ╠═6a50c48b-e41c-4028-a05f-e4b001dcd786
-# ╟─749d1d8a-4dd6-4509-81c0-a880d95cb8e1
-# ╠═ff385d11-7916-4a68-b4d0-2ade41f252e0
-# ╠═eb76d4e7-f3a7-425e-9c4c-300e294face3
-# ╠═b469a288-a02b-480b-93e0-b848fdb8dc06
-# ╟─728479a2-afc1-4dd7-9156-39bdc64da9fe
 # ╟─a103d9a0-332d-4032-9644-de961f36dd8a
 # ╟─bc9bfd83-b3b2-4f66-aaa3-0f9edf0e651a
 # ╟─866cf80c-26a1-421f-98f1-702bd2de2bb4
-# ╟─0af7eb48-153f-4d57-8691-82403ee3454d
-# ╟─637c4017-a537-4b79-902b-a4bf508e559e
+# ╠═0af7eb48-153f-4d57-8691-82403ee3454d
+# ╠═637c4017-a537-4b79-902b-a4bf508e559e
 # ╠═59372abe-baf4-45f2-b7bd-339ae4dba2bb
 # ╟─f560279a-1c1c-45f9-991d-ceefc575da3d
-# ╟─8d02a306-7ba5-4513-a2e4-103c5637a1ac
-# ╟─947f1f04-5d95-4047-8f14-1947b3178b30
+# ╠═8d02a306-7ba5-4513-a2e4-103c5637a1ac
+# ╠═947f1f04-5d95-4047-8f14-1947b3178b30
 # ╠═a6f17a60-2251-427b-b6b3-bacf01927ed0
 # ╟─3a9f8b1f-bc71-4ae1-93ba-601553d1f4bb
 # ╠═5fa580cd-93fd-4a40-b816-544e7c2acf7e
@@ -995,10 +1039,25 @@ md" ### Multidimensional constrained optimisation"
 # ╟─769e3ed7-1a1c-40da-b5f9-7b06cc7d9ef4
 # ╟─c07acf72-b729-4364-bfcc-9662ff36489b
 # ╟─9676b7d5-5e54-4660-8aac-7c79940478f7
+# ╟─c8482288-04fb-4150-809b-db8d09af0e24
+# ╟─5367cec2-9f7e-48e0-a955-5fd00a69ee87
+# ╠═431ddad6-1b19-4d6e-8a43-755673c77c33
+# ╟─e6077548-5eaa-46ae-abcb-aee09252e01e
+# ╟─4ab6f872-e504-4753-8a75-72ffb91c3d6c
 # ╟─6673f432-6368-4455-bf46-dad3cc813901
+# ╟─6053a895-b063-42bb-b30b-9e11597059eb
+# ╟─515efb25-c1d2-4b52-b2d1-64a1c91a6be7
+# ╟─53386bd3-9e26-47c0-86ba-9d5683082523
+# ╟─9852d394-32b8-4936-9f73-c5921bb1f31d
+# ╠═509776fd-a055-4f90-9dba-e68f42f61347
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
+# ╟─b6a7fe10-8fe3-4a4a-a8c1-1c0e918aeed0
 # ╟─799314f0-7f66-45d5-8798-5227155ce0bc
-# ╟─7727d19e-6911-4056-92c9-8ef76bb5d87a
-# ╟─4030d783-6dd1-45b4-97e0-e361d4bbf477
+# ╟─978de32a-7975-4d85-8c3e-36e7c2efdd83
+# ╠═4d1e8b43-1d74-4100-9eaf-c3923c0e269e
+# ╟─0a37a8a2-b56f-4c30-9abd-5b4472307388
+# ╠═41babb68-bf77-4679-a3db-dd85c207ee68
+# ╠═35ec71a1-eb61-4e31-a3bb-6e48d790496f
+# ╠═e1696385-ba74-4c5e-85c6-2bf410dc3c70
 # ╟─9715ec3c-0477-4cc0-8a58-b76e8f886895
 # ╟─f25f23c0-1436-4744-a05c-a92b10ad25b9

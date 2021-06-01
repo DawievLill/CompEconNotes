@@ -24,7 +24,7 @@ begin
 			Pkg.PackageSpec(name="HypertextLiteral"),
 			Pkg.PackageSpec(name="Random"), 
 			Pkg.PackageSpec(name="BenchmarkTools"), 
-			Pkg.PackageSpec(name="Plots"), 
+			Pkg.PackageSpec(name="Plots", version="1"), 
 			Pkg.PackageSpec(name="LaTeXStrings"), 
 			Pkg.PackageSpec(name="Optim"),
 			Pkg.PackageSpec(name="OptimTestProblems"),
@@ -34,8 +34,9 @@ begin
 			Pkg.PackageSpec(name="Roots"), 
 			Pkg.PackageSpec(name="ForwardDiff"),
 			Pkg.PackageSpec(name="Convex"),
-			Pkg.PackageSpec(name="SCS"), 
-			Pkg.PackageSpec(name="Interact")
+			Pkg.PackageSpec(name="SCS"),
+			Pkg.PackageSpec(name="JuMP"), 
+			Pkg.PackageSpec(name="Statistics")
 			])
 	using Random
 	using BenchmarkTools
@@ -54,7 +55,8 @@ begin
 	using LineSearches
 	using Convex
 	using SCS
-	using Interact
+	using JuMP
+	using Statistics
 end
 
 # ╔═╡ b214155c-17ca-4479-886e-14a09bc1e14c
@@ -963,6 +965,28 @@ md" Newton's method tends to take relatively few iterations to converge in the c
 # ╔═╡ 9715ec3c-0477-4cc0-8a58-b76e8f886895
 md" #### Stochastic methods "
 
+# ╔═╡ 5c141a51-2cbf-4312-85df-34042039eba1
+md" Here we discuss some method that incorporate dimensions of randomness. We will focus on stochastic gradient descent, simulated annealing and particle swarm methods. "
+
+# ╔═╡ 1133f64e-b997-42b1-8603-caca664baadb
+md" ##### Stochastic gradient descent "
+
+# ╔═╡ 7b05748a-6f28-4360-af3b-50c75e13ec64
+md" We know that methods like gradient descent can get stuck at local minima. One way to resolve this issue is to apply a random shock to the value of the descent direction. One could modify the gradient from before in the following fashion, 
+
+$\mathbf{x}^{(k+1)} \leftarrow \mathbf{x}^{(k)}+\alpha^{k} \mathbf{g}^{(k)}+\boldsymbol{\varepsilon}^{(k)}$
+
+where $\boldsymbol{\varepsilon}^{(k)} \sim N\left(0, \sigma_{k}^{2}\right)$ is decreasing in $k$. This method is quite popular in training neural networks in deep learning. "
+
+# ╔═╡ 10cd58da-6f5f-4d3b-961f-5c0b7d21ecba
+md" ##### Simulated annealing "
+
+# ╔═╡ a501dd90-021c-47e2-92de-9e5795958930
+md" In this method one specifies a **temperature** that controls the degree of randomness. If the temperature is high then the search is alowed to jump around across a wide range of values. Start with an initial high temperature in order to escape potential local minima. "
+
+# ╔═╡ def9105a-5eac-49b7-a451-729c94e3baa6
+md" ##### Particle swarm "
+
 # ╔═╡ f25f23c0-1436-4744-a05c-a92b10ad25b9
 md" ### Multidimensional constrained optimisation"
 
@@ -1013,13 +1037,13 @@ md" ### Multidimensional constrained optimisation"
 # ╟─a103d9a0-332d-4032-9644-de961f36dd8a
 # ╟─bc9bfd83-b3b2-4f66-aaa3-0f9edf0e651a
 # ╟─866cf80c-26a1-421f-98f1-702bd2de2bb4
-# ╠═0af7eb48-153f-4d57-8691-82403ee3454d
-# ╠═637c4017-a537-4b79-902b-a4bf508e559e
-# ╠═59372abe-baf4-45f2-b7bd-339ae4dba2bb
+# ╟─0af7eb48-153f-4d57-8691-82403ee3454d
+# ╟─637c4017-a537-4b79-902b-a4bf508e559e
+# ╟─59372abe-baf4-45f2-b7bd-339ae4dba2bb
 # ╟─f560279a-1c1c-45f9-991d-ceefc575da3d
-# ╠═8d02a306-7ba5-4513-a2e4-103c5637a1ac
-# ╠═947f1f04-5d95-4047-8f14-1947b3178b30
-# ╠═a6f17a60-2251-427b-b6b3-bacf01927ed0
+# ╟─8d02a306-7ba5-4513-a2e4-103c5637a1ac
+# ╟─947f1f04-5d95-4047-8f14-1947b3178b30
+# ╟─a6f17a60-2251-427b-b6b3-bacf01927ed0
 # ╟─3a9f8b1f-bc71-4ae1-93ba-601553d1f4bb
 # ╠═5fa580cd-93fd-4a40-b816-544e7c2acf7e
 # ╟─3bcbb714-2b8b-44c7-83c3-568e903a64fe
@@ -1087,16 +1111,22 @@ md" ### Multidimensional constrained optimisation"
 # ╟─515efb25-c1d2-4b52-b2d1-64a1c91a6be7
 # ╠═53386bd3-9e26-47c0-86ba-9d5683082523
 # ╟─9852d394-32b8-4936-9f73-c5921bb1f31d
-# ╠═509776fd-a055-4f90-9dba-e68f42f61347
+# ╟─509776fd-a055-4f90-9dba-e68f42f61347
 # ╟─fd5c5545-74e3-43a5-b0f3-6907ab2efa5f
 # ╟─b6a7fe10-8fe3-4a4a-a8c1-1c0e918aeed0
 # ╟─799314f0-7f66-45d5-8798-5227155ce0bc
 # ╟─a0ce61ac-2478-46ce-b430-9ad5a67888d2
 # ╟─978de32a-7975-4d85-8c3e-36e7c2efdd83
-# ╠═4d1e8b43-1d74-4100-9eaf-c3923c0e269e
+# ╟─4d1e8b43-1d74-4100-9eaf-c3923c0e269e
 # ╟─0a37a8a2-b56f-4c30-9abd-5b4472307388
 # ╠═41babb68-bf77-4679-a3db-dd85c207ee68
 # ╠═35ec71a1-eb61-4e31-a3bb-6e48d790496f
 # ╠═e1696385-ba74-4c5e-85c6-2bf410dc3c70
 # ╟─9715ec3c-0477-4cc0-8a58-b76e8f886895
+# ╟─5c141a51-2cbf-4312-85df-34042039eba1
+# ╟─1133f64e-b997-42b1-8603-caca664baadb
+# ╟─7b05748a-6f28-4360-af3b-50c75e13ec64
+# ╟─10cd58da-6f5f-4d3b-961f-5c0b7d21ecba
+# ╟─a501dd90-021c-47e2-92de-9e5795958930
+# ╟─def9105a-5eac-49b7-a451-729c94e3baa6
 # ╟─f25f23c0-1436-4744-a05c-a92b10ad25b9

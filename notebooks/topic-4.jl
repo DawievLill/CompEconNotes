@@ -585,7 +585,41 @@ end
 md" ##### Grid search "
 
 # ╔═╡ 3bab6ddf-8a7c-4774-8e76-cbe51b3f8002
-md" With this method we simply compare the objective function at a selection of grid points and pick the gihest function value. This method is often a good place to start, but it is quite slow and often requires a large number of grid points to be effective. It is quite robust though and if you evaluate along a large enough number of points you will find a global optimiser! Let us attempt the grid search on our Rosenbrock function."
+md" With this method we simply compare the objective function at a selection of grid points and pick the highest function value. This method is often a good place to start, but it is quite slow and often requires a large number of grid points to be effective. It is quite robust though and if you evaluate along a large enough number of points you will find a global optimiser! This method is often used in economics since our objective functions may not be nice. Usually a first step in multi-alogorithm approach. General structure of algorithm is as follows
+
+1. Take starting value $x^{(0)}$ and define the region of search, $I = (x^{(0)} - a, x^{(0)} + b)$.
+2. Impose a discrete grid consisting of point $x^{(k)}$ where $k = 1, \ldots, n$.
+3. Compute $f(x^{(k)})$ for all $k$.
+4. Return the maximum of $f(x^{(k)})$ as the result.
+
+Let us consider the function $f(x) = -x^{4} + 2.5x^2 + x + 10$. From the first order conditions we can evaluate the critical points analytically. 
+
+$\begin{aligned} f^{\prime}(x)=-4 x^{3}+5 x+1 &=0 \\-4 x\left(x^{2}-1\right)+x+1 &=0 \\(x+1)\left(-4 x^{2}+4 x+1\right) &=0 \\(x+1)\left(x-\frac{1}{2}-\frac{1}{\sqrt{2}}\right)\left(x-\frac{1}{2}+\frac{1}{\sqrt{2}}\right) &=0 \end{aligned}$"
+
+# ╔═╡ 7c79dfd8-9176-4cd7-bb4b-16468a2f6149
+function grid_search(fun, lower_bound = 0, upper_bound =  1, ngrid = 10)
+	
+	grid = collect(range(lower_bound, upper_bound, length = ngrid))
+	func = fun.(grid)
+	i = argmax(func)
+	return grid[i]
+end
+
+
+# ╔═╡ fb564648-4b03-4303-a392-311731b9c997
+f1(x) = -x.^4 .+ (2.5)x.^2 .+ x .+ 10
+
+# ╔═╡ 68bfcba3-517e-4797-8f59-19a7ba47f75a
+plot(f1)
+
+# ╔═╡ 3ba55917-2e6d-4eec-906e-b9d664aa9263
+critical_values = [-1.0,0.5 - 1/sqrt(2), 0.5 + 1/sqrt(2)]
+
+# ╔═╡ d836b9d1-f3b1-4bee-89ef-b0aeef144279
+grid_search(f1, -4, 4, 10)
+
+# ╔═╡ ab60ae00-5b14-4547-9e13-15bdf0e7db56
+md" Let us attempt a similar approach with the Rosenbrock function."
 
 # ╔═╡ f372e288-6535-404b-ab18-aa3f475de4dd
 # Rosenbrock example from the Optim package
@@ -605,6 +639,41 @@ begin
 	r = findmin(val2D);
 	grid2D[r[2]] # This is the minimiser from the grid search process.  
 end
+
+# ╔═╡ 49e664aa-3239-450b-b1fe-3efe5bb650c1
+md" Grid search is slow and inaccurate, but it picks out the global optimum every time. A more appropriate example would be:
+
+$f(x)=\left\{\begin{array}{l}\exp (x+3) \text { if } x \in(-\infty,-1] \\ 10 x+13 \text { if } x \in(-1,-0.5] \\ 75 x^{3} \text { if } x \in(-0.5,0.5] \\ 5 \text { if } x \in(0.5,1.5] \\ \log (x-1.5) \text { if } x \in(1.5,+\infty)\end{array}\right.$
+
+Example with many different cases. This function is nasty in that it has non-differentiable kinks, discontinuities, multiple local optima and regions where the function is completely flat. In this case discretisation and grid search might be the only feasible option! "
+
+
+
+# ╔═╡ 9d593c53-68a2-48ff-b8c0-611bdc5f24c7
+function nasty_func(x)
+	
+	if x <= -1
+		exp(x .+ 3)
+	elseif -1 < x <= -0.5
+		10x .+ 13
+	elseif -0.5 < x <= 0.5
+		75(x.^3) 
+	elseif 0.5 < x <= 1.5
+		5
+	else 
+		log(x .- 1.5)
+	end
+end
+		
+
+# ╔═╡ d1373376-c76f-40d7-9206-4e205856baa2
+plot(-5:0.01:5, nasty_func)
+
+# ╔═╡ 664bca88-60cd-4707-8d12-4e09b1f7b7c2
+grid_search(nasty_func, -10, 10, 10) # Use our grid search algorithm from before -- increase grid size for better accuracy.  
+
+# ╔═╡ 59d6e725-b084-4d9f-94ab-f02caed07adf
+md" It is often the case that economic models have discontinuities or kinks. Estimation procedures may also require working with piecewise functions. As we have metnioned before, most good algorithms start with a point found by grid search. One could also use the starting value to continue with smaller interval of search, as in adaptive grid search or pattern search in multiple dimensions.  "
 
 # ╔═╡ 5bd99323-8ab3-46f1-8860-15a9cb9876c5
 md" ##### Nelder-Mead "
@@ -1070,8 +1139,19 @@ md" ### Multidimensional constrained optimisation"
 # ╠═e4c81c30-7c6e-4a96-8be8-061093989429
 # ╟─23e88b42-bfbc-474a-bdc1-3fae1f060829
 # ╟─3bab6ddf-8a7c-4774-8e76-cbe51b3f8002
+# ╠═7c79dfd8-9176-4cd7-bb4b-16468a2f6149
+# ╠═fb564648-4b03-4303-a392-311731b9c997
+# ╠═68bfcba3-517e-4797-8f59-19a7ba47f75a
+# ╠═3ba55917-2e6d-4eec-906e-b9d664aa9263
+# ╠═d836b9d1-f3b1-4bee-89ef-b0aeef144279
+# ╟─ab60ae00-5b14-4547-9e13-15bdf0e7db56
 # ╠═f372e288-6535-404b-ab18-aa3f475de4dd
 # ╠═2e6c4e41-3262-45f2-a87c-48df3b1b6273
+# ╟─49e664aa-3239-450b-b1fe-3efe5bb650c1
+# ╠═9d593c53-68a2-48ff-b8c0-611bdc5f24c7
+# ╠═d1373376-c76f-40d7-9206-4e205856baa2
+# ╠═664bca88-60cd-4707-8d12-4e09b1f7b7c2
+# ╟─59d6e725-b084-4d9f-94ab-f02caed07adf
 # ╟─5bd99323-8ab3-46f1-8860-15a9cb9876c5
 # ╟─742e6f2f-bdab-41b8-8496-d243db501b01
 # ╟─005b33ac-16e0-4813-b22f-53498642d600
@@ -1117,7 +1197,7 @@ md" ### Multidimensional constrained optimisation"
 # ╟─799314f0-7f66-45d5-8798-5227155ce0bc
 # ╟─a0ce61ac-2478-46ce-b430-9ad5a67888d2
 # ╟─978de32a-7975-4d85-8c3e-36e7c2efdd83
-# ╟─4d1e8b43-1d74-4100-9eaf-c3923c0e269e
+# ╠═4d1e8b43-1d74-4100-9eaf-c3923c0e269e
 # ╟─0a37a8a2-b56f-4c30-9abd-5b4472307388
 # ╠═41babb68-bf77-4679-a3db-dd85c207ee68
 # ╠═35ec71a1-eb61-4e31-a3bb-6e48d790496f

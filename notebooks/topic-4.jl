@@ -148,11 +148,9 @@ begin
 	function rosenbrock(t::Vector)
 	  return (1.0 - t[1])^2 + 100.0 * (t[2] - t[1]^2)^2
 	end
-	
-	default(size=(600,400), fc=:heat, palette = :Dark2_5)
 	t, s = -1.5:0.1:1.5, -1.5:0.1:1.5
 	v = Surface((t,s)->rosenbrock([t,s]), t, s)
-	surface(t,s,v, linealpha = 0.4)
+	surface(t,s,v, linealpha = 0.7, cbar = false, fillcolor = :deep)
 end
 
 # ╔═╡ ae9a3167-d239-43a5-bedd-f025f3666f47
@@ -1093,7 +1091,12 @@ end
 # ╔═╡ 149d0405-f007-4ea8-94fe-27f339555d30
 begin
 	plotly()
-	surface(-30:0.1:30,-30:0.1:30,(x,y)->ackley([x, y]),cbar=false)
+	surface(-30:0.1:30,-30:0.1:30,(x,y)->ackley([x, y]),cbar=false, fillcolor = :deep)
+end
+
+# ╔═╡ 7d875ef4-d66d-485c-980f-5187e0066202
+function himmelblau(t::Vector)
+	return (t[1]^2 + t[2] - 11)^2 + (t[1] + t[2]^2 - 7)^2
 end
 
 # ╔═╡ 6e897792-681d-4380-9f91-f6104000b43d
@@ -1286,6 +1289,7 @@ md" ### Multidimensional constrained optimisation"
 # ╠═23c33271-a6be-44b6-8990-65c08e6daeaf
 # ╠═1c88a33c-7910-4391-8c28-183698391e15
 # ╠═149d0405-f007-4ea8-94fe-27f339555d30
+# ╠═7d875ef4-d66d-485c-980f-5187e0066202
 # ╠═6e897792-681d-4380-9f91-f6104000b43d
 # ╠═d49969a3-8786-4345-8d40-84bb91188142
 # ╠═2ba636b8-9149-45a7-a4d5-9f161fa1955e

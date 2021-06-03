@@ -1051,10 +1051,85 @@ where $\boldsymbol{\varepsilon}^{(k)} \sim N\left(0, \sigma_{k}^{2}\right)$ is d
 md" ##### Simulated annealing "
 
 # ╔═╡ a501dd90-021c-47e2-92de-9e5795958930
-md" In this method one specifies a **temperature** that controls the degree of randomness. If the temperature is high then the search is alowed to jump around across a wide range of values. Start with an initial high temperature in order to escape potential local minima. "
+md" This is a derivative free method for optimisation that is based on the Metropolis-Hastings algorithm. It is often used to generate draws from a posterior when doing Bayesian inference. In this method one specifies a **temperature** that controls the degree of randomness. If the temperature is high then the search is alowed to jump around across a wide range of values. Start with an initial high temperature in order to escape potential local minima. Tempterature is then decreased, which reduces the step size. This method is characterised by the temperature, a neighbour function and acceptance probability. 
 
-# ╔═╡ def9105a-5eac-49b7-a451-729c94e3baa6
-md" ##### Particle swarm "
+At each iteration $k$, we accept a new point $\mathbf{x}^{\prime}$ with
+
+$\operatorname{Pr}\left(\text { accept } \mathbf{x}^{\prime}\right)=\left\{\begin{array}{ll}
+1 & \text { if } \Delta y \leq 0 \\
+\min \left(e^{\Delta y / t}, 1\right) & \text { if } \Delta y>0
+\end{array}\right.$
+
+where $\Delta y=f\left(\mathbf{x}^{\prime}\right)-f(\mathbf{x})$ and $t$ is the temperature. "
+
+# ╔═╡ 23c33271-a6be-44b6-8990-65c08e6daeaf
+function simulated_annealing(f, x, T, t, k_max) 
+    y = f(x)
+    ytrace = zeros(typeof(y),k_max)
+    x_best, y_best = x, y 
+    for k in 1 : k_max
+        x′ = x + rand(T)
+        y′ = f(x′)
+        Δy = y′ - y
+        if Δy ≤ 0 || rand() < exp(-Δy/t(k))
+            x, y = x′, y′ 
+        end
+        if y′ < y_best
+            x_best, y_best = x′, y′
+        end 
+        ytrace[k] = y_best
+    end
+    return x_best,ytrace
+end
+
+# ╔═╡ 1c88a33c-7910-4391-8c28-183698391e15
+# Construct this really cool function
+
+function ackley(x, a=20, b=0.2, c=2π) 
+    d = length(x)
+    return -a*exp(-b*sqrt(sum(x.^2)/d)) - exp(sum(cos.(c*xi) for xi in x)/d) + a + exp(1)
+end
+
+# ╔═╡ 149d0405-f007-4ea8-94fe-27f339555d30
+begin
+	plotly()
+	surface(-30:0.1:30,-30:0.1:30,(x,y)->ackley([x, y]),cbar=false)
+end
+
+# ╔═╡ 6e897792-681d-4380-9f91-f6104000b43d
+res_ackley = Optim.optimize(ackley, [-30.0,-30], [30.0,30.0], [-20.0,-20], SAMIN(), Optim.Options(iterations=10^6)) # Use the Optim package. 
+
+# ╔═╡ d49969a3-8786-4345-8d40-84bb91188142
+SAMIN(; nt = 5,     # reduce temperature every nt*ns*dim(x_init) evaluations
+        ns = 5,     # adjust bounds every ns*dim(x_init) evaluations
+        rt = 0.9 ,    # geometric temperature reduction factor: when temp changes, new temp is t=rt*t
+        neps = 5 ,  # number of previous best values the final result is compared to
+        f_tol = 1e-12, # the required tolerance level for function value comparisons
+        x_tol = 1e-6, # the required tolerance level for x
+        coverage_ok = false ,# if false, increase temperature until initial parameter space is covered
+        verbosity = 0) # scalar: 0, 1, 2 or 3 (default = 0).
+
+# ╔═╡ 2ba636b8-9149-45a7-a4d5-9f161fa1955e
+res_ackley_new = Optim.optimize(ackley, [-30.0,-30], [30.0,30.0], [-20.0,-20], SAMIN(nt = 15, rt = 0.4), Optim.Options(iterations=10^6))
+
+# ╔═╡ 314eb585-3021-4a16-ae56-6403d2d51210
+begin
+	p = Any[]
+	niters = 10000
+	temps = (1,10,50)
+	sigs = (1,5,30)
+	push!(p,[plot(x->i/x,1:niters,title = "tmp $i",lw=2,ylims = (0,1),leg = false) for i in temps]...)
+	for sig in sigs, t1 in temps
+	    y = simulated_annealing(ackley,[15,15],MvNormal(2,sig),x->t1/x,niters)[2][:]
+	    push!(p,plot(y,title = "sig = $sig",leg=false,lw=1.5,color="red",ylims = (0,20)))
+	end
+end
+
+# ╔═╡ 1c51d242-d9c7-48b4-aad7-1470c3a09085
+begin
+	gr()
+	plot(p...,layout = (4,3))
+end
 
 # ╔═╡ f25f23c0-1436-4744-a05c-a92b10ad25b9
 md" ### Multidimensional constrained optimisation"
@@ -1208,5 +1283,12 @@ md" ### Multidimensional constrained optimisation"
 # ╟─7b05748a-6f28-4360-af3b-50c75e13ec64
 # ╟─10cd58da-6f5f-4d3b-961f-5c0b7d21ecba
 # ╟─a501dd90-021c-47e2-92de-9e5795958930
-# ╟─def9105a-5eac-49b7-a451-729c94e3baa6
+# ╠═23c33271-a6be-44b6-8990-65c08e6daeaf
+# ╠═1c88a33c-7910-4391-8c28-183698391e15
+# ╠═149d0405-f007-4ea8-94fe-27f339555d30
+# ╠═6e897792-681d-4380-9f91-f6104000b43d
+# ╠═d49969a3-8786-4345-8d40-84bb91188142
+# ╠═2ba636b8-9149-45a7-a4d5-9f161fa1955e
+# ╠═314eb585-3021-4a16-ae56-6403d2d51210
+# ╠═1c51d242-d9c7-48b4-aad7-1470c3a09085
 # ╟─f25f23c0-1436-4744-a05c-a92b10ad25b9

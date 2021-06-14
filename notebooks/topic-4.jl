@@ -1135,7 +1135,7 @@ end
 md" ### Multidimensional constrained optimisation"
 
 # ╔═╡ 4429cc48-8dbd-409e-946c-443d57742063
-md" For this next session we will be considering the case where constraints are added to our optimisation problem. The objective function will remain the same, but we will be constrained in some fashion in our optimisation problem. This type of problem is found frequently in many areas of economics."
+md" Once again, these notes draw heavily from **Florian Oswald**. You can look at his course for more detailed notes. For this next session we will be considering the case where constraints are added to our optimisation problem. The objective function will remain the same, but we will be constrained in some fashion in our optimisation problem. This type of problem is found frequently in many areas of economics."
 
 # ╔═╡ 92d57818-d96f-4498-80b9-bd25020bc590
 md" #### Lagrange multipliers "
@@ -1147,13 +1147,27 @@ $\min _{x} f(x) \quad \text{subject to} \quad h(x)=0$
 
 Finding the best $x$ such that $h(x) = 0$ means that we have 
 
-$\nabla f(x)=\lambda \nabla h(x)$
+$f'(x)=\lambda h'(x)$
 
 where the Lagrange multiplier is given by $\lambda$. We can form the Lagrangian as:
 
 $\mathscr{L}(x, \lambda)=f(x)-\lambda h(x)$
 
-You should be quite familiar with this process, since you have covered this in your mathematics course at third year level. "
+You should be quite familiar with this process, since you have covered this in your mathematics course at third year level. One could also have inequality constraints, then we would like to know when the constraints are slack or active."
+
+# ╔═╡ a28b40aa-b4e2-4f23-a8f0-826f80e84a74
+md" #### Inequality constraints "
+
+# ╔═╡ 2f81c64d-5889-41d9-a707-efa888464c65
+md" One can also have a problem with inequality constraints, where the problem is posed as follows:
+
+$\min _{x} f(x) \quad \text{subject to} \quad g(x) \leq 0$
+
+If the solution lies on the constraint boundary then 
+
+$f'(x)=\mu g'(x)$
+
+where $\mu$ is the multiplier associated with this type of problem. The constraint can either be binding or slack. Of the constraint is not binding then we are back in the domain of the unconstrained optimisation problem. In this case we are then looking for $f'(x) = 0$ and we set $\mu = 0$"
 
 # ╔═╡ 15b2dc95-e286-4817-96c0-ab8627cdf970
 md" ##### Lagrangian example "
@@ -1165,13 +1179,25 @@ $\min _{x_{1}, x_{2}}-\exp \left(-\left(x_{1} x_{2}-3 / 2\right)^{2}-\left(x_{2}
 
 The Lagrangian for that problem can be framed as 
 
-$\mathscr{L}\left(x_{1}, x_{2}, \lambda\right)=-\exp \left(-\left(x_{1} x_{2}-\frac{3}{2}\right)^{2}-\left(x_{2}-\frac{3}{2}\right)^{2}\right)-\lambda\left(x_{1}-x_{2}^{2}\right)$"
+$\mathscr{L}\left(x_{1}, x_{2}, \mu\right)=-\exp \left(-\left(x_{1} x_{2}-\frac{3}{2}\right)^{2}-\left(x_{2}-\frac{3}{2}\right)^{2}\right)-\mu\left(x_{1}-x_{2}^{2}\right)$"
 
-# ╔═╡ 7952fe9b-d953-4b6f-a187-85fd9b90e9c9
-md" Let us remind ourselves of what the plot looks like for this problem. "
+# ╔═╡ 6a5baa59-5563-43fa-b62a-4092f6e05be1
+begin
+	contour(xx,xx,(x,y)->f0(x,y),lw=1.5,levels=[collect(0:-0.1:-0.85)...,-0.887,-0.95,-1])
+	plot!(c,0.01,3.5,label="",lw=2,color=:black,fill=(0,0.5,:blue))
+	scatter!([1.358],[1.165],markersize=5,markercolor=:red,label="Constr. Optimum")
+end
 
-# ╔═╡ 340f2a15-a2cf-4e4f-ae76-bed29859f3f7
-plot(p1, p2, size=(900,300))
+# ╔═╡ 6a15cc75-9312-480f-91a2-62b35bf2cfac
+md" If the constraint were not binding then we would be left with the unconstrained optimisation problem, as can be seen below. "
+
+# ╔═╡ 753b1549-6615-4f51-a6c3-58a2e4be1f90
+begin
+	c2(x1) = 1+sqrt(x1)
+	contour(xx,xx,(x,y)->f0(x,y),lw=1.5,levels=[collect(0:-0.1:-0.85)...,-0.887,-0.95,-1])
+	plot!(c2,0.01,3.5,label="",lw=2,color=:black,fill=(0,0.5,:blue))
+	scatter!([1],[1.5],markersize=5,markercolor=:red,label="Unconstr. Optimum")
+end
 
 # ╔═╡ Cell order:
 # ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
@@ -1335,7 +1361,10 @@ plot(p1, p2, size=(900,300))
 # ╟─4429cc48-8dbd-409e-946c-443d57742063
 # ╟─92d57818-d96f-4498-80b9-bd25020bc590
 # ╟─d3841fc5-6174-456f-b04f-28ca5229e348
+# ╟─a28b40aa-b4e2-4f23-a8f0-826f80e84a74
+# ╟─2f81c64d-5889-41d9-a707-efa888464c65
 # ╟─15b2dc95-e286-4817-96c0-ab8627cdf970
 # ╟─10b40666-b048-4d07-80a7-1c323d5ad167
-# ╟─7952fe9b-d953-4b6f-a187-85fd9b90e9c9
-# ╠═340f2a15-a2cf-4e4f-ae76-bed29859f3f7
+# ╟─6a5baa59-5563-43fa-b62a-4092f6e05be1
+# ╟─6a15cc75-9312-480f-91a2-62b35bf2cfac
+# ╟─753b1549-6615-4f51-a6c3-58a2e4be1f90

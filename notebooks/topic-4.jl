@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.7
+# v0.14.8
 
 using Markdown
 using InteractiveUtils
@@ -614,7 +614,7 @@ plot(f1)
 critical_values = [-1.0,0.5 - 1/sqrt(2), 0.5 + 1/sqrt(2)]
 
 # ╔═╡ d836b9d1-f3b1-4bee-89ef-b0aeef144279
-grid_search(f1, -4, 4, 10)
+grid_search(f1, -4, 4, 100000000)
 
 # ╔═╡ ab60ae00-5b14-4547-9e13-15bdf0e7db56
 md" Let us attempt a similar approach with the Rosenbrock function."
@@ -668,7 +668,7 @@ end
 plot(-5:0.01:5, nasty_func)
 
 # ╔═╡ 664bca88-60cd-4707-8d12-4e09b1f7b7c2
-grid_search(nasty_func, -10, 10, 10) # Use our grid search algorithm from before -- increase grid size for better accuracy.  
+grid_search(nasty_func, -10, 10, 10000000) # Use our grid search algorithm from before -- increase grid size for better accuracy.  
 
 # ╔═╡ 59d6e725-b084-4d9f-94ab-f02caed07adf
 md" It is often the case that economic models have discontinuities or kinks. Estimation procedures may also require working with piecewise functions. As we have metnioned before, most good algorithms start with a point found by grid search. One could also use the starting value to continue with smaller interval of search, as in adaptive grid search or pattern search in multiple dimensions.  "
@@ -991,7 +991,7 @@ Below we provide an example of the different speeds of convergence of gradient d
 
 # ╔═╡ 978de32a-7975-4d85-8c3e-36e7c2efdd83
 md"""
-steps = $(@bind ix2 Slider(1:22, show_value=true, default=0))
+steps = $(@bind ix2 Slider(1:30, show_value=true, default=0))
 """
 
 # ╔═╡ 4d1e8b43-1d74-4100-9eaf-c3923c0e269e
@@ -1094,11 +1094,6 @@ begin
 	surface(-30:0.1:30,-30:0.1:30,(x,y)->ackley([x, y]),cbar=false, fillcolor = :deep)
 end
 
-# ╔═╡ 7d875ef4-d66d-485c-980f-5187e0066202
-function himmelblau(t::Vector)
-	return (t[1]^2 + t[2] - 11)^2 + (t[1] + t[2]^2 - 7)^2
-end
-
 # ╔═╡ 6e897792-681d-4380-9f91-f6104000b43d
 res_ackley = Optim.optimize(ackley, [-30.0,-30], [30.0,30.0], [-20.0,-20], SAMIN(), Optim.Options(iterations=10^6)) # Use the Optim package. 
 
@@ -1128,14 +1123,55 @@ begin
 	end
 end
 
+# ╔═╡ 96247875-4939-4e19-af47-e4422d0f6137
+gr()
+
 # ╔═╡ 1c51d242-d9c7-48b4-aad7-1470c3a09085
 begin
-	gr()
 	plot(p...,layout = (4,3))
 end
 
 # ╔═╡ f25f23c0-1436-4744-a05c-a92b10ad25b9
 md" ### Multidimensional constrained optimisation"
+
+# ╔═╡ 4429cc48-8dbd-409e-946c-443d57742063
+md" For this next session we will be considering the case where constraints are added to our optimisation problem. The objective function will remain the same, but we will be constrained in some fashion in our optimisation problem. This type of problem is found frequently in many areas of economics."
+
+# ╔═╡ 92d57818-d96f-4498-80b9-bd25020bc590
+md" #### Lagrange multipliers "
+
+# ╔═╡ d3841fc5-6174-456f-b04f-28ca5229e348
+md" We can optimise an objective function subject to specific equality constraints. 
+
+$\min _{x} f(x) \quad \text{subject to} \quad h(x)=0$
+
+Finding the best $x$ such that $h(x) = 0$ means that we have 
+
+$\nabla f(x)=\lambda \nabla h(x)$
+
+where the Lagrange multiplier is given by $\lambda$. We can form the Lagrangian as:
+
+$\mathscr{L}(x, \lambda)=f(x)-\lambda h(x)$
+
+You should be quite familiar with this process, since you have covered this in your mathematics course at third year level. "
+
+# ╔═╡ 15b2dc95-e286-4817-96c0-ab8627cdf970
+md" ##### Lagrangian example "
+
+# ╔═╡ 10b40666-b048-4d07-80a7-1c323d5ad167
+md" Consider the constrained optimisation example we did at the beginning of the workbook. 
+
+$\min _{x_{1}, x_{2}}-\exp \left(-\left(x_{1} x_{2}-3 / 2\right)^{2}-\left(x_{2}-3 / 2\right)^{2}\right) \quad \text{s.t.} \quad x_{2} \leq \sqrt{x_{1}}$
+
+The Lagrangian for that problem can be framed as 
+
+$\mathscr{L}\left(x_{1}, x_{2}, \lambda\right)=-\exp \left(-\left(x_{1} x_{2}-\frac{3}{2}\right)^{2}-\left(x_{2}-\frac{3}{2}\right)^{2}\right)-\lambda\left(x_{1}-x_{2}^{2}\right)$"
+
+# ╔═╡ 7952fe9b-d953-4b6f-a187-85fd9b90e9c9
+md" Let us remind ourselves of what the plot looks like for this problem. "
+
+# ╔═╡ 340f2a15-a2cf-4e4f-ae76-bed29859f3f7
+plot(p1, p2, size=(900,300))
 
 # ╔═╡ Cell order:
 # ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
@@ -1289,10 +1325,17 @@ md" ### Multidimensional constrained optimisation"
 # ╠═23c33271-a6be-44b6-8990-65c08e6daeaf
 # ╠═1c88a33c-7910-4391-8c28-183698391e15
 # ╠═149d0405-f007-4ea8-94fe-27f339555d30
-# ╠═7d875ef4-d66d-485c-980f-5187e0066202
 # ╠═6e897792-681d-4380-9f91-f6104000b43d
 # ╠═d49969a3-8786-4345-8d40-84bb91188142
 # ╠═2ba636b8-9149-45a7-a4d5-9f161fa1955e
-# ╠═314eb585-3021-4a16-ae56-6403d2d51210
-# ╠═1c51d242-d9c7-48b4-aad7-1470c3a09085
+# ╟─314eb585-3021-4a16-ae56-6403d2d51210
+# ╟─96247875-4939-4e19-af47-e4422d0f6137
+# ╟─1c51d242-d9c7-48b4-aad7-1470c3a09085
 # ╟─f25f23c0-1436-4744-a05c-a92b10ad25b9
+# ╟─4429cc48-8dbd-409e-946c-443d57742063
+# ╟─92d57818-d96f-4498-80b9-bd25020bc590
+# ╟─d3841fc5-6174-456f-b04f-28ca5229e348
+# ╟─15b2dc95-e286-4817-96c0-ab8627cdf970
+# ╟─10b40666-b048-4d07-80a7-1c323d5ad167
+# ╟─7952fe9b-d953-4b6f-a187-85fd9b90e9c9
+# ╠═340f2a15-a2cf-4e4f-ae76-bed29859f3f7

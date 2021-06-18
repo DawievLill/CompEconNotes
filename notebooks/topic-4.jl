@@ -36,7 +36,8 @@ begin
 			Pkg.PackageSpec(name="Convex"),
 			Pkg.PackageSpec(name="SCS"),
 			Pkg.PackageSpec(name="JuMP"), 
-			Pkg.PackageSpec(name="Statistics")
+			Pkg.PackageSpec(name="Statistics"), 
+			Pkg.PackageSpec(name="NLopt")
 			])
 	using Random
 	using BenchmarkTools
@@ -57,6 +58,7 @@ begin
 	using SCS
 	using JuMP
 	using Statistics
+	using NLopt
 end
 
 # ╔═╡ b214155c-17ca-4479-886e-14a09bc1e14c
@@ -1123,14 +1125,6 @@ begin
 	end
 end
 
-# ╔═╡ 96247875-4939-4e19-af47-e4422d0f6137
-gr()
-
-# ╔═╡ 1c51d242-d9c7-48b4-aad7-1470c3a09085
-begin
-	plot(p...,layout = (4,3))
-end
-
 # ╔═╡ f25f23c0-1436-4744-a05c-a92b10ad25b9
 md" ### Multidimensional constrained optimisation"
 
@@ -1197,6 +1191,100 @@ begin
 	contour(xx,xx,(x,y)->f0(x,y),lw=1.5,levels=[collect(0:-0.1:-0.85)...,-0.887,-0.95,-1])
 	plot!(c2,0.01,3.5,label="",lw=2,color=:black,fill=(0,0.5,:blue))
 	scatter!([1],[1.5],markersize=5,markercolor=:red,label="Unconstr. Optimum")
+end
+
+# ╔═╡ 40b5896a-abee-429a-b182-6ad0362bfb32
+md" #### Constrained optimisation with NLopt.jl "
+
+# ╔═╡ a5ada94e-0209-470d-8cbc-e76a98ad57df
+md" With this package we need to specify one function for each objective and constraint. Constraints in this package are always formulated as inequality constraints. "
+
+# ╔═╡ 40c618bc-8746-43fb-9742-8a1dc25d381a
+md" Let us move to the Rosenbrock example with NLopt. We are going to add a specific inequality constraint for the problem. This means our problem will then be:
+
+$\min _{x \in R^{2}}\left(1-x_{1}\right)^{2}+100\left(x_{2}-x_{1}^{2}\right)^{2} \quad \text{subject to} \quad 0.8-x_{1}^{2}-x_{2}^{2} \geq 0$
+
+For NLopt the constraint format needs to be $x_{1}^{2}+x_{2}^{2}-0.8 \leq 0$"
+
+# ╔═╡ 23f74286-73d9-4259-8582-b1f1c50eee84
+function rosenbrockf(x::Vector,grad::Vector)
+    if length(grad) > 0
+        grad[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
+        grad[2] = 200.0 * (x[2] - x[1]^2)
+    end
+    return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end
+
+# ╔═╡ 0cedc03e-7cff-434b-b0e7-6650c4f7972d
+function r_constraint(x::Vector, grad::Vector)
+    if length(grad) > 0
+	grad[1] = 2*x[1]
+	grad[2] = 2*x[2]
+	end
+	return x[1]^2 + x[2]^2 - 0.8
+end
+
+# ╔═╡ 4ffe517b-eefb-44c1-aaa3-8eee54becc42
+md" Let us take a look at the constraint and the unconstrained optimiser in the next figure. "
+
+# ╔═╡ 64718fa9-d3f2-4113-b1aa-6e984f1c544b
+begin
+	gr()
+	grad = zeros(2)
+	xrange = collect(-2.5:0.01:2)
+	cc = contour(xrange,xrange, (x,y)->sqrt(rosenbrockf([x, y],grad)), fill=true, color=:deep, ylab = L"x_2",xlab = L"x_1", leg = :bottomleft)
+	contour!(cc,xrange,xrange,(x,y)->r_constraint([x, y],grad), levels = [0])
+	scatter!(cc,[1],[1],color = :red, lab = "unconstrained optimizer")
+end
+
+# ╔═╡ dd2ae9fb-30bf-413e-91fa-6b923e7b1d57
+md" Now we compute the constrained optimiser for the function. "
+
+# ╔═╡ 40337b00-f9ee-4a81-9a4c-483efc4c5b77
+begin
+	opt = Opt(:LD_MMA, 2)
+	lower_bounds!(opt, [-5, -5.0])
+	min_objective!(opt,(x,g) -> rosenbrockf(x,g))
+	inequality_constraint!(opt, (x,g) -> r_constraint(x,g))
+	ftol_rel!(opt,1e-9)
+	(minfunc,minx,ret) = NLopt.optimize(opt, [-1.0,0.0])
+end
+
+# ╔═╡ e4b6fbdb-8d2e-4c45-9695-9053192820d6
+scatter!(cc, [minx[1]], [minx[2]], label = "constrained optimizer", leg = :topleft)
+
+# ╔═╡ 17658372-57c2-4ab2-9541-6d4974cf9d00
+function r_constraint_new(x::Vector, grad::Vector,radius::Number)
+    if length(grad) > 0
+	grad[1] = 2*x[1]
+	grad[2] = 2*x[2]
+	end
+	return x[1]^2 + x[2]^2 - radius
+end
+
+# ╔═╡ ff1cb23f-d762-4a91-a30a-f7097412e062
+function nlopt_interact(radius)
+   opt = Opt(:LD_MMA, 2)
+    lower_bounds!(opt, [-5, -5.0])
+    min_objective!(opt,(x,g) -> rosenbrockf(x,g))
+    inequality_constraint!(opt, (x,g) -> r_constraint_new(x,g,radius))
+    ftol_rel!(opt,1e-9)
+    NLopt.optimize(opt, [-1.0,0.0]) 
+end
+
+# ╔═╡ 2c79ccec-6b96-45e1-a442-bcefe1490e37
+md"""
+steps = $(@bind radius Slider(0.5:0.01:4.0, show_value=true, default=0))
+"""
+
+# ╔═╡ eaa13ed5-1dfa-4c90-bf02-c24d76a01dc5
+begin
+	gr()
+	(minfunc₁,minx₁,ret₁) = nlopt_interact(radius)
+	 cc₁ = contour(xrange,xrange, (x,y)->sqrt(rosenbrockf([x, y],grad)), fill=true, color=:deep, ylab = L"x_2",xlab = L"x_1", leg = :bottomleft, ratio = 1)
+	 contour!(cc₁,xrange,xrange,(x,y)->r_constraint_new([x, y],grad,radius), levels = [0])
+	 scatter!(cc₁,[1],[1],color = :red, lab = "unconstrained optimizer")
+	 scatter!(cc₁, [minx[1]], [minx[2]], label = "constrained optimizer", leg = :topleft)
 end
 
 # ╔═╡ Cell order:
@@ -1328,7 +1416,7 @@ end
 # ╠═4ab6f872-e504-4753-8a75-72ffb91c3d6c
 # ╟─6673f432-6368-4455-bf46-dad3cc813901
 # ╟─6053a895-b063-42bb-b30b-9e11597059eb
-# ╟─515efb25-c1d2-4b52-b2d1-64a1c91a6be7
+# ╠═515efb25-c1d2-4b52-b2d1-64a1c91a6be7
 # ╠═53386bd3-9e26-47c0-86ba-9d5683082523
 # ╟─9852d394-32b8-4936-9f73-c5921bb1f31d
 # ╟─509776fd-a055-4f90-9dba-e68f42f61347
@@ -1355,8 +1443,6 @@ end
 # ╠═d49969a3-8786-4345-8d40-84bb91188142
 # ╠═2ba636b8-9149-45a7-a4d5-9f161fa1955e
 # ╟─314eb585-3021-4a16-ae56-6403d2d51210
-# ╟─96247875-4939-4e19-af47-e4422d0f6137
-# ╟─1c51d242-d9c7-48b4-aad7-1470c3a09085
 # ╟─f25f23c0-1436-4744-a05c-a92b10ad25b9
 # ╟─4429cc48-8dbd-409e-946c-443d57742063
 # ╟─92d57818-d96f-4498-80b9-bd25020bc590
@@ -1368,3 +1454,17 @@ end
 # ╟─6a5baa59-5563-43fa-b62a-4092f6e05be1
 # ╟─6a15cc75-9312-480f-91a2-62b35bf2cfac
 # ╟─753b1549-6615-4f51-a6c3-58a2e4be1f90
+# ╟─40b5896a-abee-429a-b182-6ad0362bfb32
+# ╟─a5ada94e-0209-470d-8cbc-e76a98ad57df
+# ╟─40c618bc-8746-43fb-9742-8a1dc25d381a
+# ╠═23f74286-73d9-4259-8582-b1f1c50eee84
+# ╠═0cedc03e-7cff-434b-b0e7-6650c4f7972d
+# ╟─4ffe517b-eefb-44c1-aaa3-8eee54becc42
+# ╟─64718fa9-d3f2-4113-b1aa-6e984f1c544b
+# ╟─dd2ae9fb-30bf-413e-91fa-6b923e7b1d57
+# ╠═40337b00-f9ee-4a81-9a4c-483efc4c5b77
+# ╠═e4b6fbdb-8d2e-4c45-9695-9053192820d6
+# ╠═17658372-57c2-4ab2-9541-6d4974cf9d00
+# ╠═ff1cb23f-d762-4a91-a30a-f7097412e062
+# ╟─2c79ccec-6b96-45e1-a442-bcefe1490e37
+# ╟─eaa13ed5-1dfa-4c90-bf02-c24d76a01dc5

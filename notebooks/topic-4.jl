@@ -24,7 +24,7 @@ begin
 			Pkg.PackageSpec(name="HypertextLiteral"),
 			Pkg.PackageSpec(name="Random"), 
 			Pkg.PackageSpec(name="BenchmarkTools"), 
-			Pkg.PackageSpec(name="Plots", version="1"), 
+			Pkg.PackageSpec(name="Plots"), 
 			Pkg.PackageSpec(name="LaTeXStrings"), 
 			Pkg.PackageSpec(name="Optim"),
 			Pkg.PackageSpec(name="OptimTestProblems"),
@@ -35,7 +35,6 @@ begin
 			Pkg.PackageSpec(name="ForwardDiff"),
 			Pkg.PackageSpec(name="Convex"),
 			Pkg.PackageSpec(name="SCS"),
-			Pkg.PackageSpec(name="JuMP"), 
 			Pkg.PackageSpec(name="Statistics"), 
 			Pkg.PackageSpec(name="NLopt")
 			])
@@ -56,7 +55,6 @@ begin
 	using LineSearches
 	using Convex
 	using SCS
-	using JuMP
 	using Statistics
 	using NLopt
 end
@@ -1177,6 +1175,7 @@ $\mathscr{L}\left(x_{1}, x_{2}, \mu\right)=-\exp \left(-\left(x_{1} x_{2}-\frac{
 
 # ╔═╡ 6a5baa59-5563-43fa-b62a-4092f6e05be1
 begin
+	gr()
 	contour(xx,xx,(x,y)->f0(x,y),lw=1.5,levels=[collect(0:-0.1:-0.85)...,-0.887,-0.95,-1])
 	plot!(c,0.01,3.5,label="",lw=2,color=:black,fill=(0,0.5,:blue))
 	scatter!([1.358],[1.165],markersize=5,markercolor=:red,label="Constr. Optimum")
@@ -1187,6 +1186,7 @@ md" If the constraint were not binding then we would be left with the unconstrai
 
 # ╔═╡ 753b1549-6615-4f51-a6c3-58a2e4be1f90
 begin
+	gr()
 	c2(x1) = 1+sqrt(x1)
 	contour(xx,xx,(x,y)->f0(x,y),lw=1.5,levels=[collect(0:-0.1:-0.85)...,-0.887,-0.95,-1])
 	plot!(c2,0.01,3.5,label="",lw=2,color=:black,fill=(0,0.5,:blue))
@@ -1284,11 +1284,26 @@ begin
 	 cc₁ = contour(xrange,xrange, (x,y)->sqrt(rosenbrockf([x, y],grad)), fill=true, color=:deep, ylab = L"x_2",xlab = L"x_1", leg = :bottomleft, ratio = 1)
 	 contour!(cc₁,xrange,xrange,(x,y)->r_constraint_new([x, y],grad,radius), levels = [0])
 	 scatter!(cc₁,[1],[1],color = :red, lab = "unconstrained optimizer")
-	 scatter!(cc₁, [minx[1]], [minx[2]], label = "constrained optimizer", leg = :topleft)
+	 scatter!(cc₁, [minx₁[1]], [minx₁[2]], label = "constrained optimizer", leg = :topleft)
 end
 
+# ╔═╡ ebb21154-d05f-47c0-b924-e119d45be151
+md" Next we will take a look at a mathematical programming interface for Julia that can be used to set up constrained optimisation problems. "
+
+# ╔═╡ b93c7e3b-7dcc-41a8-9595-ab133adcf9d9
+md" #### JuMP.jl "
+
+# ╔═╡ 0d714513-1dc2-4236-8029-9807ded74f39
+md" There are many benefits to using this package. In particular, it uses automatic differentiation to compute derivatives for your stated equations. You can specify your preferred solver to solve the problem at hand. JuMP provides information on sparsity structure of matrices as well as Hessians to the solver that you want to work with. JuMP converts your problem formulation into a standard representation of an optimisation problem. The best place to get started with JuMP is the official documentation. They have the Rosenbrock function as one of their examples. However, let us start with a more basic example to illustrate the functionality of JuMP. "
+
+# ╔═╡ 10d2f543-d82a-4b3c-bddd-6b53d52294ca
+md" The first step of the process is to create the model. The model collects variables, objective function and constraints. You should also specify the solver that you want to use. You can use the solver that fits your type of problem. Some common examples include linear, quadratic, second order conic, nonlinear programming problems.  "
+
+# ╔═╡ a5abb5ef-60b0-414c-9b6d-f73b513136da
+md" JuMP does not work in Pluto just yet, so I will have to show this in VScode instead. "
+
 # ╔═╡ Cell order:
-# ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
+# ╠═f4226cfe-ee06-4c72-9615-fc4aedfd045c
 # ╟─b214155c-17ca-4479-886e-14a09bc1e14c
 # ╟─1f4407d0-9b73-11eb-0e91-cd0de83535aa
 # ╟─16478345-300b-460b-8198-faccaf7740e9
@@ -1451,9 +1466,9 @@ end
 # ╟─2f81c64d-5889-41d9-a707-efa888464c65
 # ╟─15b2dc95-e286-4817-96c0-ab8627cdf970
 # ╟─10b40666-b048-4d07-80a7-1c323d5ad167
-# ╟─6a5baa59-5563-43fa-b62a-4092f6e05be1
+# ╠═6a5baa59-5563-43fa-b62a-4092f6e05be1
 # ╟─6a15cc75-9312-480f-91a2-62b35bf2cfac
-# ╟─753b1549-6615-4f51-a6c3-58a2e4be1f90
+# ╠═753b1549-6615-4f51-a6c3-58a2e4be1f90
 # ╟─40b5896a-abee-429a-b182-6ad0362bfb32
 # ╟─a5ada94e-0209-470d-8cbc-e76a98ad57df
 # ╟─40c618bc-8746-43fb-9742-8a1dc25d381a
@@ -1463,8 +1478,13 @@ end
 # ╟─64718fa9-d3f2-4113-b1aa-6e984f1c544b
 # ╟─dd2ae9fb-30bf-413e-91fa-6b923e7b1d57
 # ╠═40337b00-f9ee-4a81-9a4c-483efc4c5b77
-# ╠═e4b6fbdb-8d2e-4c45-9695-9053192820d6
+# ╟─e4b6fbdb-8d2e-4c45-9695-9053192820d6
 # ╠═17658372-57c2-4ab2-9541-6d4974cf9d00
 # ╠═ff1cb23f-d762-4a91-a30a-f7097412e062
 # ╟─2c79ccec-6b96-45e1-a442-bcefe1490e37
 # ╟─eaa13ed5-1dfa-4c90-bf02-c24d76a01dc5
+# ╟─ebb21154-d05f-47c0-b924-e119d45be151
+# ╟─b93c7e3b-7dcc-41a8-9595-ab133adcf9d9
+# ╟─0d714513-1dc2-4236-8029-9807ded74f39
+# ╟─10d2f543-d82a-4b3c-bddd-6b53d52294ca
+# ╟─a5abb5ef-60b0-414c-9b6d-f73b513136da

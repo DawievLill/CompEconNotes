@@ -1,4 +1,5 @@
 
+# Simple example using JuMP
 
 using JuMP
 using GLPK

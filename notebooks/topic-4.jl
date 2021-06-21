@@ -1130,7 +1130,7 @@ md" ### Multidimensional constrained optimisation"
 md" Once again, these notes draw heavily from **Florian Oswald**. You can look at his course for more detailed notes. For this next session we will be considering the case where constraints are added to our optimisation problem. The objective function will remain the same, but we will be constrained in some fashion in our optimisation problem. This type of problem is found frequently in many areas of economics."
 
 # ╔═╡ 92d57818-d96f-4498-80b9-bd25020bc590
-md" #### Lagrange multipliers "
+md" #### Equality constraints "
 
 # ╔═╡ d3841fc5-6174-456f-b04f-28ca5229e348
 md" We can optimise an objective function subject to specific equality constraints. 
@@ -1303,7 +1303,7 @@ md" The first step of the process is to create the model. The model collects var
 md" JuMP does not work in Pluto just yet, so I will have to show this in VScode instead. "
 
 # ╔═╡ Cell order:
-# ╠═f4226cfe-ee06-4c72-9615-fc4aedfd045c
+# ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
 # ╟─b214155c-17ca-4479-886e-14a09bc1e14c
 # ╟─1f4407d0-9b73-11eb-0e91-cd0de83535aa
 # ╟─16478345-300b-460b-8198-faccaf7740e9
@@ -1466,9 +1466,9 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╟─2f81c64d-5889-41d9-a707-efa888464c65
 # ╟─15b2dc95-e286-4817-96c0-ab8627cdf970
 # ╟─10b40666-b048-4d07-80a7-1c323d5ad167
-# ╠═6a5baa59-5563-43fa-b62a-4092f6e05be1
+# ╟─6a5baa59-5563-43fa-b62a-4092f6e05be1
 # ╟─6a15cc75-9312-480f-91a2-62b35bf2cfac
-# ╠═753b1549-6615-4f51-a6c3-58a2e4be1f90
+# ╟─753b1549-6615-4f51-a6c3-58a2e4be1f90
 # ╟─40b5896a-abee-429a-b182-6ad0362bfb32
 # ╟─a5ada94e-0209-470d-8cbc-e76a98ad57df
 # ╟─40c618bc-8746-43fb-9742-8a1dc25d381a
@@ -1477,7 +1477,7 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╟─4ffe517b-eefb-44c1-aaa3-8eee54becc42
 # ╟─64718fa9-d3f2-4113-b1aa-6e984f1c544b
 # ╟─dd2ae9fb-30bf-413e-91fa-6b923e7b1d57
-# ╠═40337b00-f9ee-4a81-9a4c-483efc4c5b77
+# ╟─40337b00-f9ee-4a81-9a4c-483efc4c5b77
 # ╟─e4b6fbdb-8d2e-4c45-9695-9053192820d6
 # ╠═17658372-57c2-4ab2-9541-6d4974cf9d00
 # ╠═ff1cb23f-d762-4a91-a30a-f7097412e062

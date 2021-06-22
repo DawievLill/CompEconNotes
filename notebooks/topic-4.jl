@@ -1303,8 +1303,8 @@ md" The first step of the process is to create the model. The model collects var
 md" JuMP does not work in Pluto just yet, so I will have to show this in VScode instead. "
 
 # ╔═╡ Cell order:
-# ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
-# ╟─b214155c-17ca-4479-886e-14a09bc1e14c
+# ╠═f4226cfe-ee06-4c72-9615-fc4aedfd045c
+# ╠═b214155c-17ca-4479-886e-14a09bc1e14c
 # ╟─1f4407d0-9b73-11eb-0e91-cd0de83535aa
 # ╟─16478345-300b-460b-8198-faccaf7740e9
 # ╟─24d0123f-acc4-4656-b564-d7677bd10cf8

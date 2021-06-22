@@ -898,7 +898,7 @@ steps = $(@bind ixx1 Slider(1:1000, show_value=true, default=0))
 begin
 	plotly()
 	xx1 = [-1,1.]
-	res2 = optimize(ro, xx1, GradientDescent(), Optim.Options(store_trace=true, extended_trace=true))
+	res2 = Optim.optimize(ro, xx1, GradientDescent(), Optim.Options(store_trace=true, extended_trace=true))
 	contour(-2.5:0.01:2, -1.5:0.01:2, (xx1,y)->sqrt(ro([xx1, y])), fill=true, color=:deep, legend=false)
 	xxtracemat1 = hcat(Optim.x_trace(res2)...)
 	plot!(xxtracemat1[1, 1:ixx1], xxtracemat1[2, 1:ixx1], mc = :white, lab="")
@@ -922,7 +922,7 @@ steps = $(@bind ix1 Slider(1:40, show_value=true, default=0))
 begin
 		plotly()
 		xx2 = [-1,1.]
-		res3 = optimize(ro, xx2, ConjugateGradient(), Optim.Options(store_trace=true, extended_trace=true))
+		res3 = Optim.optimize(ro, xx2, ConjugateGradient(), Optim.Options(store_trace=true, extended_trace=true))
 	    contour(-2.5:0.01:2, -1.5:0.01:2, (xx2,y)->sqrt(ro([xx2, y])), fill=true, color=:deep, legend=false)
 	
 		xtracemat3 = hcat(Optim.x_trace(res2)...)
@@ -998,7 +998,7 @@ steps = $(@bind ix2 Slider(1:30, show_value=true, default=0))
 begin
 	plotly()
 	xx3 = [-1., 1.]
-	res4 = optimize(ro, g!, h!, xx3, Optim.Newton(), Optim.Options(store_trace=true, extended_trace=true))
+	res4 = Optim.optimize(ro, g!, h!, xx3, Optim.Newton(), Optim.Options(store_trace=true, extended_trace=true))
 	contour(-2.5:0.01:2, -1.5:0.01:2, (xx3,y)->sqrt(ro([xx3, y])), fill=true, color=:deep, legend=false)
 	
 	xxtracemat2 = hcat(Optim.x_trace(res2)...)
@@ -1021,13 +1021,13 @@ end
 md" Newton's method tends to take relatively few iterations to converge in the case of well-behaved functions. The biggest concern is calculation of Hessians and their inverses. Another area of concern is where functions are not well approximated by their second expansions. Normally we deal with this problem by combining Newton's method with trust regions or line searches."
 
 # ╔═╡ 41babb68-bf77-4679-a3db-dd85c207ee68
-@benchmark optimize(ro, [0.0, 0.0], Optim.Newton(),Optim.Options(show_trace=false))
+@benchmark Optim.optimize(ro, [0.0, 0.0], Optim.Newton(),Optim.Options(show_trace=false))
 
 # ╔═╡ 35ec71a1-eb61-4e31-a3bb-6e48d790496f
-@benchmark optimize(ro, g!, h!,  [-1.0, 3.0], BFGS())
+@benchmark Optim.optimize(ro, g!, h!,  [-1.0, 3.0], BFGS())
 
 # ╔═╡ e1696385-ba74-4c5e-85c6-2bf410dc3c70
-@benchmark optimize(ro, g!, h!,  [0.0, 0.0], LBFGS())
+@benchmark Optim.optimize(ro, g!, h!,  [0.0, 0.0], LBFGS())
 
 # ╔═╡ 9715ec3c-0477-4cc0-8a58-b76e8f886895
 md" #### Stochastic methods "
@@ -1477,8 +1477,8 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╟─4ffe517b-eefb-44c1-aaa3-8eee54becc42
 # ╟─64718fa9-d3f2-4113-b1aa-6e984f1c544b
 # ╟─dd2ae9fb-30bf-413e-91fa-6b923e7b1d57
-# ╟─40337b00-f9ee-4a81-9a4c-483efc4c5b77
-# ╟─e4b6fbdb-8d2e-4c45-9695-9053192820d6
+# ╠═40337b00-f9ee-4a81-9a4c-483efc4c5b77
+# ╠═e4b6fbdb-8d2e-4c45-9695-9053192820d6
 # ╠═17658372-57c2-4ab2-9541-6d4974cf9d00
 # ╠═ff1cb23f-d762-4a91-a30a-f7097412e062
 # ╟─2c79ccec-6b96-45e1-a442-bcefe1490e37

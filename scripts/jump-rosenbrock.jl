@@ -4,6 +4,7 @@
 # Instead of hand-coding first and second derivatives, you only have to give `JuMP` expressions for objective and constraints.
 # Here is an example.
 
+using JuMP
 using Ipopt
 
 let
@@ -35,11 +36,12 @@ let
     @NLobjective(m₂, Min, (1-x₂)^2 + 100(y₂-x₂^2)^2)
 
 
-    @NLconstraint(m₂, x₂^2 + y₂^2 <= 0.8)
+    @NLconstraint(m₂, con, x₂^2 + y₂^2 <= 0.8)
 
     JuMP.optimize!(m₂)
     @show value(x₂)
     @show value(y₂)
     @show termination_status(m₂)
+    @show dual(con)
 
 end

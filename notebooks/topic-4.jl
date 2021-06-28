@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.8
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -154,7 +154,7 @@ begin
 end
 
 # ╔═╡ ae9a3167-d239-43a5-bedd-f025f3666f47
-optimize(rosenbrock, zeros(2)) # The zeros are the initial point for this algorithm to start with. 
+Optim.optimize(rosenbrock, zeros(2)) # The zeros are the initial point for this algorithm to start with. 
 
 # ╔═╡ 67a0a485-bef8-43b0-b8c2-91a0f24fea35
 md" We can also use a quasi-Newton method such as L-BFGS. This requires calculation of a gradient, which is done through central finite differencing in the Optim package."
@@ -897,7 +897,7 @@ steps = $(@bind ixx1 Slider(1:1000, show_value=true, default=0))
 # ╔═╡ 4ab6f872-e504-4753-8a75-72ffb91c3d6c
 begin
 	plotly()
-	xx1 = [-1,1.]
+	xx1 = [-2,1.]
 	res2 = Optim.optimize(ro, xx1, GradientDescent(), Optim.Options(store_trace=true, extended_trace=true))
 	contour(-2.5:0.01:2, -1.5:0.01:2, (xx1,y)->sqrt(ro([xx1, y])), fill=true, color=:deep, legend=false)
 	xxtracemat1 = hcat(Optim.x_trace(res2)...)
@@ -1303,8 +1303,8 @@ md" The first step of the process is to create the model. The model collects var
 md" JuMP does not work in Pluto just yet, so I will have to show this in VScode instead. "
 
 # ╔═╡ Cell order:
-# ╠═f4226cfe-ee06-4c72-9615-fc4aedfd045c
-# ╠═b214155c-17ca-4479-886e-14a09bc1e14c
+# ╟─f4226cfe-ee06-4c72-9615-fc4aedfd045c
+# ╟─b214155c-17ca-4479-886e-14a09bc1e14c
 # ╟─1f4407d0-9b73-11eb-0e91-cd0de83535aa
 # ╟─16478345-300b-460b-8198-faccaf7740e9
 # ╟─24d0123f-acc4-4656-b564-d7677bd10cf8
@@ -1312,7 +1312,7 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╟─4d0b0840-4545-490f-b1f4-84234ef914c1
 # ╟─e6b0edda-43ec-4b87-86d8-1ad183d8ab54
 # ╟─68899349-671d-4166-81c4-4f6fa50f8c46
-# ╠═9475434f-37bd-413c-85dd-f24f1dd8e504
+# ╟─9475434f-37bd-413c-85dd-f24f1dd8e504
 # ╟─90157f5a-f352-4bf7-994f-ee6b1b9ef710
 # ╟─dd6d6b21-5219-4a8e-952b-5446f94d20c1
 # ╟─c1e1db15-eddb-4535-8d00-c1180a91fdae
@@ -1482,7 +1482,7 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╠═17658372-57c2-4ab2-9541-6d4974cf9d00
 # ╠═ff1cb23f-d762-4a91-a30a-f7097412e062
 # ╟─2c79ccec-6b96-45e1-a442-bcefe1490e37
-# ╟─eaa13ed5-1dfa-4c90-bf02-c24d76a01dc5
+# ╠═eaa13ed5-1dfa-4c90-bf02-c24d76a01dc5
 # ╟─ebb21154-d05f-47c0-b924-e119d45be151
 # ╟─b93c7e3b-7dcc-41a8-9595-ab133adcf9d9
 # ╟─0d714513-1dc2-4236-8029-9807ded74f39

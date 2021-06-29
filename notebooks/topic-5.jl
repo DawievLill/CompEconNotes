@@ -58,7 +58,37 @@ In the case of local approximations we can approximate the function and it's der
 md"  ## Basis functions "
 
 # ╔═╡ 31bc8646-bf07-4a22-9030-196af852251c
+md" Before we start with the idea of a basis function, we need to understand what a basis is in the context of linear algebra. For a good description of linear algebra concepts with code, you can visit the [QuantEcon](https://python.quantecon.org/linear_algebra.html) page. We start with the idea of span and the move to linear independence and finally talk about the definition of a basis.
 
+If we are provided a set of vectors $A:=\left\{a_{1}, \ldots, a_{k}\right\}$ in $\mathbb{R}^{n}$ we want to know which new vectors can be created by performing **linear** operations. New vectors that are created in this way are referred to as *linear combinations* of $A$. We have that $y \in \mathbb{R}^{n}$ is a linear combination of $A$ if 
+
+$y=\beta_{1} a_{1}+\cdots+\beta_{k} a_{k} \quad \text{for some scalars} \quad \beta_{1}, \ldots, \beta_{k}$
+
+These $\beta$ values are the coefficients of the linear combination. The set of linear combinations of $A$ is referred to as the **span** of $A$
+
+The following figure shows the span of $A=\left\{a_{1}, a_{2}\right\}$ in $\mathbb{R}^{3}$. It provides a 2 dimensional plane passing through these two points and the origin. 
+"
+
+# ╔═╡ b6f096f4-9857-4d66-a62d-8dd818c4d9a2
+begin
+	
+	plotly()
+	# fixed linear function, to generate a plane
+	f(x, y) = 0.2x + 0.1y
+	
+	# lines to vectors
+	x_vec = [0 0; 3 3]
+	y_vec = [0 0; 4 -4]
+	z_vec = [0 0; f(3, 4) f(3, -4)]
+	
+	# draw the plane
+	n = 20
+	grid = range(-5, 5, length = n)
+	z2 = [ f(grid[row], grid[col]) for row in 1:n, col in 1:n ]
+	plot(grid, grid, z2, fill = :ice, st = :surface, alpha = 0.75)
+	plot!(x_vec, y_vec, z_vec, colour = [:black :black], linewidth = 5, labels = "", colorbar = false)
+	
+end
 
 # ╔═╡ Cell order:
 # ╟─eeca0160-d37e-11eb-05f4-bd7469319dad
@@ -67,4 +97,5 @@ md"  ## Basis functions "
 # ╟─25b6e79e-37dc-4a67-8b56-fbaf9da41713
 # ╟─a4f24d72-fb51-47cc-827d-c9f3cb367998
 # ╟─9ffc49e0-056b-4029-87ce-2fee216277a5
-# ╠═31bc8646-bf07-4a22-9030-196af852251c
+# ╟─31bc8646-bf07-4a22-9030-196af852251c
+# ╠═b6f096f4-9857-4d66-a62d-8dd818c4d9a2

@@ -74,12 +74,12 @@ begin
 	
 	plotly()
 	# fixed linear function, to generate a plane
-	f(x, y) = 0.2x + 0.1y
+	f(x, y) = 0.1x + 0.1y
 	
 	# lines to vectors
 	x_vec = [0 0; 3 3]
-	y_vec = [0 0; 4 -4]
-	z_vec = [0 0; f(3, 4) f(3, -4)]
+	y_vec = [0 0; 3 -3]
+	z_vec = [0 0; f(3, 3) f(3, -3)]
 	
 	# draw the plane
 	n = 20
@@ -88,7 +88,18 @@ begin
 	plot(grid, grid, z2, fill = :ice, st = :surface, alpha = 0.75)
 	plot!(x_vec, y_vec, z_vec, colour = [:black :black], linewidth = 5, labels = "", colorbar = false)
 	
+	
 end
+
+# ╔═╡ 7fc20a57-f784-4336-a71f-bb2b0bbdc777
+md" For our set of vectors to have a large span, we need linear independence. A collection of vectors is linearly dependent if a strict subset of $A$ has the same span as $A$. The collection of vectors are **linearly independent** if they are not linearly dependent. In other words, no vector is redundant to the span. In our example above, if there were a third vector $a_3$ then the set $\left\{a_{1}, a_{2}, a_{3}\right\}$ would be linearly dependent if $a_3$ lies in the plane. The more formal definition of linear independence is the following,
+
+$\text {If} \quad \beta_{1} a_{1}+\cdots \beta_{k} a_{k}=0 \quad \text{for scalars} \quad \beta_{1}, \ldots, \beta_{k}, \quad \text{then} \quad \beta_{1}=\cdots=\beta_{k}=0$
+
+We call $B$ a basis for the vector space over the real numbers a linearly independent subset of the vector space that spans that space. In other words, a basis satisfies linear independence and spans the space. Now that we have defined a basis in terms of linear algebra, we need to think about what a **basis function** is. 
+
+Similar to the way in which every vector in a vector space can be represented by a linear combination of basis vectors, we can represent every continuous function in a function space by a linear combination of basis functions. In other words, basis functions are linearly independent functions that span the function space. We are mostly interested in the space of continuous or continuously differentiable functions (our function space of interest)."
+
 
 # ╔═╡ Cell order:
 # ╟─eeca0160-d37e-11eb-05f4-bd7469319dad
@@ -98,4 +109,5 @@ end
 # ╟─a4f24d72-fb51-47cc-827d-c9f3cb367998
 # ╟─9ffc49e0-056b-4029-87ce-2fee216277a5
 # ╟─31bc8646-bf07-4a22-9030-196af852251c
-# ╠═b6f096f4-9857-4d66-a62d-8dd818c4d9a2
+# ╟─b6f096f4-9857-4d66-a62d-8dd818c4d9a2
+# ╟─7fc20a57-f784-4336-a71f-bb2b0bbdc777

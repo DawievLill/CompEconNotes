@@ -52,13 +52,13 @@ md" Following the work of Judd, we will focus on three general approaches to app
 2. Regression (curve fitting)
 3. Local approximations (perturbation methods)
 
-With interpolation we require that an approximation must pass through certain points of the function. The `residual` at each grid point needs to be zero with this class of methods. Finally, in the case of regression we would like to minimise some notion of distance without requiring that the points pass through the function in question. In the case of local approximations we can approximate the function and it's derivative at a single point using Taylor series expansions. "
+With interpolation we require that an approximation must pass through certain points of the function. The `residual` at each grid point needs to be zero with this class of methods. Finally, in the case of regression we would like to minimise some notion of distance without requiring that the points pass through the function in question. We won't focus too much of our attention on regression problems. In the case of local approximations we can approximate the function and it's derivative at a single point using Taylor series expansions. "
 
 # ╔═╡ 9ffc49e0-056b-4029-87ce-2fee216277a5
 md"  ## Basis functions "
 
 # ╔═╡ 31bc8646-bf07-4a22-9030-196af852251c
-md" Before we start with the idea of a basis function, we need to understand what a basis is in the context of linear algebra. For a good description of linear algebra concepts with code, you can visit the [QuantEcon](https://python.quantecon.org/linear_algebra.html) page. We start with the idea of span and the move to linear independence and finally talk about the definition of a basis.
+md" Before we start with the idea of a basis function, we need to understand what a basis is in the context of linear algebra. In general, one of the best investments you can make in your mathematical training is to study linear algebra. One can never know enough linear algebra. For a good description of linear algebra concepts with code, you can visit the [QuantEcon](https://python.quantecon.org/linear_algebra.html) page. We start with the idea of span and the move to linear independence and finally talk about the definition of a basis.
 
 If we are provided a set of vectors $A:=\left\{a_{1}, \ldots, a_{k}\right\}$ in $\mathbb{R}^{n}$ we want to know which new vectors can be created by performing **linear** operations. New vectors that are created in this way are referred to as *linear combinations* of $A$. We have that $y \in \mathbb{R}^{n}$ is a linear combination of $A$ if 
 
@@ -96,7 +96,7 @@ md" For our set of vectors to have a large span, we need linear independence. A 
 
 $\text {If} \quad \beta_{1} a_{1}+\cdots \beta_{k} a_{k}=0 \quad \text{for scalars} \quad \beta_{1}, \ldots, \beta_{k}, \quad \text{then} \quad \beta_{1}=\cdots=\beta_{k}=0$
 
-We call $B$ a basis for the vector space over the real numbers a linearly independent subset of the vector space that spans that space. In other words, a basis satisfies linear independence and spans the space. Now that we have defined a basis in terms of linear algebra, we need to think about what a **basis function** is. 
+A basis for the vector space over the real numbers is a linearly independent subset of the vector space that spans that space. In other words, a basis satisfies linear independence and spans the space. Now that we have defined a basis in terms of linear algebra, we need to think about what a **basis function** is. 
 
 Similar to the way in which every vector in a vector space can be represented by a linear combination of basis vectors, we can represent every continuous function in a function space by a linear combination of basis functions. In other words, basis functions are linearly independent functions that span the function space. We are mostly interested in the space of continuous or continuously differentiable functions (our function space of interest).
 "
@@ -108,7 +108,7 @@ md" ## Interpolation basics"
 # ╔═╡ 59dffcb5-b978-495e-a25e-22a57ae84882
 md" As mentioned before, there are three broad approaches to approximation. This section links interpolation and regression to the concept of a basis function. We will deal with local approximation through Taylor series expansion toward the end of the session.
 
-The space of continuous functions is spanned by monomials, $x^{n}$, $n = 0, 1, 2, \ldots$.
+The space of continuous functions is spanned by monomials, $x^{n}$, $n = 0, 1, 2, \ldots$, and one can use the monomials as a basis for the space of continuous functions. However, we have to ask ourselves whether this is a good basis. Normally a good basis for a vector space also has some orthogonality properties. This leads us into the discussion of constructing orthogonal polynomials as bases for our function space. In order to think about orthogonality one needs the concept of an inner product in the vector space. 
 
 Given that $F$ is a space of continuous real valued functions, let us define a inner product operation on that space. 
 
@@ -130,5 +130,5 @@ where $g, h, w \in F$ and $w$ is a weighting function. The pair $\{F,<.,.>\}$ fo
 # ╟─b6f096f4-9857-4d66-a62d-8dd818c4d9a2
 # ╟─7fc20a57-f784-4336-a71f-bb2b0bbdc777
 # ╟─55cfd73a-7015-4936-b229-ddcc488d48de
-# ╠═59dffcb5-b978-495e-a25e-22a57ae84882
+# ╟─59dffcb5-b978-495e-a25e-22a57ae84882
 # ╠═95125a71-1691-4009-acb4-5db30cd6b69f

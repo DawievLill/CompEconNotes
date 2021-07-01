@@ -48,11 +48,11 @@ The **goal** is to take our approximation to the data and determine what the fun
 # ╔═╡ a4f24d72-fb51-47cc-827d-c9f3cb367998
 md" Following the work of Judd, we will focus on three general approaches to approximation. 
 
-1. Local approximations (perturbation methods)
-2. Interpolation or collocation
-3. Regression
+1. Interpolation or collocation
+2. Regression (curve fitting)
+3. Local approximations (perturbation methods)
 
-In the case of local approximations we can approximate the function and it's derivative at a single point using Taylor series expansions. With interpolation we require that an approximation must pass through certain points of the function. The `residual` at each grid point needs to be zero with this class of methods. Finally, in the case of regression we would like to minimise some notion of distance without requiring that the points pass through the function in question. "
+With interpolation we require that an approximation must pass through certain points of the function. The `residual` at each grid point needs to be zero with this class of methods. Finally, in the case of regression we would like to minimise some notion of distance without requiring that the points pass through the function in question. In the case of local approximations we can approximate the function and it's derivative at a single point using Taylor series expansions. "
 
 # ╔═╡ 9ffc49e0-056b-4029-87ce-2fee216277a5
 md"  ## Basis functions "
@@ -98,7 +98,25 @@ $\text {If} \quad \beta_{1} a_{1}+\cdots \beta_{k} a_{k}=0 \quad \text{for scala
 
 We call $B$ a basis for the vector space over the real numbers a linearly independent subset of the vector space that spans that space. In other words, a basis satisfies linear independence and spans the space. Now that we have defined a basis in terms of linear algebra, we need to think about what a **basis function** is. 
 
-Similar to the way in which every vector in a vector space can be represented by a linear combination of basis vectors, we can represent every continuous function in a function space by a linear combination of basis functions. In other words, basis functions are linearly independent functions that span the function space. We are mostly interested in the space of continuous or continuously differentiable functions (our function space of interest)."
+Similar to the way in which every vector in a vector space can be represented by a linear combination of basis vectors, we can represent every continuous function in a function space by a linear combination of basis functions. In other words, basis functions are linearly independent functions that span the function space. We are mostly interested in the space of continuous or continuously differentiable functions (our function space of interest).
+"
+
+
+# ╔═╡ 55cfd73a-7015-4936-b229-ddcc488d48de
+md" ## Interpolation basics"
+
+# ╔═╡ 59dffcb5-b978-495e-a25e-22a57ae84882
+md" As mentioned before, there are three broad approaches to approximation. This section links interpolation and regression to the concept of a basis function. We will deal with local approximation through Taylor series expansion toward the end of the session.
+
+The space of continuous functions is spanned by monomials, $x^{n}$, $n = 0, 1, 2, \ldots$.
+
+Given that $F$ is a space of continuous real valued functions, let us define a inner product operation on that space. 
+
+$<g, h>=\int_{\mathbf{x}} g(x) h(x) w(x) d x$
+
+where $g, h, w \in F$ and $w$ is a weighting function. The pair $\{F,<.,.>\}$ form an inner-product vetor space. "
+
+# ╔═╡ 95125a71-1691-4009-acb4-5db30cd6b69f
 
 
 # ╔═╡ Cell order:
@@ -111,3 +129,6 @@ Similar to the way in which every vector in a vector space can be represented by
 # ╟─31bc8646-bf07-4a22-9030-196af852251c
 # ╟─b6f096f4-9857-4d66-a62d-8dd818c4d9a2
 # ╟─7fc20a57-f784-4336-a71f-bb2b0bbdc777
+# ╟─55cfd73a-7015-4936-b229-ddcc488d48de
+# ╠═59dffcb5-b978-495e-a25e-22a57ae84882
+# ╠═95125a71-1691-4009-acb4-5db30cd6b69f

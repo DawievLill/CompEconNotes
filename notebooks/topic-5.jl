@@ -88,7 +88,7 @@ $\text {If} \quad \beta_{1} a_{1}+\cdots \beta_{k} a_{k}=0 \quad \text{for scala
 
 A basis for the vector space over the real numbers is a linearly independent subset of the vector space that spans that space. In other words, a basis satisfies linear independence and spans the space. Now that we have defined a basis in terms of linear algebra, we need to think about what a **basis function** is. 
 
-Similar to the way in which every vector in a vector space can be represented by a linear combination of basis vectors, we can represent every continuous function in a function space by a linear combination of basis functions. In other words, basis functions are linearly independent functions that span the function space. We are mostly interested in the space of continuous or continuously differentiable functions (our function space of interest).
+Similar to the way in which every vector in a vector space can be represented by a linear combination of basis vectors, we can represent every continuous function in a function space by a linear combination of basis functions. In other words, basis functions are linearly independent functions that span the function space. 
 "
 
 
@@ -98,29 +98,66 @@ md" ## Interpolation based methods "
 # ╔═╡ 59dffcb5-b978-495e-a25e-22a57ae84882
 md" Interpolation is a form of function approximation in which the interpolant and the true function must agree. In other words, they must have same value at a finite number of points. Additional restrictions can also be imposed on the interpolant, such as constraints on monotonicity, convexity and smoothness. In general, interpolation is any method that takes information at a finite set of points and finds a function that satisfies that information.
 
-There are are two primary approaches to interpolation. The approaches are **finite element methods** and **spectral methods**. We will talk about finite element methods first and then move on to spectral methods toward the end of the session. "
+There are are two primary approaches to interpolation. The approaches are **finite element methods** and **spectral methods**. We will talk about spectral methods first and then move on to finite element methods toward the end of the session. "
 
 # ╔═╡ ef709d7b-107b-43bb-9026-c7af1efacfdc
 md" ### Interpolation basics "
 
-# ╔═╡ 5e55cf7d-a076-45e1-8c54-c561be82857d
-md" ### Finite element methods "
+# ╔═╡ 2e0a22df-6eab-465b-b23b-a9b14a093290
+md" We want to approximate a known function $f(x)$. The interpolant $\hat{f}$ is chosen to be a linear combination of a collection of basis functions $\left\{\phi_{j}(x)\right\}_{j=1}^{n}$ where $n$ is the degree of interpolation. 
+
+Basis functions, as we mentioned before, are linearly independent functions that span the family of functions chosen for the interpolation. In other words, the function space. We are mostly interested in the space of continuous or continuously differentiable functions (our function space of interest).
+
+Thus, for a given family of basis functions $\left\{\phi_{j}(x)\right\}_{j=1}^{n}$ we have 
+
+$f(x) \simeq \hat{f}(x) \equiv \sum_{j=1}^{n} w_{j} \phi_{j}(x)$
+
+Reduced the problem of characterising an infinite dimensional object to the problem of determining the $n$ weights $\{w_{j}\}$. The first step is to choose an appropriate basis function. Polynomials of increasing order are often used as basis functions.  
+
+Second step is designing interpolation scheme to properties of original function $f$ that one wishes the interpolant to replicate. Normally, one interpolates to match the value of the original function at selected interpolation nodes. 
+
+Given that we have $n$ interpolation nodes and $n$ basis functions, computing basis coefficients reduces to solving:
+
+$\sum_{j=1}^{n} w_{j}\phi_{j}\left(x_{i}\right) =f\left(x_{i}\right)=y_{i} \quad \forall i=1,2, \ldots, n$
+
+
+One can write the problem in matrix notation as follows $\Phi c=y$ where $\Phi_{i j}=\phi_{j}\left(x_{i}\right)$. Written in full,  
+
+$\Phi=\left[\begin{array}{ccc} \phi_{1}\left(x_{1}\right) & \ldots & \phi_{n}\left(x_{1}\right) \\ \vdots & & \\ \phi_{1}\left(x_{n}\right) & \ldots & \phi_{n}\left(x_{n}\right)\end{array}\right], c=\left[\begin{array}{c} c_{1} \\ \vdots \\ c_{n}\end{array}\right], y=\left[\begin{array}{c} y_{1} \\ \vdots \\ y_{n}\end{array}\right]$
+
+The interpolation scheme is well defined if the interpolation nodes and basis function are chosen such that the interpolation matrix is nonsingular. "
+
+
 
 # ╔═╡ 95125a71-1691-4009-acb4-5db30cd6b69f
 md" ### Spectral methods "
 
+# ╔═╡ 507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
+md" Spectral methods basically mean that we use a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. "
+
+# ╔═╡ 31d4476e-96d2-4478-9905-abb311dc2fcb
+md" #### Polynomial interpolation "
+
+# ╔═╡ 8918fde2-07d7-4f76-8c5b-03fa04650058
+md" ##### Monomials "
+
+# ╔═╡ 113e9d8d-17cc-413e-95ca-0c53dda1f48b
+md" ##### Orthogonal polynomials "
+
 # ╔═╡ ef9fb41f-b815-4e77-8913-82ee14fc3d8c
-md" This section links interpolation and regression to the concept of a basis function. We will deal with local approximation through Taylor series expansion toward the end of the session. This section draws from Chapter 6 of Judd and Chapter 6 of Miranda and Fackler. 
-
-
-
+md" 
 The space of continuous functions is spanned by monomials, $x^{n}$, $n = 0, 1, 2, \ldots$, and one can use the monomials as a basis for the space of continuous functions. However, we have to ask ourselves whether this is a good basis. Normally a good basis for a vector space also has some orthogonality properties. This leads us into the discussion of constructing orthogonal polynomials as bases for our function space. In order to think about orthogonality one needs the concept of an inner product in the vector space. 
+
+Talk about the Vandermonde matrix here as an example of why this is not a good basis. 
 
 Given that $F$ is a space of continuous real valued functions, let us define a inner product operation on that space. 
 
 $<g, h>=\int_{\mathbf{x}} g(x) h(x) w(x) d x$
 
 where $g, h, w \in F$ and $w$ is a weighting function. The pair $\{F,<.,.>\}$ form an inner-product vetor space."
+
+# ╔═╡ 5e55cf7d-a076-45e1-8c54-c561be82857d
+md" ### Finite element methods "
 
 # ╔═╡ 0a9c73e1-68c1-4c17-bd48-98673b44d332
 md" ## Local approximations " 
@@ -140,7 +177,12 @@ md" ## Local approximations "
 # ╟─55cfd73a-7015-4936-b229-ddcc488d48de
 # ╟─59dffcb5-b978-495e-a25e-22a57ae84882
 # ╟─ef709d7b-107b-43bb-9026-c7af1efacfdc
-# ╟─5e55cf7d-a076-45e1-8c54-c561be82857d
+# ╟─2e0a22df-6eab-465b-b23b-a9b14a093290
 # ╟─95125a71-1691-4009-acb4-5db30cd6b69f
+# ╟─507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
+# ╟─31d4476e-96d2-4478-9905-abb311dc2fcb
+# ╟─8918fde2-07d7-4f76-8c5b-03fa04650058
+# ╟─113e9d8d-17cc-413e-95ca-0c53dda1f48b
 # ╟─ef9fb41f-b815-4e77-8913-82ee14fc3d8c
+# ╟─5e55cf7d-a076-45e1-8c54-c561be82857d
 # ╟─0a9c73e1-68c1-4c17-bd48-98673b44d332

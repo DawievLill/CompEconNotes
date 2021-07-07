@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.8
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -1350,7 +1350,7 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╟─bc9bfd83-b3b2-4f66-aaa3-0f9edf0e651a
 # ╟─866cf80c-26a1-421f-98f1-702bd2de2bb4
 # ╟─0af7eb48-153f-4d57-8691-82403ee3454d
-# ╟─637c4017-a537-4b79-902b-a4bf508e559e
+# ╠═637c4017-a537-4b79-902b-a4bf508e559e
 # ╟─59372abe-baf4-45f2-b7bd-339ae4dba2bb
 # ╟─f560279a-1c1c-45f9-991d-ceefc575da3d
 # ╟─8d02a306-7ba5-4513-a2e4-103c5637a1ac

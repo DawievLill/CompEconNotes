@@ -4,8 +4,23 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ eeca0160-d37e-11eb-05f4-bd7469319dad
-using Plots
+begin
+	using Plots
+	using PlutoUI
+end
+
+# ╔═╡ 1969882f-7901-4886-ac1e-003a46357fa0
+
 
 # ╔═╡ 99e0b1b9-d032-41d6-8a1d-742050d5ddeb
 html"""
@@ -128,22 +143,62 @@ Normally, one interpolates to match the value of the original function at select
 md" #### Selection criteria "
 
 # ╔═╡ 36de0424-f52d-40ca-9c42-dfa05277effa
+md" From the previous discussion one might be interested in knowing which interpolation nodes and basis functions to choose. Below are some desirable criteria. 
 
+1. The interpolant should approach the target function by increasing the number of nodes and basis functions as well as number of basis once a polynomial basis is chosen. 
+
+2. The basis coefficients should be quick to compute. Works best with diagonal or orthogonal interpolation matrices. 
+
+3. The interpolant should be easy to work with. In other words, the basis function should have the property of being easily evaluated, differentiated and integrated. "
 
 # ╔═╡ e5910bba-3703-4eb0-9aae-55554193de20
 md" ##### Interpolation nodes "
+
+# ╔═╡ 095e025d-0344-4e2c-97d9-fa1b230b2469
+md" One option for the interpolation nodes is to select evenly spaced nodes. This yields the following selection for nodes,
+
+$x_{i}=a+\frac{i-1}{n-1}(b-a), \quad \forall i=1,2, \ldots, n$
+
+Evenly spaced nodes are not always a good choice, even if you function is smooth. A classic example of this is Runge's function $f(x)=\frac{1}{1+25 x^{2}}$ where the approximation error rises rapidly with number of nodes.  We will come back to this topic at a later stage, exploring this specific function in more detail. The function is presented below and does not seem to be that problematic to work with. "
+
+
+# ╔═╡ ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
+r(x) = 1 / (1 + 25x^2)	
+
+# ╔═╡ 7a0bf746-edae-448e-a71d-7d87c914d65b
+begin
+	r_y = -1:0.001:1
+	plot(r_y, r) # Plot of the Runge function. We will look to approximating this function. 
+end
+
+# ╔═╡ 91856137-f5de-479b-a2fa-f04a4ac99946
+md"""
+a = $(@bind a Slider(0.5:0.5:10, show_value=true, default=1))
+"""
+
+# ╔═╡ 1bee986c-86d7-4db8-be73-70fa21c289f5
+witch_of_agnesi(x) = 8a^3 / x^2 + 4a^2
+
+# ╔═╡ d7ad814b-a5c3-4b93-abce-8130ba803538
+plot(r_y, witch_of_agnesi)
 
 # ╔═╡ 95125a71-1691-4009-acb4-5db30cd6b69f
 md" ### Spectral methods "
 
 # ╔═╡ 507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
-md" Spectral methods basically mean that we use a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. "
+md" Spectral methods basically refer to the usage of a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. "
 
 # ╔═╡ 31d4476e-96d2-4478-9905-abb311dc2fcb
 md" #### Polynomial interpolation "
 
 # ╔═╡ 8918fde2-07d7-4f76-8c5b-03fa04650058
 md" ##### Monomials "
+
+# ╔═╡ 3fa3a47d-2b05-4bcf-808b-e3768b86e566
+md" ##### Lagrange "
+
+# ╔═╡ c4e41e78-e554-47b3-822f-3516f615bc2c
+
 
 # ╔═╡ 113e9d8d-17cc-413e-95ca-0c53dda1f48b
 md" ##### Orthogonal polynomials "
@@ -164,15 +219,17 @@ where $g, h, w \in F$ and $w$ is a weighting function. The pair $\{F,<.,.>\}$ fo
 md" ### Finite element methods "
 
 # ╔═╡ 0a9c73e1-68c1-4c17-bd48-98673b44d332
-md" ## Local approximations " 
+md" ## Local methods " 
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 Plots = "~1.18.0"
+PlutoUI = "~0.7.9"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -622,6 +679,12 @@ git-tree-sha1 = "9f126950870ef24ce75cdd841f4b7cf34affc6d2"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.18.0"
 
+[[PlutoUI]]
+deps = ["Base64", "Dates", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "Suppressor"]
+git-tree-sha1 = "44e225d5837e2a2345e69a1d1e01ac2443ff9fcb"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.9"
+
 [[Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "00cfd92944ca9c760982747e9a1d0d5d86ab1e5a"
@@ -729,6 +792,11 @@ deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
 git-tree-sha1 = "000e168f5cc9aded17b6999a560b7c11dda69095"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 version = "0.6.0"
+
+[[Suppressor]]
+git-tree-sha1 = "a819d77f31f83e5792a76081eee1ea6342ab8787"
+uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
+version = "0.2.0"
 
 [[TOML]]
 deps = ["Dates"]
@@ -979,6 +1047,7 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╠═eeca0160-d37e-11eb-05f4-bd7469319dad
+# ╠═1969882f-7901-4886-ac1e-003a46357fa0
 # ╟─99e0b1b9-d032-41d6-8a1d-742050d5ddeb
 # ╟─0ac4cb74-c027-4677-bd45-672f19035ce4
 # ╟─25b6e79e-37dc-4a67-8b56-fbaf9da41713
@@ -993,12 +1062,20 @@ version = "0.9.1+5"
 # ╟─ef709d7b-107b-43bb-9026-c7af1efacfdc
 # ╟─2e0a22df-6eab-465b-b23b-a9b14a093290
 # ╟─18830fc6-d17d-45f9-8e21-cd42ef74ea4e
-# ╠═36de0424-f52d-40ca-9c42-dfa05277effa
+# ╟─36de0424-f52d-40ca-9c42-dfa05277effa
 # ╟─e5910bba-3703-4eb0-9aae-55554193de20
+# ╟─095e025d-0344-4e2c-97d9-fa1b230b2469
+# ╠═ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
+# ╠═7a0bf746-edae-448e-a71d-7d87c914d65b
+# ╟─91856137-f5de-479b-a2fa-f04a4ac99946
+# ╠═1bee986c-86d7-4db8-be73-70fa21c289f5
+# ╠═d7ad814b-a5c3-4b93-abce-8130ba803538
 # ╟─95125a71-1691-4009-acb4-5db30cd6b69f
 # ╟─507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
 # ╟─31d4476e-96d2-4478-9905-abb311dc2fcb
 # ╟─8918fde2-07d7-4f76-8c5b-03fa04650058
+# ╟─3fa3a47d-2b05-4bcf-808b-e3768b86e566
+# ╠═c4e41e78-e554-47b3-822f-3516f615bc2c
 # ╟─113e9d8d-17cc-413e-95ca-0c53dda1f48b
 # ╟─ef9fb41f-b815-4e77-8913-82ee14fc3d8c
 # ╟─5e55cf7d-a076-45e1-8c54-c561be82857d

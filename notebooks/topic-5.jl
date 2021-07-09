@@ -6,9 +6,12 @@ using InteractiveUtils
 
 # ╔═╡ eeca0160-d37e-11eb-05f4-bd7469319dad
 begin
+	using ApproxFun
+	using LinearAlgebra
 	using Plots
 	using PlutoUI
-	using FastGaussQuadrature
+	using FastGaussQuadrature # Package to compute quadrature nodes and weights
+	using SpecialFunctions
 end
 
 # ╔═╡ 99e0b1b9-d032-41d6-8a1d-742050d5ddeb
@@ -118,9 +121,9 @@ Given that we have $n$ interpolation nodes and $n$ basis functions, computing ba
 $\sum_{j=1}^{n} w_{j}\phi_{j}\left(x_{i}\right) =f\left(x_{i}\right)=y_{i} \quad \forall i=1,2, \ldots, n$
 
 
-One can write the problem in matrix notation as follows $\Phi c=y$ where $\Phi_{i j}=\phi_{j}\left(x_{i}\right)$. Written in full,  
+One can write the problem in matrix notation as follows $\Phi w=y$ where $\Phi_{i j}=\phi_{j}\left(x_{i}\right)$. Written in full,  
 
-$\Phi=\left[\begin{array}{ccc} \phi_{1}\left(x_{1}\right) & \ldots & \phi_{n}\left(x_{1}\right) \\ \vdots & & \\ \phi_{1}\left(x_{n}\right) & \ldots & \phi_{n}\left(x_{n}\right)\end{array}\right], c=\left[\begin{array}{c} c_{1} \\ \vdots \\ c_{n}\end{array}\right], y=\left[\begin{array}{c} y_{1} \\ \vdots \\ y_{n}\end{array}\right]$
+$\Phi=\left[\begin{array}{ccc} \phi_{1}\left(x_{1}\right) & \ldots & \phi_{n}\left(x_{1}\right) \\ \vdots & & \\ \phi_{1}\left(x_{n}\right) & \ldots & \phi_{n}\left(x_{n}\right)\end{array}\right], w=\left[\begin{array}{c} w_{1} \\ \vdots \\ w_{n}\end{array}\right], y=\left[\begin{array}{c} y_{1} \\ \vdots \\ y_{n}\end{array}\right]$
 
 The interpolation scheme is well defined if the interpolation nodes and basis function are chosen such that the interpolation matrix is nonsingular. 
 
@@ -152,7 +155,7 @@ Evenly spaced nodes are not always a good choice, even if you function is smooth
 
 
 # ╔═╡ ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
-r(x) = 1 / (1 + 25x^2)	
+runge(x) = 1 / (1 + 25x^2)	
 
 # ╔═╡ a8cc355c-de1b-4a04-a9b7-f13efad70c64
 expo(x) = exp(-x)
@@ -160,16 +163,16 @@ expo(x) = exp(-x)
 # ╔═╡ 7a0bf746-edae-448e-a71d-7d87c914d65b
 begin
 	x_grid = -1:0.001:1
-	plot(x_grid, r) # Plot of the Runge function. We will look to approximating this function. 
+	plot(x_grid, runge, label = "Runge") # Plot of the Runge function. We will look to approximating this function. 
 end
 
 # ╔═╡ 5570caf4-ea82-48af-bcb3-326b898f96a3
 begin
-	plot(x_grid, expo) # Plot of the exponential function
+	plot(x_grid, expo, label = "Exponential") # Plot of the exponential function
 end
 
 # ╔═╡ 75ba3ecf-6dff-482d-99f3-9650b6597540
-md" The general rule is that Chebyshev nodes are the best to use in most cases. These are the roots of the Chebyshev polynomial (which we will discuss soon). These nodes are defined on the interval $[-1,1]$ as 
+md" Theory and empirical evidence suggests that Chebyshev nodes are better to use than evenly spaced nodes. These are the roots of the Chebyshev polynomial (which we will discuss soon). These nodes are defined on the interval $[-1,1]$ as 
 
 $x_{i}=\cos \left(\frac{2 k-1}{2 n} \pi\right), k=1, \ldots, n$
 
@@ -179,11 +182,11 @@ These nodes can be mapped to any general interval $[a, b]$ by an appropriate tra
 begin
 	plotly()
 	gcnodes = gausschebyshev(21)
-	scatter(gcnodes,ones(21),ylims=(0.9,1.1),m=(:red),legend=false,size=(600,400),yticks=nothing)
+	scatter(gcnodes,ones(21),ylims=(0.9,1.1),m=(:red),label = "Cheb Nodes",size=(600,400))
 end
 
 # ╔═╡ 93a84049-7e73-41c4-afd8-0359656c6399
-md" One can see that the nodes are not evenly scattered. They are spaced further apart in the center of the interval and then more closely grouped toward the end points of the interval. "
+md" One can see that the nodes are not evenly scattered. They are spaced further apart in the center of the interval and then more closely grouped toward the end points of the interval. Next we need to think about what type of basis we can use for the problem. "
 
 # ╔═╡ 95125a71-1691-4009-acb4-5db30cd6b69f
 md" ### Spectral methods "
@@ -197,11 +200,47 @@ md" #### Polynomial interpolation "
 # ╔═╡ 8918fde2-07d7-4f76-8c5b-03fa04650058
 md" ##### Monomials "
 
-# ╔═╡ 3fa3a47d-2b05-4bcf-808b-e3768b86e566
-md" ##### Lagrange "
-
 # ╔═╡ c4e41e78-e554-47b3-822f-3516f615bc2c
+md" The monomials $x^{i}$, $i = 1, 2, \ldots$ build a basis for the space of continuous functions over the interval $[a, b]$. Each member of this function space can be represented by 
 
+$\hat{f}(x)=\sum_{j=1}^{\infty} w_{j} x^{j-1}$
+
+Common to use a linear combination of the first $n$ members of this basis to approximate continuous functions, 
+
+$f(x) \approx \hat{f}(x)=w_{1}+w_{2} x+w_{3} x^{2}+\ldots+w_{n} x^{n-1}$
+
+The figure below shows that the monomials basis components become more similar to each other as we increase the degree of the basis. In other words, the additional information is marginally less valuable."
+
+# ╔═╡ 218cf2e7-aa3a-4dcd-a22e-ee368a0a7862
+begin
+	
+	# Think about a more efficient way to code this up.  
+	
+	f₁(x) = 1
+	f₂(x) = x
+	f₃(x) = x^2
+	f₄(x) = x^3
+	f₅(x) = x^4
+	f₆(x) = x^5	
+	f₇(x) = x^6	
+	f₈(x) = x^7
+	
+	plot(f₁, 0, 1)
+	plot!(f₂, 0, 1)
+	plot!(f₃, 0, 1)
+	plot!(f₄, 0, 1)
+	plot!(f₅, 0, 1)
+	plot!(f₆, 0, 1)
+	plot!(f₇, 0, 1)
+	plot!(f₈, 0, 1, legend = false)
+end
+
+# ╔═╡ 4e21ef20-c5ae-46c7-a512-efb47c48a244
+md" This idea is also captured in the basis matrix for monomials. The matrix looks as follows, 
+
+$\left[\begin{array}{cccc} 1 & x_{1} & \ldots & x_{1}^{n} \\ & \vdots & \ddots & \vdots \\ 1 & x_{n} & \ldots & x_{n}^{n}\end{array}\right]\left[\begin{array}{c} w_{1} \\ \vdots \\ w_{n}\end{array}\right]=\left[\begin{array}{c} y_{1} \\ \vdots \\ y_{n}\end{array}\right]$
+
+This matrix is called a Vandermonde matrix. Theorethically this system is well defined, but in practice this matrix is known for being ill-conditioned, especially for high-degree polynomials. The columns of the matrix are nearly linearly dependent as the degree increases. This means that there might be an alternative to a monomial basis that might work better. "
 
 # ╔═╡ 113e9d8d-17cc-413e-95ca-0c53dda1f48b
 md" ##### Orthogonal polynomials "
@@ -227,19 +266,30 @@ md" ## Local methods "
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+ApproxFun = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
+ApproxFun = "~0.12.5"
 FastGaussQuadrature = "~0.4.7"
 Plots = "~1.18.0"
 PlutoUI = "~0.7.9"
+SpecialFunctions = "~1.5.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
+
+[[AbstractFFTs]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "485ee0867925449198280d4af84bdb46a2a404d0"
+uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+version = "1.0.1"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -247,14 +297,80 @@ git-tree-sha1 = "84918055d15b3114ede17ac6a7182f68870c16f7"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.3.1"
 
+[[ApproxFun]]
+deps = ["AbstractFFTs", "ApproxFunBase", "ApproxFunFourier", "ApproxFunOrthogonalPolynomials", "ApproxFunSingularities", "Calculus", "DomainSets", "DualNumbers", "FFTW", "FastTransforms", "LinearAlgebra", "RecipesBase", "Reexport", "SpecialFunctions"]
+git-tree-sha1 = "411ca0706d880fb1fe173a9925477a3fe26c564f"
+uuid = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
+version = "0.12.5"
+
+[[ApproxFunBase]]
+deps = ["AbstractFFTs", "BandedMatrices", "BlockArrays", "BlockBandedMatrices", "Calculus", "DSP", "DomainSets", "DualNumbers", "FFTW", "FastGaussQuadrature", "FillArrays", "InfiniteArrays", "IntervalSets", "LazyArrays", "LinearAlgebra", "LowRankApprox", "SparseArrays", "SpecialFunctions", "StaticArrays", "Statistics", "Test", "ToeplitzMatrices"]
+git-tree-sha1 = "df2a30a3242c12ded166d8cfabd77e7cb466945b"
+uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
+version = "0.4.5"
+
+[[ApproxFunFourier]]
+deps = ["AbstractFFTs", "ApproxFunBase", "DomainSets", "FFTW", "FastTransforms", "InfiniteArrays", "IntervalSets", "LinearAlgebra", "Reexport"]
+git-tree-sha1 = "50f8608bc46db8918ac80345bd033570b2e69bde"
+uuid = "59844689-9c9d-51bf-9583-5b794ec66d30"
+version = "0.2.9"
+
+[[ApproxFunOrthogonalPolynomials]]
+deps = ["AbstractFFTs", "ApproxFunBase", "BandedMatrices", "BlockArrays", "BlockBandedMatrices", "DomainSets", "FFTW", "FastGaussQuadrature", "FastTransforms", "FillArrays", "IntervalSets", "LinearAlgebra", "Reexport", "SpecialFunctions", "Statistics"]
+git-tree-sha1 = "faf6a0ebd9275c334aab3fc9bb0be48a93876bb1"
+uuid = "b70543e2-c0d9-56b8-a290-0d4d6d4de211"
+version = "0.4.1"
+
+[[ApproxFunSingularities]]
+deps = ["ApproxFunBase", "ApproxFunOrthogonalPolynomials", "DomainSets", "IntervalSets", "LinearAlgebra", "Reexport", "Statistics"]
+git-tree-sha1 = "0d6851111d0cc741e845546bfc4a267a0f3a6433"
+uuid = "f8fcb915-6b99-5be2-b79a-d6dbef8e6e7e"
+version = "0.2.2"
+
 [[ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
+
+[[ArrayInterface]]
+deps = ["IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
+git-tree-sha1 = "045ff5e1bc8c6fb1ecb28694abba0a0d55b5f4f5"
+uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+version = "3.1.17"
+
+[[ArrayLayouts]]
+deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "0f7998147ff3d112fad027c894b6b6bebf867154"
+uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
+version = "0.7.3"
 
 [[Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
+[[BandedMatrices]]
+deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "Random", "SparseArrays"]
+git-tree-sha1 = "6facee700024bdc7bc870657d235848043f5564c"
+uuid = "aae01518-5342-5314-be14-df237901396f"
+version = "0.16.9"
+
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[BinaryProvider]]
+deps = ["Libdl", "Logging", "SHA"]
+git-tree-sha1 = "ecdec412a9abc8db54c0efc5548c64dfce072058"
+uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
+version = "0.5.10"
+
+[[BlockArrays]]
+deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra"]
+git-tree-sha1 = "a37151e369c618aebaff8b95b9db2f603246e160"
+uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
+version = "0.15.3"
+
+[[BlockBandedMatrices]]
+deps = ["ArrayLayouts", "BandedMatrices", "BlockArrays", "FillArrays", "LinearAlgebra", "MatrixFactorizations", "SparseArrays", "Statistics"]
+git-tree-sha1 = "d6c449df788a7340c1350dc3ae67c409a85b39d1"
+uuid = "ffab5731-97b5-5995-9138-79e8c1846df0"
+version = "0.10.7"
 
 [[Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -267,6 +383,12 @@ deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll",
 git-tree-sha1 = "e2f47f6d8337369411569fd45ae5753ca10394c6"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.0+6"
+
+[[Calculus]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
+uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
+version = "0.5.1"
 
 [[ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
@@ -308,6 +430,12 @@ git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
+[[DSP]]
+deps = ["FFTW", "IterTools", "LinearAlgebra", "Polynomials", "Random", "Reexport", "SpecialFunctions", "Statistics"]
+git-tree-sha1 = "2a63cb5fc0e8c1f0f139475ef94228c7441dc7d0"
+uuid = "717857b8-e6f2-59f4-9121-6e50c889abd2"
+version = "0.6.10"
+
 [[DataAPI]]
 git-tree-sha1 = "ee400abb2298bd13bfc3df1c412ed228061a2385"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
@@ -342,9 +470,21 @@ git-tree-sha1 = "a32185f5428d3986f47c2ab78b1f216d5e6cc96f"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.5"
 
+[[DomainSets]]
+deps = ["IntervalSets", "LinearAlgebra", "StaticArrays", "Statistics", "Test"]
+git-tree-sha1 = "372f681128afe9e728ff00dca2df6b0795e51fbe"
+uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
+version = "0.4.2"
+
 [[Downloads]]
 deps = ["ArgTools", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+
+[[DualNumbers]]
+deps = ["Calculus", "NaNMath", "SpecialFunctions"]
+git-tree-sha1 = "fe385ec95ac5533650fb9b1ba7869e9bc28cdd0a"
+uuid = "fa6b7ba4-c1ee-5f82-b5fc-ecf0adba8f74"
+version = "0.6.5"
 
 [[EarCut_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -352,11 +492,22 @@ git-tree-sha1 = "92d8f9f208637e8d2d28c664051a00569c01493d"
 uuid = "5ae413db-bbd1-5e63-b57d-d24a61df00f5"
 version = "2.1.5+1"
 
+[[EllipsisNotation]]
+deps = ["ArrayInterface"]
+git-tree-sha1 = "8041575f021cba5a099a456b4163c9a08b566a02"
+uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
+version = "1.1.0"
+
 [[Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "b3bfd02e98aedfa5cf885665493c5598c350cd2f"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.2.10+0"
+
+[[ExprTools]]
+git-tree-sha1 = "b7e3d17636b348f005f11040025ae8c6f645fe92"
+uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
+version = "0.1.6"
 
 [[FFMPEG]]
 deps = ["FFMPEG_jll"]
@@ -370,11 +521,41 @@ git-tree-sha1 = "3cc57ad0a213808473eafef4845a74766242e05f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.3.1+4"
 
+[[FFTW]]
+deps = ["AbstractFFTs", "FFTW_jll", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
+git-tree-sha1 = "f985af3b9f4e278b1d24434cbb546d6092fca661"
+uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+version = "1.4.3"
+
+[[FFTW_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "3676abafff7e4ff07bbd2c42b3d8201f31653dcc"
+uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
+version = "3.3.9+8"
+
 [[FastGaussQuadrature]]
 deps = ["LinearAlgebra", "SpecialFunctions", "StaticArrays"]
 git-tree-sha1 = "5829b25887e53fb6730a9df2ff89ed24baa6abf6"
 uuid = "442a2c76-b920-505d-bb47-c5924d526838"
 version = "0.4.7"
+
+[[FastTransforms]]
+deps = ["AbstractFFTs", "ArrayLayouts", "BinaryProvider", "DSP", "FFTW", "FastGaussQuadrature", "FastTransforms_jll", "FillArrays", "Libdl", "LinearAlgebra", "Reexport", "SpecialFunctions", "Test", "ToeplitzMatrices"]
+git-tree-sha1 = "7c10535fb7b59bac11667749f2c1229ea755cad8"
+uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
+version = "0.12.4"
+
+[[FastTransforms_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "FFTW_jll", "JLLWrappers", "Libdl", "MPFR_jll", "OpenBLAS_jll", "Pkg"]
+git-tree-sha1 = "176f3f679f8921b3dc2ba127da2f9caf3f6a26eb"
+uuid = "34b6f7d7-08f9-5794-9e10-3819e4c7e49a"
+version = "0.5.1+0"
+
+[[FillArrays]]
+deps = ["LinearAlgebra", "Random", "SparseArrays"]
+git-tree-sha1 = "693210145367e7685d8604aee33d9bfb85db8b31"
+uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
+version = "0.11.9"
 
 [[FixedPointNumbers]]
 deps = ["Statistics"]
@@ -406,11 +587,19 @@ git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.10+0"
 
+[[Future]]
+deps = ["Random"]
+uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+
 [[GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pkg", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
 git-tree-sha1 = "dba1e8614e98949abfa60480b13653813d8f0157"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.3.5+0"
+
+[[GMP_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "781609d7-10c4-51f6-84f2-b8444358ff6d"
 
 [[GR]]
 deps = ["Base64", "DelimitedFiles", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Printf", "Random", "Serialization", "Sockets", "Test", "UUIDs"]
@@ -453,15 +642,49 @@ git-tree-sha1 = "c6a1fff2fd4b1da29d3dccaffb1e1001244d844e"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 version = "0.9.12"
 
+[[IfElse]]
+git-tree-sha1 = "28e837ff3e7a6c3cdb252ce49fb412c8eb3caeef"
+uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
+version = "0.1.0"
+
+[[InfiniteArrays]]
+deps = ["ArrayLayouts", "DSP", "FillArrays", "Infinities", "LazyArrays", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "81b4318932ff7691e164d5e0a98b55e2992c78c6"
+uuid = "4858937d-0d70-526a-a4dd-2d5cb5dd786c"
+version = "0.10.8"
+
+[[Infinities]]
+git-tree-sha1 = "06570a7404df6901f0fa09733dde6f7ae4c68b0a"
+uuid = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
+version = "0.1.0"
+
 [[IniFile]]
 deps = ["Test"]
 git-tree-sha1 = "098e4d2c533924c921f9f9847274f2ad89e018b8"
 uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
 version = "0.5.0"
 
+[[IntelOpenMP_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "d979e54b71da82f3a65b62553da4fc3d18c9004c"
+uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
+version = "2018.0.3+2"
+
 [[InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[IntervalSets]]
+deps = ["Dates", "EllipsisNotation", "Statistics"]
+git-tree-sha1 = "3cc368af3f110a767ac786560045dceddfc16758"
+uuid = "8197267c-284f-5f27-9208-e0e47529a953"
+version = "0.5.3"
+
+[[Intervals]]
+deps = ["Dates", "Printf", "RecipesBase", "Serialization", "TimeZones"]
+git-tree-sha1 = "323a38ed1952d30586d0fe03412cde9399d3618b"
+uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
+version = "1.5.0"
 
 [[IterTools]]
 git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
@@ -513,6 +736,16 @@ deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdow
 git-tree-sha1 = "a4b12a1bd2ebade87891ab7e36fdbce582301a92"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 version = "0.15.6"
+
+[[LazyArrays]]
+deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "MatrixFactorizations", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "bbd9faba414e9c8442f4cfa86de353a2434534fa"
+uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
+version = "0.21.10"
+
+[[LazyArtifacts]]
+deps = ["Artifacts", "Pkg"]
+uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
 
 [[LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -600,6 +833,22 @@ version = "0.2.5"
 [[Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
+[[LowRankApprox]]
+deps = ["FFTW", "FillArrays", "LinearAlgebra", "Nullables", "Random", "SparseArrays", "Test"]
+git-tree-sha1 = "35e31d7e505492cb70b44eacf94e89adf6ef79f6"
+uuid = "898213cb-b102-5a47-900c-97e73b919f73"
+version = "0.4.3"
+
+[[MKL_jll]]
+deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
+git-tree-sha1 = "c253236b0ed414624b083e6b72bfe891fbd2c7af"
+uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
+version = "2021.1.1+1"
+
+[[MPFR_jll]]
+deps = ["Artifacts", "GMP_jll", "Libdl"]
+uuid = "3a97d323-0669-5f0c-9066-3539efd106a3"
+
 [[MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "6a8a2a625ab0dea913aba95c11370589e0239ff0"
@@ -609,6 +858,12 @@ version = "0.5.6"
 [[Markdown]]
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
+[[MatrixFactorizations]]
+deps = ["ArrayLayouts", "LinearAlgebra", "Printf", "Random"]
+git-tree-sha1 = "24814f4e65b4521ba081ccaaea9f5c6533c462a2"
+uuid = "a3b82374-2e81-5b9e-98ce-41277c0e4c87"
+version = "0.8.4"
 
 [[MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
@@ -634,6 +889,12 @@ version = "1.0.0"
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
+[[Mocking]]
+deps = ["ExprTools"]
+git-tree-sha1 = "916b850daad0d46b8c71f65f719c49957e9513ed"
+uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
+version = "0.7.1"
+
 [[MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 
@@ -645,11 +906,26 @@ version = "0.3.5"
 [[NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
+[[Nullables]]
+git-tree-sha1 = "8f87854cc8f3685a60689d8edecaa29d2251979b"
+uuid = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
+version = "1.0.0"
+
+[[OffsetArrays]]
+deps = ["Adapt"]
+git-tree-sha1 = "2bf78c5fd7fa56d2bbf1efbadd45c1b8789e6f57"
+uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+version = "1.10.2"
+
 [[Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "7937eda4681660b4d6aeeecc2f7e1c81c8ee4e2f"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
 version = "1.3.5+0"
+
+[[OpenBLAS_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
 [[OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -719,6 +995,12 @@ deps = ["Base64", "Dates", "InteractiveUtils", "JSON", "Logging", "Markdown", "R
 git-tree-sha1 = "44e225d5837e2a2345e69a1d1e01ac2443ff9fcb"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.9"
+
+[[Polynomials]]
+deps = ["Intervals", "LinearAlgebra", "OffsetArrays", "RecipesBase"]
+git-tree-sha1 = "0b15f3597b01eb76764dd03c3c23d6679a3c32c8"
+uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+version = "1.2.1"
 
 [[Preferences]]
 deps = ["TOML"]
@@ -807,6 +1089,12 @@ git-tree-sha1 = "a50550fa3164a8c46747e62063b4d774ac1bcf49"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "1.5.1"
 
+[[Static]]
+deps = ["IfElse"]
+git-tree-sha1 = "2740ea27b66a41f9d213561a04573da5d3823d4b"
+uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+version = "0.2.5"
+
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
 git-tree-sha1 = "896d55218776ab8f23fb7b222a5a4a946d4aafc2"
@@ -862,6 +1150,18 @@ uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 [[Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[[TimeZones]]
+deps = ["Dates", "Future", "LazyArtifacts", "Mocking", "Pkg", "Printf", "RecipesBase", "Serialization", "Unicode"]
+git-tree-sha1 = "81753f400872e5074768c9a77d4c44e70d409ef0"
+uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
+version = "1.5.6"
+
+[[ToeplitzMatrices]]
+deps = ["AbstractFFTs", "FFTW", "LinearAlgebra", "StatsBase"]
+git-tree-sha1 = "39731ea29652305b1eeb7ab0d1085533db307191"
+uuid = "c751599d-da0a-543b-9d20-d0a503d91d24"
+version = "0.6.3"
 
 [[URIs]]
 git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
@@ -1107,8 +1407,8 @@ version = "0.9.1+5"
 # ╟─095e025d-0344-4e2c-97d9-fa1b230b2469
 # ╠═ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
 # ╠═a8cc355c-de1b-4a04-a9b7-f13efad70c64
-# ╠═7a0bf746-edae-448e-a71d-7d87c914d65b
-# ╠═5570caf4-ea82-48af-bcb3-326b898f96a3
+# ╟─7a0bf746-edae-448e-a71d-7d87c914d65b
+# ╟─5570caf4-ea82-48af-bcb3-326b898f96a3
 # ╟─75ba3ecf-6dff-482d-99f3-9650b6597540
 # ╟─41cee516-36a5-4af3-b157-46fcd1ff6aa5
 # ╟─93a84049-7e73-41c4-afd8-0359656c6399
@@ -1116,8 +1416,9 @@ version = "0.9.1+5"
 # ╟─507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
 # ╟─31d4476e-96d2-4478-9905-abb311dc2fcb
 # ╟─8918fde2-07d7-4f76-8c5b-03fa04650058
-# ╟─3fa3a47d-2b05-4bcf-808b-e3768b86e566
-# ╠═c4e41e78-e554-47b3-822f-3516f615bc2c
+# ╟─c4e41e78-e554-47b3-822f-3516f615bc2c
+# ╟─218cf2e7-aa3a-4dcd-a22e-ee368a0a7862
+# ╟─4e21ef20-c5ae-46c7-a512-efb47c48a244
 # ╟─113e9d8d-17cc-413e-95ca-0c53dda1f48b
 # ╟─ef9fb41f-b815-4e77-8913-82ee14fc3d8c
 # ╟─5e55cf7d-a076-45e1-8c54-c561be82857d

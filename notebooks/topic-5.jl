@@ -4,6 +4,15 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ eeca0160-d37e-11eb-05f4-bd7469319dad
 begin
 	using ApproxFun
@@ -96,7 +105,7 @@ md" ## Global methods "
 # ╔═╡ 59dffcb5-b978-495e-a25e-22a57ae84882
 md" Interpolation is a form of global function approximation in which the interpolant and the true function must agree. In other words, they must have same value at a finite number of points. Additional restrictions can also be imposed on the interpolant, such as constraints on monotonicity, convexity and smoothness. In general, interpolation is any method that takes information at a finite set of points and finds a function that satisfies that information.
 
-There are are two primary approaches to interpolation. The approaches are **finite element methods** and **spectral methods**. We will talk about spectral methods first and then move on to finite element methods toward the end of the session. "
+There are are two primary approaches to selecting basis functions for interpolation. The approaches are **finite element methods** and **spectral methods**. We will talk about spectral methods first and then move on to finite element methods toward the end of the session. "
 
 # ╔═╡ ef709d7b-107b-43bb-9026-c7af1efacfdc
 md" ### Interpolation basics "
@@ -127,7 +136,9 @@ $\Phi=\left[\begin{array}{ccc} \phi_{1}\left(x_{1}\right) & \ldots & \phi_{n}\le
 
 The interpolation scheme is well defined if the interpolation nodes and basis function are chosen such that the interpolation matrix is nonsingular. 
 
-Normally, one interpolates to match the value of the original function at selected interpolation nodes. However, we are not limited to point values. We may also use first (and higher order) derivatives at specified points."
+Normally, one interpolates to match the value of the original function at selected interpolation nodes. However, we are not limited to point values. We may also use first (and higher order) derivatives at specified points. 
+
+If we have exactly as many nodes as coefficients then this we have a simple root finding problem $\Phi w - y = 0$. If we have more nodes than coefficients then we have a least squares problem, such that $w = (\Phi^{\prime} \Phi)^{-1} \Phi^{\prime}y$. "
 
 
 
@@ -144,35 +155,18 @@ md" From the previous discussion one might be interested in knowing which interp
 3. The interpolant should be easy to work with. In other words, the basis function should have the property of being easily evaluated, differentiated and integrated. "
 
 # ╔═╡ e5910bba-3703-4eb0-9aae-55554193de20
-md" ##### Interpolation nodes "
+md" #### Note on node placement "
 
 # ╔═╡ 095e025d-0344-4e2c-97d9-fa1b230b2469
 md" One option for the interpolation nodes is to select evenly spaced nodes. This yields the following selection for nodes,
 
 $x_{i}=a+\frac{i-1}{n-1}(b-a), \quad \forall i=1,2, \ldots, n$
 
-Evenly spaced nodes are not always a good choice, even if you function is smooth. We will look at two specific examples. First we have Runge's function $f(x)=\frac{1}{1+25 x^{2}}$ where the approximation error rises rapidly with number of nodes.  Second, the function $e^{-x}$ The functions are presented below and do not seem to be that problematic to work with. "
+Evenly spaced nodes are not always a good choice, even if your function is smooth. Theory and empirical evidence suggests that Chebyshev nodes are better to use than evenly spaced nodes. These are the roots of the Chebyshev polynomial (which we will discuss soon). "
 
-
-# ╔═╡ ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
-runge(x) = 1 / (1 + 25x^2)	
-
-# ╔═╡ a8cc355c-de1b-4a04-a9b7-f13efad70c64
-expo(x) = exp(-x)
-
-# ╔═╡ 7a0bf746-edae-448e-a71d-7d87c914d65b
-begin
-	x_grid = -1:0.001:1
-	plot(x_grid, runge, label = "Runge") # Plot of the Runge function. We will look to approximating this function. 
-end
-
-# ╔═╡ 5570caf4-ea82-48af-bcb3-326b898f96a3
-begin
-	plot(x_grid, expo, label = "Exponential") # Plot of the exponential function
-end
 
 # ╔═╡ 75ba3ecf-6dff-482d-99f3-9650b6597540
-md" Theory and empirical evidence suggests that Chebyshev nodes are better to use than evenly spaced nodes. These are the roots of the Chebyshev polynomial (which we will discuss soon). These nodes are defined on the interval $[-1,1]$ as 
+md" Chebyshev nodes are defined on the interval $[-1,1]$ as 
 
 $x_{i}=\cos \left(\frac{2 k-1}{2 n} \pi\right), k=1, \ldots, n$
 
@@ -186,22 +180,24 @@ begin
 end
 
 # ╔═╡ 93a84049-7e73-41c4-afd8-0359656c6399
-md" One can see that the nodes are not evenly scattered. They are spaced further apart in the center of the interval and then more closely grouped toward the end points of the interval. Next we need to think about what type of basis we can use for the problem. "
+md" One can see that the nodes are not evenly scattered. They are spaced further apart in the center of the interval and then more closely grouped toward the end points of the interval. Next we need to think about what type of basis we can use for the problem. 
+
+General advice for node placement is that we want more nodes where the function changes rapidly or has kinks. Usually these points are close to the endpoints of the interval. Now we move to the selection of basis functions. "
 
 # ╔═╡ 95125a71-1691-4009-acb4-5db30cd6b69f
 md" ### Spectral methods "
 
 # ╔═╡ 507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
-md" Spectral methods basically refer to the usage of a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. "
+md" Spectral methods basically refer to the usage of a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. This theorem does not tell us which type of polynomial to use. This is something that we need to figure out for ourselves. "
 
-# ╔═╡ 31d4476e-96d2-4478-9905-abb311dc2fcb
-md" #### Polynomial interpolation "
+# ╔═╡ b1f875af-4046-445e-a2fb-afca07f992ef
+md" There are many polynomial families that are well suited to approximate continuous and differentiable funcitons. However we will focus mostly on monomials and orthogonal polynomials. In the class of orthogonal polynomials most of our attention will be placed on Chebyshev polynomials. "
 
 # ╔═╡ 8918fde2-07d7-4f76-8c5b-03fa04650058
-md" ##### Monomials "
+md" #### Monomials "
 
 # ╔═╡ c4e41e78-e554-47b3-822f-3516f615bc2c
-md" The monomials $x^{i}$, $i = 1, 2, \ldots$ build a basis for the space of continuous functions over the interval $[a, b]$. Each member of this function space can be represented by 
+md" The most logical choice for a basis is the monomial basis. The monomials $x^{i}$, $i = 1, 2, \ldots$ build a basis for the space of continuous functions over the interval $[a, b]$. Each member of this function space can be represented by 
 
 $\hat{f}(x)=\sum_{j=1}^{\infty} w_{j} x^{j-1}$
 
@@ -211,39 +207,132 @@ $f(x) \approx \hat{f}(x)=w_{1}+w_{2} x+w_{3} x^{2}+\ldots+w_{n} x^{n-1}$
 
 The figure below shows that the monomials basis components become more similar to each other as we increase the degree of the basis. In other words, the additional information is marginally less valuable."
 
-# ╔═╡ 218cf2e7-aa3a-4dcd-a22e-ee368a0a7862
-begin
+# ╔═╡ 1d8391b6-c28b-4707-9a27-b6152b14be49
+function plot_function(basis_function, x, n)
 	
-	# Think about a more efficient way to code this up.  
+	for i = 1:n-1
+		
+		f_data = basis_function(x, i)
+		
+		if i == 1
+			plot(x, f_data, linewidth = 1.5, xlabel = "x", ylabel = "Basis functions", label = "", 
+			tickfontsize = 10, guidefontsize = 10);
+		else
+			plot!(x, f_data, linewidth = 1.5, label = "");
+		end
+	end
 	
-	f₁(x) = 1
-	f₂(x) = x
-	f₃(x) = x^2
-	f₄(x) = x^3
-	f₅(x) = x^4
-	f₆(x) = x^5	
-	f₇(x) = x^6	
-	f₈(x) = x^7
-	
-	plot(f₁, 0, 1)
-	plot!(f₂, 0, 1)
-	plot!(f₃, 0, 1)
-	plot!(f₄, 0, 1)
-	plot!(f₅, 0, 1)
-	plot!(f₆, 0, 1)
-	plot!(f₇, 0, 1)
-	plot!(f₈, 0, 1, legend = false)
-end
+	f_data = basis_function(x, n)
+	plot!(x, f_data, linewidth = 1.5, label = "")
+end	# Read through this again to see how the plotting scheme works here. Struggling to make sense of this. 
+
+# ╔═╡ 606948ed-57bd-4f25-8b8a-99133c405bc8
+x_range = -1:.01:1;
+
+# ╔═╡ c232b1db-ab1c-4c29-b0ee-8fc719b9d2bc
+monomials(x, n) = x.^n
+
+# ╔═╡ e45843c7-a0a9-40fd-abff-d150fc1efb67
+plot_function(monomials, x_range, 8)
 
 # ╔═╡ 4e21ef20-c5ae-46c7-a512-efb47c48a244
 md" This idea is also captured in the basis matrix for monomials. The matrix looks as follows, 
 
 $\left[\begin{array}{cccc} 1 & x_{1} & \ldots & x_{1}^{n} \\ & \vdots & \ddots & \vdots \\ 1 & x_{n} & \ldots & x_{n}^{n}\end{array}\right]\left[\begin{array}{c} w_{1} \\ \vdots \\ w_{n}\end{array}\right]=\left[\begin{array}{c} y_{1} \\ \vdots \\ y_{n}\end{array}\right]$
 
-This matrix is called a Vandermonde matrix. Theorethically this system is well defined, but in practice this matrix is known for being ill-conditioned, especially for high-degree polynomials. The columns of the matrix are nearly linearly dependent as the degree increases. This means that there might be an alternative to a monomial basis that might work better. "
+This matrix is called a Vandermonde matrix. Theorethically this system is well defined, but in practice this matrix is known for being ill-conditioned, especially for high-degree polynomials. The columns of the matrix are nearly linearly dependent as the degree increases. Let us look at an example where we approximate a function with a monomial basis on an evenly spaced grid."
+
+# ╔═╡ 46bf582a-ba9a-491f-96f9-fa1ec38698a9
+function monomial(f, n, lb, ub)
+	
+    # This function solves Φw = y → w = Φ\y
+    # Φ = matrix of monomial basis functions evaluated on the grid
+    
+	coll_points = range(lb, ub, length = n)                      # evenly spaced collocation nodes
+    y_values = f(coll_points)                                    # function values on the grid
+    basis_functions = [coll_points.^degree for degree = 0:n-1]   # vector of basis functions
+    basis_matrix = hcat(basis_functions...)                      # basis matrix
+    coefficients = basis_matrix\y_values                         # w = Φ\y
+	
+    return coefficients
+end
+
+# ╔═╡ 53bee8bb-5469-4f99-86f1-a6e9ce0f44f7
+function f_approx(coefficients, points)
+	
+	n = length(coefficients) - 1
+	basis_functions = [coefficients[degree + 1] * points.^degree for degree = 0:n]  # evaluate basis functions 
+	basis_matrix = hcat(basis_functions...)										   # transform into matrix
+	function_values = sum(basis_matrix, dims = 2)								   # sum up into function value
+	
+	return function_values
+end
+
+# ╔═╡ 0c0334c0-9c5e-44df-a9e7-9927cdea816b
+md" Let us illustrate the same point, but this time with an interactive slider. "
+
+# ╔═╡ 75885058-267f-4e7e-9cb2-bd5e1f2c87c2
+md"""
+α = $(@bind α Slider(4:8, show_value=true, default=4))
+"""
+
+# ╔═╡ 456bcf5c-25a2-453d-80ac-3b103a671d93
+g(x) = sin.(x)
+
+# ╔═╡ 3606489f-e45d-4f06-ab72-2c31def7ed10
+plot_points = 0:.01:2pi;
+
+# ╔═╡ 93d60563-a66e-4a8f-a11b-a81564cd3941
+coefficients_α = monomial(g, α, 0, 2pi);
+
+# ╔═╡ b089c56d-9f9e-48c8-bf58-611b58bdcd0c
+f_values_α = f_approx(coefficients_α, plot_points);
+
+# ╔═╡ 2ca3cba6-90db-4d4b-a225-7ed25093fedd
+begin
+	plot(g, plot_points, label = "sin(x)", line = 3.5)
+	plot!(plot_points, f_values_α, label = "Approximation", line = 2, linestyle = :dash)
+end
+
+# ╔═╡ d8b7067c-a4be-4d87-bd79-adb721c61935
+md" Like we said before, we will almost never use monomial basis functions. Try this same method on the Runge function $f(x) = 1 / (1 + 25x^2)$ to see why this is the case. "
+
+# ╔═╡ 3bd260fc-de99-4cf9-9453-828df9178b64
+md"""
+β = $(@bind β Slider(3:20, show_value=true, default=3))
+"""
+
+# ╔═╡ ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
+runge(x) = 1 ./ (1 .+ 25x.^2)	
+
+# ╔═╡ ebfa42bb-0c34-40f1-82ab-dd40d8954eb9
+runge_plot_points = -1:.01:1;
+
+# ╔═╡ a2ef0e9f-8dc9-4892-acbb-3b7b13681c93
+runge_coefficients_β = monomial(runge, β, -1, 1);
+
+# ╔═╡ b1f8acd8-3de8-4512-91e1-47b45780c0ea
+runge_values_β = f_approx(runge_coefficients_β, runge_plot_points);
+
+# ╔═╡ 38a7ad81-944a-438a-ba07-75c24daffdd1
+begin
+	plot(runge, runge_plot_points, label = "Runge Function", line = 3)
+	plot!(runge_plot_points, runge_values_β, label = "Approximation", line = 2, linestyle = :dash)
+end
+
+# ╔═╡ d894bcf7-a28a-4b6e-bb9d-bcc7b1626dca
+md" Constructing the monomial basis below "
+
+# ╔═╡ ab62300c-5196-4a68-888b-3526ea242461
+function mono_base(p, x)
+	
+	n, a, b = p[1], p[2], p[3]
+	z = (2 / (b - a)) * (x - (a + b) / 2)
+	
+end ## Need to complete this function
 
 # ╔═╡ 113e9d8d-17cc-413e-95ca-0c53dda1f48b
-md" ##### Orthogonal polynomials "
+md" #### Orthogonal polynomials "
 
 # ╔═╡ ef9fb41f-b815-4e77-8913-82ee14fc3d8c
 md" 
@@ -256,6 +345,25 @@ Given that $F$ is a space of continuous real valued functions, let us define a i
 $<g, h>=\int_{\mathbf{x}} g(x) h(x) w(x) d x$
 
 where $g, h, w \in F$ and $w$ is a weighting function. The pair $\{F,<.,.>\}$ form an inner-product vetor space."
+
+# ╔═╡ 1d3fa479-5844-49ae-bb3c-5a12954cdf60
+md" ##### Chebyshev polynomials "
+
+# ╔═╡ 97b9730f-fffe-4e8d-86e7-553cdd8dcf5b
+function cheb_polys(x, n)
+    if n == 0
+        return x./x                 # T_0(x) = 1
+    elseif n == 1
+        return x                    # T_1(x) = x
+    else
+        cheb_recursion(x, n) =
+            2x.*cheb_polys.(x, n - 1) .- cheb_polys.(x, n - 2)
+        return cheb_recursion(x, n) # T_n(x) = 2xT_{n-1}(x) - T_{n-2}(x)
+    end
+end;
+
+# ╔═╡ f371ee9e-c72e-4dc0-90d2-b99345edd4d0
+plot_function(cheb_polys, x_range, 5)
 
 # ╔═╡ 5e55cf7d-a076-45e1-8c54-c561be82857d
 md" ### Finite element methods "
@@ -1387,7 +1495,7 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═eeca0160-d37e-11eb-05f4-bd7469319dad
+# ╟─eeca0160-d37e-11eb-05f4-bd7469319dad
 # ╟─99e0b1b9-d032-41d6-8a1d-742050d5ddeb
 # ╟─0ac4cb74-c027-4677-bd45-672f19035ce4
 # ╟─25b6e79e-37dc-4a67-8b56-fbaf9da41713
@@ -1405,22 +1513,42 @@ version = "0.9.1+5"
 # ╟─36de0424-f52d-40ca-9c42-dfa05277effa
 # ╟─e5910bba-3703-4eb0-9aae-55554193de20
 # ╟─095e025d-0344-4e2c-97d9-fa1b230b2469
-# ╠═ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
-# ╠═a8cc355c-de1b-4a04-a9b7-f13efad70c64
-# ╟─7a0bf746-edae-448e-a71d-7d87c914d65b
-# ╟─5570caf4-ea82-48af-bcb3-326b898f96a3
 # ╟─75ba3ecf-6dff-482d-99f3-9650b6597540
 # ╟─41cee516-36a5-4af3-b157-46fcd1ff6aa5
 # ╟─93a84049-7e73-41c4-afd8-0359656c6399
 # ╟─95125a71-1691-4009-acb4-5db30cd6b69f
 # ╟─507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
-# ╟─31d4476e-96d2-4478-9905-abb311dc2fcb
+# ╟─b1f875af-4046-445e-a2fb-afca07f992ef
 # ╟─8918fde2-07d7-4f76-8c5b-03fa04650058
 # ╟─c4e41e78-e554-47b3-822f-3516f615bc2c
-# ╟─218cf2e7-aa3a-4dcd-a22e-ee368a0a7862
+# ╠═1d8391b6-c28b-4707-9a27-b6152b14be49
+# ╠═606948ed-57bd-4f25-8b8a-99133c405bc8
+# ╠═c232b1db-ab1c-4c29-b0ee-8fc719b9d2bc
+# ╠═e45843c7-a0a9-40fd-abff-d150fc1efb67
 # ╟─4e21ef20-c5ae-46c7-a512-efb47c48a244
+# ╠═46bf582a-ba9a-491f-96f9-fa1ec38698a9
+# ╠═53bee8bb-5469-4f99-86f1-a6e9ce0f44f7
+# ╟─0c0334c0-9c5e-44df-a9e7-9927cdea816b
+# ╟─75885058-267f-4e7e-9cb2-bd5e1f2c87c2
+# ╠═456bcf5c-25a2-453d-80ac-3b103a671d93
+# ╠═3606489f-e45d-4f06-ab72-2c31def7ed10
+# ╠═93d60563-a66e-4a8f-a11b-a81564cd3941
+# ╠═b089c56d-9f9e-48c8-bf58-611b58bdcd0c
+# ╟─2ca3cba6-90db-4d4b-a225-7ed25093fedd
+# ╟─d8b7067c-a4be-4d87-bd79-adb721c61935
+# ╟─3bd260fc-de99-4cf9-9453-828df9178b64
+# ╠═ec27fb6b-1cbb-46c8-9da6-bf128dd5feae
+# ╠═ebfa42bb-0c34-40f1-82ab-dd40d8954eb9
+# ╠═a2ef0e9f-8dc9-4892-acbb-3b7b13681c93
+# ╠═b1f8acd8-3de8-4512-91e1-47b45780c0ea
+# ╟─38a7ad81-944a-438a-ba07-75c24daffdd1
+# ╟─d894bcf7-a28a-4b6e-bb9d-bcc7b1626dca
+# ╠═ab62300c-5196-4a68-888b-3526ea242461
 # ╟─113e9d8d-17cc-413e-95ca-0c53dda1f48b
 # ╟─ef9fb41f-b815-4e77-8913-82ee14fc3d8c
+# ╟─1d3fa479-5844-49ae-bb3c-5a12954cdf60
+# ╠═97b9730f-fffe-4e8d-86e7-553cdd8dcf5b
+# ╟─f371ee9e-c72e-4dc0-90d2-b99345edd4d0
 # ╟─5e55cf7d-a076-45e1-8c54-c561be82857d
 # ╟─0a9c73e1-68c1-4c17-bd48-98673b44d332
 # ╟─00000000-0000-0000-0000-000000000001

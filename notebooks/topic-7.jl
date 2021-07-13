@@ -18,10 +18,10 @@ begin
 	using ApproxFun
 	using Colors
 	using Images
+	using LaTeXStrings
 	using Optim
 	using Parameters
 	using Plots
-	using LaTeXStrings
 	using PlutoUI
 end
 
@@ -204,12 +204,44 @@ This value function specifies the maximium attainable sum of current and furure 
 
 $R_{t+1} = R_t - a_t = g(R_t, a_t)$
 
-which is known as the **transition function**. While $a_t$ is referred to as the control variable, $R_t$ represent the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function). In the case with uncertainty we will have to introduce Markov chains to describe the transition function. Fortunately our example is simle enough that we don't have to talk about that yet.  "
+which is known as the **transition function**. While $a_t$ is referred to as the control variable, $R_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function). In the case with uncertainty we will have to introduce Markov chains to describe the transition function. Fortunately our example is simle enough that we don't have to talk about that yet.  "
 
 
 
 # ╔═╡ db4c8010-a33f-4e78-bea4-b3168c5ce72b
 md" #### Bellman equation "
+
+# ╔═╡ 60a84858-5aa2-47d5-a5af-3821e7de313f
+md" The relationship between $V_{t}(R_{t})$ and $V_{t+1}(R_{t+1})$ is given by 
+
+$$V_{t}\left(R_{t}\right)=\max _{0 \leq a_{t} \leq R_{t}}\left[C_{t}\left(a_{t}\right)+V_{t+1}\left(g\left(R_{t}, a_{t}\right)\right)\right]$$ 
+
+> The value of having $R_t$ resources left in period $t$ is the value of optimizing current spending (the $\max C_t(a_t)$ part) plus the value of then having $g(R_t,a_t)$ units left going forward
+
+This equation is commonly known as the _Bellman Equation_.
+Given $R_t$ we could just try out different $a_t$ and see which gives the highest value. But...what on earth is $V_{t+1}(\cdot)$? 🤔
+
+"
+
+# ╔═╡ 728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
+md" #### Finite time backward induction "
+
+# ╔═╡ 3f18f963-ad85-4c75-ab8c-64ac3cbf312c
+md" One way in which we could do this is by saying that time is finite and stops at $T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(R) = 0$. Therefore the last period is going to be
+
+$$V_{T}\left(R_{T}\right)=\max _{0 \leq a_{T-1} \leq R_{T}} C_{T}\left(a_{T}\right)$$
+
+To maximise this we simply choose the value for $a_T$ that provides the highest payoff. This period's maximisation problem is then quite easy to solve. Now consider the problem at $T-1$: 
+
+$V_{T-1}\left(R_{T-1}\right)=\max _{0 \leq a_{T-1} \leq R_{T-1}}\left[C_{T-1}\left(a_{T-1}\right)+V_{T}\left(g\left(R_{T-1}, a_{T-1}\right)\right)\right]$
+
+This is also easy to solve. We know the answer to $V_{T}\left(R_{T}\right)$ from the previous iteration. This means that we know the future. For period $T-1$ we are now left with solving the final piece of the puzzle, namely 
+
+$\max _{0 \leq a_{T-1} \leq R_{T-1}} C_{T-1}\left(a_{T-1}\right)$
+
+This iterative procedure will work all the way till we reach the first period. If the control variable is discrete we do not need assumptions of the payoff function (other than it is finite). Let us showcase the method with an example. In this case we have that $C_t(a_t) = \sqrt{a_t}$ and $V_{T+1}(R) = 0$. 
+
+"
 
 # ╔═╡ fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 @bind highR Slider(2:200,show_value = true, default = 20)
@@ -220,19 +252,21 @@ md" #### Bellman equation "
 # ╔═╡ 7b63094f-ddde-4dff-911a-58d8fc7226a2
 begin
 	# final period T
-	points = 500
-	lowR = 0.0001
-	# highR = 10.0 # slider below
-	# more points towards zero to make nicer plot
-	Rspace = exp.(range(log(lowR), stop = log(highR), length = points))
-	aT = Rspace # consume whatever is left
-	VT = sqrt.(aT)  # utility of that consumption
+	points = 500; # The number of points on the grid 
+	
+	# Lower and upper limits of the state space. In this case this represents the size of the cake. 	
+	lowR = 1e-6;
+	# highR = 20.0 # slider below
+	
+	# Log and then exponentiate for more points towards zero, which makes a nicer plot
+	Rspace = exp.(range(log(lowR), stop = log(highR), length = points)); # The state space
+	aT = Rspace; # Consume whatever is left -- Consume all resources in this case, since it is all left.
+	VT = sqrt.(aT);  # Utility of that consumption
 end
 
 # ╔═╡ c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 function plotVT()
-	plot(Rspace, VT, xlab = "R", ylab = "Value",label = L"V_T", m = (:circle),
-	     leg = :bottomright)
+	plot(Rspace, VT, xlab = "R", ylab = "Value",label = L"V_T", m = (:circle), leg = :bottomright)
 end
 
 # ╔═╡ 4716e611-3342-4c3e-afc2-5afd8de2fc15
@@ -240,9 +274,9 @@ plotVT()
 
 # ╔═╡ b40713e0-54db-4b49-8d35-a5b68f71ac89
 begin
-	# period T-1
+	# period T-1 
 	# now for each value in Rspace, we need to decide how much to consume
-	w = zeros(points) # temporary vector for each choice or R'
+	w = zeros(points) # temporary vector for each choice of R
 	VT_1 = zeros(points) # optimal value in T-1 at each state of R
 	ix = 0 # optimal index of action in T-1 at each state of R
 	aT_1 = zeros(points) # optimal action in T-1 at each state of R
@@ -376,12 +410,6 @@ md" ## Time iteration "
 
 # ╔═╡ 06ad7123-da44-45ac-aae1-9bb2eda3664c
 md" An alternative to VFI and PFI is time iteration. This can be applied to the cake eating problem. We will later apply these techniques to the optimal growth problem when we get to stochastic dynamic programming problems. "
-
-# ╔═╡ 1d505336-1d96-481a-b3ca-c5b7e2e0a85a
-md" ### Optimal growth problem "
-
-# ╔═╡ 80200272-aeee-4a72-917d-b8d9e25a3ea0
-md" Below is an example of an optimal growth model from https://discourse.julialang.org/t/using-approxfun-for-dynamic-programming/1754/3. "
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1868,10 +1896,13 @@ version = "0.9.1+5"
 # ╟─398a316b-fc53-444a-aea7-169231c95f4b
 # ╟─b0ca2d8d-dfa9-4fed-b34d-90167e950153
 # ╟─db4c8010-a33f-4e78-bea4-b3168c5ce72b
+# ╟─60a84858-5aa2-47d5-a5af-3821e7de313f
+# ╟─728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
+# ╟─3f18f963-ad85-4c75-ab8c-64ac3cbf312c
 # ╠═fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # ╠═b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
-# ╠═c5ea0324-8e8c-49d1-88f6-3abc4278aefa
+# ╟─c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 # ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
 # ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
 # ╠═7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
@@ -1888,7 +1919,5 @@ version = "0.9.1+5"
 # ╟─f1f49ce4-6697-4a3c-b153-db2c3b646f12
 # ╟─c9cddd21-82a0-498a-88e2-c33febc28877
 # ╟─06ad7123-da44-45ac-aae1-9bb2eda3664c
-# ╠═1d505336-1d96-481a-b3ca-c5b7e2e0a85a
-# ╠═80200272-aeee-4a72-917d-b8d9e25a3ea0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

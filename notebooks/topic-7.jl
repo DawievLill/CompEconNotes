@@ -25,16 +25,25 @@ begin
 	using PlutoUI
 end
 
+# ╔═╡ c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
+html"""
+<style>
+  main {
+    max-width: 900px;
+  }
+</style>
+"""
+
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
-md" # Dynamic programming "
+md" # Deterministic dynamic programming "
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
-md" Method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then briefly discuss the cake eating problem before moving on to an optimal growth model. We will then close with a income fluctuation problem (savings problem).
+md" Method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
 
-We will utlise value function iteration, policy function iteration, time iteration, projection methods and then finally the endogenous grid methods to solve some of these dynamic programming problems. "
+We will utlise backward induction, value function iteration, policy function iteration and time iteration. In the next session on dynamic programming we will move on to projection methods and then finally the endogenous grid methods to solve more complicated dynamic programming problems. "
 
 # ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
-md" ## Deterministic dynamic programming "
+md" ## DP with backward induction"
 
 # ╔═╡ 21d809ee-8cac-499c-8234-7873fdc4b334
 md" The first problem is one that is often encountered in computer science and is effective in explaining the main idea behind dynamic programming. "
@@ -55,7 +64,7 @@ n = $(@bind n Slider(2:12, show_value = true, default=8))
 """
 
 # ╔═╡ 6071a006-d300-487b-835e-bc4b8487d458
-M = rand( 0:9, n, n)
+M = rand( 0:9, n, n);
 
 # ╔═╡ 621779a2-fcbd-4e55-8b36-447733b92ea5
 begin
@@ -105,7 +114,7 @@ end
 begin
 	paths = allpaths(n,n)
 	numpaths = length(paths)
-	md"There are $numpaths paths to check."
+	md"There are $numpaths paths to check for this example"
 end
 
 # ╔═╡ f6c5bc76-b0d8-46e0-9994-b6163eee9704
@@ -118,12 +127,8 @@ begin
 	winnernum = argmin([sum( M[i,p[i]] for i=1:n) for p∈paths]);
 	winner = paths[winnernum];
 	winnertotal = sum( M[i,winner[i]] for i=1:n);
+	md" The winner total is $winnertotal and the winner number is $winnernum"
 end
-
-# ╔═╡ 71c35e7f-03c8-496a-b8ba-e88a2cf7b35f
-md"""
-Our goal is to add the numbers on a path and find the minimal path. The winner is number $winnernum.
-"""
 
 # ╔═╡ 0c7a94ba-dd82-4015-9c39-adaec2e424f5
 let
@@ -168,16 +173,49 @@ end
 md" This example is useful to get an idea of what dynamic programming is about. Now let us move to more complex problems. We will also need to talk about some of the theory surrounding dynamic programming. We will not delve too deeply into the theory, but rather provide sources that give a good overview of theorethical constructs. Dynamic programming can become quite technical and it is isnt witin the scope of these sessions to provide a rigorous training in these methods. "
 
 # ╔═╡ b844d7eb-b152-4c37-9922-a0223f3b5589
-md" ### Cake eating problem "
+md" ### Cake eating problem [🍰 ≅ 😁]"
 
 # ╔═╡ e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
-md" This problem is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. "
+md" This problem is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. The notes presented here are almost an exact copy of the ones used by **Florian Oswald**. "
 
 # ╔═╡ ba5f4d25-2ed0-4d5b-8f84-25f10dc0ad82
 md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. "
 
-# ╔═╡ 118f2969-827a-4b4b-a9ec-2bb27c09d0a1
-md" ## Stochastic dynamic programming "
+# ╔═╡ e5ef57d1-e00b-4005-913a-7d6579c9c59c
+md" In this cake eating (🍰) problem you are given a certain budget of resources $R$ to spend (eat) over $t$ dates. In this example $R$ refers to the size of the cake. You take an action $a_t$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $C_t(a_t)$ be the reward / utility that results from the action that you take in period $t$.
+
+In this example the action is the consumption of cake, so this can be viewed as a consumption-savings problem. However, to keep things general we will refer to action instead of consumption. Now let us frame the problem more formally. "
+
+# ╔═╡ 398a316b-fc53-444a-aea7-169231c95f4b
+md" #### Budgeting problem "
+
+# ╔═╡ b0ca2d8d-dfa9-4fed-b34d-90167e950153
+md" The goal is to maximise total utility subject to a resource constraint.
+
+$$\max _{a} \sum_{t \in \mathcal{T}} C_{t}\left(a_{t}\right) \quad \text{s.t.} \quad \sum_{t \in \mathcal{T}} a_{t} = R$$ 
+
+For this example we will not allow borrowing, so $a_t \geq 0$. For this problem our control variable is the action $a_t$. We want to choose the best action in each period. To choose the best action available in each period we want a list of all the values for $a_t$ in each period given the resources available in that period. Represent these values with a function, called the **value function**.
+
+This value function is a function of the resources available in that period. In more mathematical terms, 
+
+$V_{t}(R_{t}) = \text{value of having } R_{t} \text{ resources left to allocate to dates } t, t+1$
+
+The value of resources evolve according to the following equation
+
+$R_{t+1} = R_t - a_t = g(R_t, a_t)$
+
+which is known as the transition function. While $a_t$ is referred to as the control variable, $R_t$ represent the state variable. This variable encodes all relevant information to model the system. "
+
+
+
+# ╔═╡ db4c8010-a33f-4e78-bea4-b3168c5ce72b
+md" #### Bellman equation "
+
+# ╔═╡ 0c415e88-d258-47dc-83e2-ebcfc2ceaf9f
+md" ## DP with value function iteration "
+
+# ╔═╡ c9cddd21-82a0-498a-88e2-c33febc28877
+md" ## DP with time iteration "
 
 # ╔═╡ 1d505336-1d96-481a-b3ca-c5b7e2e0a85a
 md" ### Optimal growth problem "
@@ -1648,6 +1686,7 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╟─7fffd413-6ebe-49d2-b426-1428aee5ae26
+# ╟─c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
 # ╟─1fa1bdc2-a076-42be-9540-1d20ebcffeb5
@@ -1660,14 +1699,18 @@ version = "0.9.1+5"
 # ╟─eea67d06-ac30-4e49-b307-b6b4691f1d76
 # ╟─f6c5bc76-b0d8-46e0-9994-b6163eee9704
 # ╟─fd77c87a-ac60-4507-a251-19cb4b82088a
-# ╟─71c35e7f-03c8-496a-b8ba-e88a2cf7b35f
 # ╟─0c7a94ba-dd82-4015-9c39-adaec2e424f5
 # ╟─d2de514f-ae9d-4d89-ba5e-e5a2d4c55081
 # ╟─b844d7eb-b152-4c37-9922-a0223f3b5589
 # ╟─e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
 # ╟─ba5f4d25-2ed0-4d5b-8f84-25f10dc0ad82
-# ╟─118f2969-827a-4b4b-a9ec-2bb27c09d0a1
-# ╟─1d505336-1d96-481a-b3ca-c5b7e2e0a85a
-# ╟─80200272-aeee-4a72-917d-b8d9e25a3ea0
+# ╟─e5ef57d1-e00b-4005-913a-7d6579c9c59c
+# ╟─398a316b-fc53-444a-aea7-169231c95f4b
+# ╟─b0ca2d8d-dfa9-4fed-b34d-90167e950153
+# ╟─db4c8010-a33f-4e78-bea4-b3168c5ce72b
+# ╟─0c415e88-d258-47dc-83e2-ebcfc2ceaf9f
+# ╟─c9cddd21-82a0-498a-88e2-c33febc28877
+# ╠═1d505336-1d96-481a-b3ca-c5b7e2e0a85a
+# ╠═80200272-aeee-4a72-917d-b8d9e25a3ea0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -43,7 +43,7 @@ md" Method to solve dynamic problems in economics, and other disciplines. Useful
 We will utlise backward induction, value function iteration, policy function iteration and time iteration. In the next session on dynamic programming we will move on to projection methods and then finally the endogenous grid methods to solve more complicated dynamic programming problems. "
 
 # ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
-md" ## DP with backward induction"
+md" ## Backward induction"
 
 # ╔═╡ 21d809ee-8cac-499c-8234-7873fdc4b334
 md" The first problem is one that is often encountered in computer science and is effective in explaining the main idea behind dynamic programming. "
@@ -194,28 +194,188 @@ md" The goal is to maximise total utility subject to a resource constraint.
 
 $$\max _{a} \sum_{t \in \mathcal{T}} C_{t}\left(a_{t}\right) \quad \text{s.t.} \quad \sum_{t \in \mathcal{T}} a_{t} = R$$ 
 
-For this example we will not allow borrowing, so $a_t \geq 0$. For this problem our control variable is the action $a_t$. We want to choose the best action in each period. To choose the best action available in each period we want a list of all the values for $a_t$ in each period given the resources available in that period. Represent these values with a function, called the **value function**.
+For this example we will not allow borrowing, so $a_t \geq 0$. For this problem our control variable is the action $a_t$. We want to choose the best action in each period. To choose the best action available in each period we want a list of all the values for $a_t$ in each period given the resources available in that period. We seek a best policy that prescribes the action that should be taken at each state at each point in time to maximise rewards. We can represent the values with a function, called the **value function**.
 
 This value function is a function of the resources available in that period. In more mathematical terms, 
 
 $V_{t}(R_{t}) = \text{value of having } R_{t} \text{ resources left to allocate to dates } t, t+1$
 
-The value of resources evolve according to the following equation
+This value function specifies the maximium attainable sum of current and furure rewards given the state and time period. The value of resources evolve according to the following equation
 
 $R_{t+1} = R_t - a_t = g(R_t, a_t)$
 
-which is known as the transition function. While $a_t$ is referred to as the control variable, $R_t$ represent the state variable. This variable encodes all relevant information to model the system. "
+which is known as the **transition function**. While $a_t$ is referred to as the control variable, $R_t$ represent the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function). In the case with uncertainty we will have to introduce Markov chains to describe the transition function. Fortunately our example is simle enough that we don't have to talk about that yet.  "
 
 
 
 # ╔═╡ db4c8010-a33f-4e78-bea4-b3168c5ce72b
 md" #### Bellman equation "
 
+# ╔═╡ fd4d1601-5a71-4ce1-a3bd-5d34776502f9
+@bind highR Slider(2:200,show_value = true, default = 20)
+
+# ╔═╡ b22748fb-9acb-4105-9fbe-654daf34dbf4
+@bind nperiods Slider(2:20,show_value = true, default = 5)
+
+# ╔═╡ 7b63094f-ddde-4dff-911a-58d8fc7226a2
+begin
+	# final period T
+	points = 500
+	lowR = 0.0001
+	# highR = 10.0 # slider below
+	# more points towards zero to make nicer plot
+	Rspace = exp.(range(log(lowR), stop = log(highR), length = points))
+	aT = Rspace # consume whatever is left
+	VT = sqrt.(aT)  # utility of that consumption
+end
+
+# ╔═╡ c5ea0324-8e8c-49d1-88f6-3abc4278aefa
+function plotVT()
+	plot(Rspace, VT, xlab = "R", ylab = "Value",label = L"V_T", m = (:circle),
+	     leg = :bottomright)
+end
+
+# ╔═╡ 4716e611-3342-4c3e-afc2-5afd8de2fc15
+plotVT()
+
+# ╔═╡ b40713e0-54db-4b49-8d35-a5b68f71ac89
+begin
+	# period T-1
+	# now for each value in Rspace, we need to decide how much to consume
+	w = zeros(points) # temporary vector for each choice or R'
+	VT_1 = zeros(points) # optimal value in T-1 at each state of R
+	ix = 0 # optimal index of action in T-1 at each state of R
+	aT_1 = zeros(points) # optimal action in T-1 at each state of R
+
+	for (ir,r) in enumerate(Rspace) # for all possible R-values
+        # loop over all possible action choices
+        for (ia,achoice) in enumerate(Rspace)
+            if r <= achoice   # check whether that choice is feasible
+                w[ia] = -Inf
+            else
+				r1 = r - achoice  # tomorrow's R
+				jr = argmin(abs.(Rspace .- r1))  # index of that value in Rspace
+                w[ia] = sqrt(achoice) + VT[jr]   # value of that achoice
+            end
+        end
+        # find best action
+        VT_1[ir], ix = findmax(w) # stores Value und policy (index of optimal choice)
+		aT_1[ir] = Rspace[ix]  # record optimal action level
+		
+    end
+end
+
+# ╔═╡ 7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
+let
+	pv = plotVT()
+	plot!(pv, Rspace, VT_1, label = L"V_{T-1}", m = (:star))
+end
+
+# ╔═╡ b71abd7b-191f-4044-91a9-d0f4e4883f88
+plotaT() = plot(Rspace, aT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "R")
+
+# ╔═╡ 6f2eac77-4ad3-4da7-95a7-c958ccf270cd
+let
+	pa = plotaT()
+	plot!(pa, Rspace, aT_1, label = L"a_{T-1}")
+end
+
+# ╔═╡ d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
+# period T-1 till 1
+# each period is the same now!
+# that calls for a function!
+"""
+	Vperiod(grid::Vector,vplus::Vector)
+
+Given a grid and a next period value function `vplus`,
+calculate current period optimal value and actions.
+"""
+function Vperiod(grid::Vector,vplus::Vector)
+	points = length(grid)
+	w = zeros(points) # temporary vector for each choice or R'
+	Vt = zeros(points) # optimal value in T-1 at each state of R
+	ix = 0 # optimal action index in T-1 at each state of R
+	at = zeros(points) # optimal action in T-1 at each state of R
+	for (ir,r) in enumerate(grid) # for all possible R-values
+		# loop over all possible action choices
+		for (ia,achoice) in enumerate(grid)
+			if r <= achoice   # check whether that choice is feasible
+				w[ia] = -Inf
+			else
+				r1 = r - achoice  # tomorrow's R
+				jr = argmin(abs.(grid .- r1))  # index of that value in Rspace
+				w[ia] = sqrt(achoice) + vplus[jr]   # value of that achoice
+			end
+		end
+		# find best action
+		Vt[ir], ix = findmax(w) # stores Value und policy (index of optimal choice)
+		at[ir] = grid[ix]  # record optimal action level
+	end
+	return (Vt, at)
+end
+
+# ╔═╡ 7529e1a7-c41c-49ec-8885-6c7c14093700
+function backwards(grid, nperiods)
+	points = length(grid)
+	V = zeros(nperiods,points)
+	a = zeros(nperiods,points)
+	V[end,:] = sqrt.(grid)  # from before: final period
+	a[end,:] = collect(grid)
+
+	for it in (nperiods-1):-1:1
+		x = Vperiod(grid, V[it+1,:])	
+		V[it,:] = x[1]
+		a[it,:] = x[2]
+	end
+	return (V,a)
+end
+
+# ╔═╡ 86f2d8ca-ea32-4558-8133-bce4789ad105
+V,a = backwards(Rspace, nperiods);
+
+# ╔═╡ b1e0e8e1-858f-4f12-a272-7197a117af25
+let
+	cg = cgrad(:viridis)
+    cols = cg[range(0.0,stop=1.0,length = nperiods)]
+	pv = plot(Rspace, V[1,:], xlab = "R", ylab = "Value",label = L"V_1",leg = :bottomright, color = cols[1])
+	for it in 2:nperiods
+		plot!(pv, Rspace, V[it,:], label = L"V_{%$(it)}", color = cols[it])
+	end
+	pv
+end
+
+# ╔═╡ 23bdbe50-8544-4bb9-9e91-ba7397ca4db2
+let
+	cg = cgrad(:viridis)
+    cols = cg[range(0.0,stop=1.0,length = nperiods)]
+	pa = plot(Rspace, a[1,:], xlab = "R", ylab = "Action",label = L"a_1",leg = :topleft, color = cols[1])
+	for it in 2:nperiods
+		plot!(pa, Rspace, a[it,:], label = L"a_{%$(it)}", color = cols[it])
+	end
+	pv = plot(Rspace, V[1,:], xlab = "R", ylab = "Value",label = L"V_1",leg = :bottomright, color = cols[1])
+	for it in 2:nperiods
+		plot!(pv, Rspace, V[it,:], label = L"V_{%$(it)}", color = cols[it])
+	end
+	plot(pv,pa, layout = (1,2))
+end
+
+# ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
+bar(1:nperiods,a[:, end], leg = false, title = "Given R_t = $(Rspace[end]), take action...",xlab = "period")
+
 # ╔═╡ 0c415e88-d258-47dc-83e2-ebcfc2ceaf9f
-md" ## DP with value function iteration "
+md" ## Value function iteration "
+
+# ╔═╡ 8d819c3c-c9bd-4d89-bd74-4a585174772f
+md" We can now look to solve the cake eating problem with value function iteration and policy function iteration instead of backward induction. There are advantages to using this method. "
+
+# ╔═╡ f1f49ce4-6697-4a3c-b153-db2c3b646f12
+md" ## Policy function iteration "
 
 # ╔═╡ c9cddd21-82a0-498a-88e2-c33febc28877
-md" ## DP with time iteration "
+md" ## Time iteration "
+
+# ╔═╡ 06ad7123-da44-45ac-aae1-9bb2eda3664c
+md" An alternative to VFI and PFI is time iteration. This can be applied to the cake eating problem. We will later apply these techniques to the optimal growth problem when we get to stochastic dynamic programming problems. "
 
 # ╔═╡ 1d505336-1d96-481a-b3ca-c5b7e2e0a85a
 md" ### Optimal growth problem "
@@ -1708,8 +1868,26 @@ version = "0.9.1+5"
 # ╟─398a316b-fc53-444a-aea7-169231c95f4b
 # ╟─b0ca2d8d-dfa9-4fed-b34d-90167e950153
 # ╟─db4c8010-a33f-4e78-bea4-b3168c5ce72b
+# ╠═fd4d1601-5a71-4ce1-a3bd-5d34776502f9
+# ╠═b22748fb-9acb-4105-9fbe-654daf34dbf4
+# ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
+# ╠═c5ea0324-8e8c-49d1-88f6-3abc4278aefa
+# ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
+# ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
+# ╠═7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
+# ╠═b71abd7b-191f-4044-91a9-d0f4e4883f88
+# ╠═6f2eac77-4ad3-4da7-95a7-c958ccf270cd
+# ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
+# ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
+# ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
+# ╠═b1e0e8e1-858f-4f12-a272-7197a117af25
+# ╠═23bdbe50-8544-4bb9-9e91-ba7397ca4db2
+# ╠═8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─0c415e88-d258-47dc-83e2-ebcfc2ceaf9f
+# ╟─8d819c3c-c9bd-4d89-bd74-4a585174772f
+# ╟─f1f49ce4-6697-4a3c-b153-db2c3b646f12
 # ╟─c9cddd21-82a0-498a-88e2-c33febc28877
+# ╟─06ad7123-da44-45ac-aae1-9bb2eda3664c
 # ╠═1d505336-1d96-481a-b3ca-c5b7e2e0a85a
 # ╠═80200272-aeee-4a72-917d-b8d9e25a3ea0
 # ╟─00000000-0000-0000-0000-000000000001

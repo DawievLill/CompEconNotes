@@ -17,7 +17,9 @@ end
 begin
 	using ApproxFun
 	using BasisMatrices
+	using ChebyshevApprox
 	using LinearAlgebra
+	using Parameters
 	using Plots
 	using PlutoUI
 	using FastGaussQuadrature # Package to compute quadrature nodes and weights
@@ -139,7 +141,7 @@ The interpolation scheme is well defined if the interpolation nodes and basis fu
 
 Normally, one interpolates to match the value of the original function at selected interpolation nodes. However, we are not limited to point values. We may also use first (and higher order) derivatives at specified points. 
 
-If we have exactly as many nodes as coefficients then this we have a simple root finding problem $\Phi w - y = 0$. If we have more nodes than coefficients then we have a least squares problem, such that $w = (\Phi^{\prime} \Phi)^{-1} \Phi^{\prime}y$. "
+If we have exactly as many nodes as coefficients then this we have a simple root finding problem $\Phi w - y = 0$. If we have more nodes than coefficients then we have a least squares (curve fitting) problem, such that $w = (\Phi^{\prime} \Phi)^{-1} \Phi^{\prime}y$. "
 
 
 
@@ -238,8 +240,13 @@ x_range = -1:.01:1;
 # ╔═╡ c232b1db-ab1c-4c29-b0ee-8fc719b9d2bc
 monomials(x, n) = x.^n
 
+# ╔═╡ 79b677e8-98a7-446e-babb-c9f8ccdec52b
+md"""
+Polynomial degree = $(@bind τ Slider(2:20, show_value=true, default=2))
+"""
+
 # ╔═╡ e45843c7-a0a9-40fd-abff-d150fc1efb67
-plot_function(monomials, x_range, 8)
+plot_function(monomials, x_range, τ)
 
 # ╔═╡ 4e21ef20-c5ae-46c7-a512-efb47c48a244
 md" This idea is also captured in the basis matrix for monomials. The matrix looks as follows, 
@@ -273,9 +280,6 @@ function f_approx(coefficients, points)
 	
 	return function_values
 end
-
-# ╔═╡ 0c0334c0-9c5e-44df-a9e7-9927cdea816b
-md" Let us illustrate the same point, but this time with an interactive slider. "
 
 # ╔═╡ 75885058-267f-4e7e-9cb2-bd5e1f2c87c2
 md"""
@@ -331,27 +335,57 @@ md" #### Orthogonal polynomials "
 
 # ╔═╡ ef9fb41f-b815-4e77-8913-82ee14fc3d8c
 md" 
-The space of continuous functions is spanned by monomials, $x^{n}$, $n = 0, 1, 2, \ldots$, and one can use the monomials as a basis for the space of continuous functions. However, we have to ask ourselves whether this is a good basis. Normally a good basis for a vector space also has some orthogonality properties. This leads us into the discussion of constructing orthogonal polynomials as bases for our function space. In order to think about orthogonality one needs the concept of an inner product in the vector space. 
+The space of continuous functions is spanned by monomials, $x^{n}$, $n = 0, 1, 2, \ldots$, and one can use the monomials as a basis for the space of continuous functions. However, we have to ask ourselves whether this is a good basis. Normally a good basis for a vector space also has some orthogonality properties. This leads us into the discussion of constructing orthogonal polynomials as bases for our function space. Let us introduce some definitions in order to facilitate the discussion. 
 
-Given that $F$ is a space of continuous real valued functions, let us define a inner product operation on that space. 
+**Definition (weighting function)** A weighting function $\omega(x)$ on an interval $[a, b]$ is a function that is positive almost everywhere on $[a, b]$ and has finite integral on $[a, b]$.
 
-$<g, h>=\int_{\mathbf{x}} g(x) h(x) w(x) d x$
+An example of a weighting function would be $\omega(x) = (1 - x)^{-1/2}$ over the interval $[-1, 1]$. This function is positive over the entire interval and integrates to a value of $\pi$ over the interval.
 
-where $g, h, w \in F$ and $w$ is a weighting function. The pair $\{F,<.,.>\}$ form an inner-product vetor space."
+In order to think about orthogonality one needs the concept of an inner product in the vector space.
+
+**Definition (inner product)** Given two functions $f_1(x)$ and $f_2(x)$ defined on $[a, b]$, the inner product with respect to the weighting function is given by
+
+$\left\langle f_{1}, f_{2}\right\rangle=\int_{a}^{b} f_{1}(x) f_{2}(x) \omega(x) \mathrm{d} x$
+
+As an example, assume that $f_1 = 1$ and $f_2  = x$ and $\omega = (1 - x)^{-1/2}$. The inner product over the interval $[-1, 1]$ is 
+
+$\left\langle f_{1}, f_{2}\right\rangle=\int_{-1}^{1} \frac{x}{\sqrt{1-x}} \mathrm{~d} x=-\left.\sqrt{1-x^{2}}\right|_{-1} ^{1}=0$
+
+In this case we actually have the orthogonality property with respect to the weighting function. 
+
+**Definition (orthogonal polynomial)** Family of polynomials $\left\{P_{n}(x)\right\}$ is mutually orthogonal with respect to the $\omega(x)$ iff
+
+$\left\langle P_{i}, P_{j}\right\rangle=0 \quad \text{for} \quad i \neq j$
+
+Below is a table of the most common families of orthogonal polynomials. 
+
+$$\begin{aligned}
+&\text { Orthogonal polynomials (definitions) }\\
+&\begin{array}{lccl}
+\hline \hline \text { Family } & \omega(x) & {[a ; b]} & \text { Definition } \\
+\hline \text { Legendre } & 1 & {[-1 ; 1]} & P_{n}(x)=\frac{(-1)^{n}}{2^{n} n !} \frac{\mathrm{d}^{n}}{\mathrm{~d} x^{n}}\left(1-x^{2}\right)^{n} \\
+\text { Chebychev } & \left(1-x^{2}\right)^{-1 / 2} & {[-1 ; 1]} & T_{n}(x)=\cos \left(n \cos ^{-1}(x)\right) \\
+\text { Laguerre } & \exp (-x) & {[0, \infty)} & L_{n}(x)=\frac{\exp (x)}{n !} \frac{\mathrm{d}^{n}}{\mathrm{~d} x^{n}}\left(x^{n} \exp (-x)\right) \\
+\text { Hermite } & \exp \left(-x^{2}\right) & (-\infty, \infty) & H_{n}(x)=(-1)^{n} \exp \left(x^{2}\right) \frac{\mathrm{d}^{n}}{\mathrm{~d} x^{n}} \exp \left(-x^{2}\right) \\
+\hline \hline
+\end{array}
+\end{aligned}$$
+
+"
 
 # ╔═╡ 1d3fa479-5844-49ae-bb3c-5a12954cdf60
 md" ##### Chebyshev polynomials "
 
 # ╔═╡ 37f7640f-13ab-4d39-a9f1-7a258fe62bf6
-md" One nice property of orthonogal polynomials is that they span the space, while monomials tend to clump together. There are different types of orthogonal polynomials. However, we will only talk about Chebyshev polynomials here, since they are most frequently used in practice. 
+md" Orthogonal polynomials span the polynomial space. Below is a figure that provides different degrees of the Chebyshev polynomial over the interval $[-1, 1]$. These polynomials are an excellent basis for constructing polynomials that interpolate function values at the Chebyshev nodes (which were mentioned before).
 
-These polynomials span the entire polynomial vector space and the $\Phi$ matrix has full rank and is invertible. As an aside, the zeros of the Chebyshev polynomial are known as the Chebyshev nodes. We mentioned these nodes briefly in a previous section. There are many reasons, both theorethical and practical to use these polynomials. There is a famous quote by John Boyd on the three moral principles for the selection of Chebyshev polynomials. 
+Chebychev basis polynomials in combination with Chebychev interpolation nodes yields an extremely well-conditioned interpolation equation that can be accurately and effciently solved, even with high
+degree approximants. "
 
-1. When in doubt, use Chebyshev polynomials unless the solution is spatially periodic, in which case an ordinary Fourier series is better
-2. Unless you are sure another set of basis functions is better, use Chebyshev polynomials
-3. Unless you are really, really sure another set of basis functions is better use Chebyshev polynomials
-
-The main message is that for periodic functions, use Fourier series. For everything else, use Chebyshev polynomials. Below is a figure that provides different degrees of the Chebyshev polynomial. "
+# ╔═╡ cb81c6b1-a8ec-473d-bc27-1bdbb46b5a35
+md"""
+Polynomial degree = $(@bind δ Slider(2:10, show_value=true, default=2))
+"""
 
 # ╔═╡ 97b9730f-fffe-4e8d-86e7-553cdd8dcf5b
 function cheb_polys(x, n)
@@ -367,16 +401,16 @@ function cheb_polys(x, n)
 end;
 
 # ╔═╡ f371ee9e-c72e-4dc0-90d2-b99345edd4d0
-plot_function(cheb_polys, x_range, 5)
+plot_function(cheb_polys, x_range, δ)
 
 # ╔═╡ e46bc8e3-10d7-4637-8d68-9b9ad5f9bf41
-md" Another nice feature of these polynomials is that they can be easily calculated through recursion. 
+md" These polynomials are easily calculated through recursion. 
 
 $\begin{align} T_0(x) & = 1 \\
   T_1(x) & = x \\
   T_{n+1}(x) & = 2xT_n(x) - T_{n-1}(x) \end{align}$
 
-The following function helps us to code this up. "
+The explicit formulation as stated before is $T_{n}(x)=\cos \left(n \cos ^{-1}(x)\right)$. "
 
 # ╔═╡ da986aee-d913-4c23-b214-dd4ae0ede309
 function T(x,n)
@@ -390,23 +424,50 @@ function T(x,n)
     end
 end
 
-# ╔═╡ a5f9d6fb-e5cf-4a20-a95a-d4f241c5c8cd
-md" We can easily check that this gives the same result as when we use the general formula. "
-
 # ╔═╡ d27de7be-46b7-4801-b3c3-920ae3c00efe
 T2(x,n) = cos(n* acos(x))
 
 # ╔═╡ 9b1b2070-bda5-43d9-be31-b83829fcd98d
 T2(0.5,3) == T(0.5,3) # Compare the two methods. 
 
-# ╔═╡ f5537715-1a50-4beb-b965-5af16020873f
-md" The general interpolation procedure can then be summarised as follows. "
+# ╔═╡ 59214606-5ad7-4905-b029-43f4271fe5b5
+md" Since these polynomials span the entire polynomial vector space, the $\Phi$ matrix has full rank and is invertible. There are many reasons, both theorethical and practical to use these polynomials. There is a famous quote by John Boyd on the three moral principles for the selection of Chebyshev polynomials. 
+
+1. When in doubt, use Chebyshev polynomials unless the solution is spatially periodic, in which case an ordinary Fourier series is better
+2. Unless you are sure another set of basis functions is better, use Chebyshev polynomials
+3. Unless you are really, really sure another set of basis functions is better use Chebyshev polynomials
+
+The main message is that for periodic functions, use Fourier series. For everything else, use Chebyshev polynomials.  "
 
 # ╔═╡ a96fe789-13d8-42f3-9c04-07e56637949c
 md" #### ApproxFun.jl "
 
 # ╔═╡ f7dba6aa-e1fd-451c-9ab7-e76a483f6959
-md" One of the packages that we can use for function approximation and manipulation is ApproxFun.jl. This package allows for more than simple function approximation functionality. You can do algebra, differentiate and integrate functions, solve ODES and PDEs, represent periodic functions, etc. This is an amazing package and we won't have time cover it in this session, but I highly recommend you go to the website and take a look. It draws inspiration from the Matlab package chebfun, which is quite famous. Nick Hale at the applied mathematics department worked on chebfun when he was at Oxford, so you can ask him some questions on the package. "
+md" One of the packages that we can use for function approximation and manipulation is ApproxFun.jl. This package allows for more than simple function approximation functionality. You can do algebra, differentiate and integrate functions, solve ODES and PDEs, represent periodic functions, etc. This is an amazing package and we won't have time cover most of3 it in this session, but I highly recommend you go to the website and take a look. It draws inspiration from the Matlab package chebfun, which is quite famous. Nick Hale at the applied mathematics department worked on chebfun when he was at Oxford, so you can ask him some questions on the package. "
+
+# ╔═╡ 2fa769ef-29d7-440a-89fb-c24980e609ca
+z = Fun(runge,-1..1)
+
+# ╔═╡ f0786957-9371-4569-9631-e173b068530e
+space(z)
+
+# ╔═╡ a6837eae-68ac-420b-b47e-a05a32e355a5
+begin
+	plot(z; label = "Runge Approx", line = 3, linestyle = :dash)
+	plot!(runge; label = "Runge Function", line = 2, alpha = 0.7)
+end
+
+# ╔═╡ 70edc423-3403-4652-b7a6-e90720543918
+ramp(x) = (x + abs(x)) / 2
+
+# ╔═╡ 11b12320-f60e-4a6f-a2fb-b85a573abdd2
+q = Fun(ramp, -1..1)
+
+# ╔═╡ 7387b11f-873b-4af1-b909-bf3051d16e6e
+begin
+	plot(q; label = "Ramp Approx", line = 3, linestyle = :dash)
+	plot!(ramp; label = "Ramp Function", line = 2, alpha = 0.7)
+end
 
 # ╔═╡ 5e55cf7d-a076-45e1-8c54-c561be82857d
 md" ### Finite element methods "
@@ -419,8 +480,10 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 ApproxFun = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
 BasisMatrices = "08854c51-b66b-5062-a90d-8e7ae4547a49"
+ChebyshevApprox = "17a596ad-87cd-578c-9b6d-01108c31dc04"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
@@ -428,7 +491,9 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 [compat]
 ApproxFun = "~0.12.5"
 BasisMatrices = "~0.7.0"
+ChebyshevApprox = "~0.1.12"
 FastGaussQuadrature = "~0.4.5"
+Parameters = "~0.12.2"
 Plots = "~1.18.2"
 PlutoUI = "~0.7.9"
 SpecialFunctions = "~0.10.3"
@@ -560,6 +625,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
+
+[[ChebyshevApprox]]
+deps = ["LinearAlgebra", "ThreadPools"]
+git-tree-sha1 = "19d88cd5fbc46bf2893873120763a31c6d351a86"
+uuid = "17a596ad-87cd-578c-9b6d-01108c31dc04"
+version = "0.1.12"
 
 [[CodecBzip2]]
 deps = ["Bzip2_jll", "Libdl", "TranscodingStreams"]
@@ -1486,6 +1557,12 @@ uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
+[[ThreadPools]]
+deps = ["Printf", "RecipesBase", "Statistics"]
+git-tree-sha1 = "47885d07fc68cf4f0eb7fcb3e2ad74765f91bed8"
+uuid = "b189fb0b-2eb5-4ed4-bc0c-d34c51242431"
+version = "2.0.1"
+
 [[TimeZones]]
 deps = ["Dates", "Future", "LazyArtifacts", "Mocking", "Pkg", "Printf", "RecipesBase", "Serialization", "Unicode"]
 git-tree-sha1 = "81753f400872e5074768c9a77d4c44e70d409ef0"
@@ -1734,7 +1811,7 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═eeca0160-d37e-11eb-05f4-bd7469319dad
+# ╟─eeca0160-d37e-11eb-05f4-bd7469319dad
 # ╟─99e0b1b9-d032-41d6-8a1d-742050d5ddeb
 # ╟─0ac4cb74-c027-4677-bd45-672f19035ce4
 # ╟─25b6e79e-37dc-4a67-8b56-fbaf9da41713
@@ -1754,22 +1831,22 @@ version = "0.9.1+5"
 # ╟─095e025d-0344-4e2c-97d9-fa1b230b2469
 # ╟─75ba3ecf-6dff-482d-99f3-9650b6597540
 # ╟─be3e84ef-842f-43ed-833b-7faee299c904
-# ╟─41cee516-36a5-4af3-b157-46fcd1ff6aa5
+# ╠═41cee516-36a5-4af3-b157-46fcd1ff6aa5
 # ╟─93a84049-7e73-41c4-afd8-0359656c6399
 # ╟─95125a71-1691-4009-acb4-5db30cd6b69f
 # ╟─507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
 # ╟─b1f875af-4046-445e-a2fb-afca07f992ef
 # ╟─8918fde2-07d7-4f76-8c5b-03fa04650058
 # ╟─c4e41e78-e554-47b3-822f-3516f615bc2c
-# ╠═1d8391b6-c28b-4707-9a27-b6152b14be49
+# ╟─1d8391b6-c28b-4707-9a27-b6152b14be49
 # ╠═606948ed-57bd-4f25-8b8a-99133c405bc8
 # ╠═c232b1db-ab1c-4c29-b0ee-8fc719b9d2bc
-# ╠═e45843c7-a0a9-40fd-abff-d150fc1efb67
+# ╟─79b677e8-98a7-446e-babb-c9f8ccdec52b
+# ╟─e45843c7-a0a9-40fd-abff-d150fc1efb67
 # ╟─4e21ef20-c5ae-46c7-a512-efb47c48a244
 # ╠═46bf582a-ba9a-491f-96f9-fa1ec38698a9
 # ╠═53bee8bb-5469-4f99-86f1-a6e9ce0f44f7
-# ╟─0c0334c0-9c5e-44df-a9e7-9927cdea816b
-# ╠═75885058-267f-4e7e-9cb2-bd5e1f2c87c2
+# ╟─75885058-267f-4e7e-9cb2-bd5e1f2c87c2
 # ╠═456bcf5c-25a2-453d-80ac-3b103a671d93
 # ╠═3606489f-e45d-4f06-ab72-2c31def7ed10
 # ╠═93d60563-a66e-4a8f-a11b-a81564cd3941
@@ -1786,16 +1863,22 @@ version = "0.9.1+5"
 # ╟─ef9fb41f-b815-4e77-8913-82ee14fc3d8c
 # ╟─1d3fa479-5844-49ae-bb3c-5a12954cdf60
 # ╟─37f7640f-13ab-4d39-a9f1-7a258fe62bf6
-# ╟─97b9730f-fffe-4e8d-86e7-553cdd8dcf5b
+# ╟─cb81c6b1-a8ec-473d-bc27-1bdbb46b5a35
+# ╠═97b9730f-fffe-4e8d-86e7-553cdd8dcf5b
 # ╟─f371ee9e-c72e-4dc0-90d2-b99345edd4d0
 # ╟─e46bc8e3-10d7-4637-8d68-9b9ad5f9bf41
 # ╠═da986aee-d913-4c23-b214-dd4ae0ede309
-# ╟─a5f9d6fb-e5cf-4a20-a95a-d4f241c5c8cd
 # ╠═d27de7be-46b7-4801-b3c3-920ae3c00efe
 # ╠═9b1b2070-bda5-43d9-be31-b83829fcd98d
-# ╟─f5537715-1a50-4beb-b965-5af16020873f
+# ╟─59214606-5ad7-4905-b029-43f4271fe5b5
 # ╟─a96fe789-13d8-42f3-9c04-07e56637949c
 # ╟─f7dba6aa-e1fd-451c-9ab7-e76a483f6959
+# ╠═2fa769ef-29d7-440a-89fb-c24980e609ca
+# ╠═f0786957-9371-4569-9631-e173b068530e
+# ╟─a6837eae-68ac-420b-b47e-a05a32e355a5
+# ╠═70edc423-3403-4652-b7a6-e90720543918
+# ╠═11b12320-f60e-4a6f-a2fb-b85a573abdd2
+# ╟─7387b11f-873b-4af1-b909-bf3051d16e6e
 # ╟─5e55cf7d-a076-45e1-8c54-c561be82857d
 # ╟─0a9c73e1-68c1-4c17-bd48-98673b44d332
 # ╟─00000000-0000-0000-0000-000000000001

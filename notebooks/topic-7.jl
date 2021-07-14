@@ -35,7 +35,7 @@ html"""
 """
 
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
-md" # Deterministic dynamic programming "
+md" # Dynamic programming I"
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" Method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
@@ -244,10 +244,7 @@ This iterative procedure will work all the way till we reach the first period. I
 "
 
 # ╔═╡ fd4d1601-5a71-4ce1-a3bd-5d34776502f9
-@bind highR Slider(2:200,show_value = true, default = 20)
-
-# ╔═╡ b22748fb-9acb-4105-9fbe-654daf34dbf4
-@bind nperiods Slider(2:20,show_value = true, default = 5)
+# @bind highR Slider(2:200,show_value = true, default = 20)
 
 # ╔═╡ 7b63094f-ddde-4dff-911a-58d8fc7226a2
 begin
@@ -256,7 +253,7 @@ begin
 	
 	# Lower and upper limits of the state space. In this case this represents the size of the cake. 	
 	lowR = 1e-6;
-	# highR = 20.0 # slider below
+	highR = 30.0 # slider below
 	
 	# Log and then exponentiate for more points towards zero, which makes a nicer plot
 	Rspace = exp.(range(log(lowR), stop = log(highR), length = points)); # The state space
@@ -272,18 +269,21 @@ end
 # ╔═╡ 4716e611-3342-4c3e-afc2-5afd8de2fc15
 plotVT()
 
+# ╔═╡ aa534428-e995-4885-bfeb-135ad92129a4
+md" As we stated in our discussion, we now have an answer for "
+
 # ╔═╡ b40713e0-54db-4b49-8d35-a5b68f71ac89
 begin
 	# period T-1 
 	# now for each value in Rspace, we need to decide how much to consume
-	w = zeros(points) # temporary vector for each choice of R
-	VT_1 = zeros(points) # optimal value in T-1 at each state of R
+	w = zeros(points) # temporary vector for each choice of R 
+	VT_1 = zeros(points) # optimal value in T-1 at each state of R 
 	ix = 0 # optimal index of action in T-1 at each state of R
 	aT_1 = zeros(points) # optimal action in T-1 at each state of R
 
-	for (ir,r) in enumerate(Rspace) # for all possible R-values
+	for (ir, r) in enumerate(Rspace) # for all possible R-values
         # loop over all possible action choices
-        for (ia,achoice) in enumerate(Rspace)
+        for (ia, achoice) in enumerate(Rspace)
             if r <= achoice   # check whether that choice is feasible
                 w[ia] = -Inf
             else
@@ -364,6 +364,9 @@ function backwards(grid, nperiods)
 	return (V,a)
 end
 
+# ╔═╡ b22748fb-9acb-4105-9fbe-654daf34dbf4
+@bind nperiods Slider(2:20,show_value = true, default = 5)
+
 # ╔═╡ 86f2d8ca-ea32-4558-8133-bce4789ad105
 V,a = backwards(Rspace, nperiods);
 
@@ -395,21 +398,6 @@ end
 
 # ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
 bar(1:nperiods,a[:, end], leg = false, title = "Given R_t = $(Rspace[end]), take action...",xlab = "period")
-
-# ╔═╡ 0c415e88-d258-47dc-83e2-ebcfc2ceaf9f
-md" ## Value function iteration "
-
-# ╔═╡ 8d819c3c-c9bd-4d89-bd74-4a585174772f
-md" We can now look to solve the cake eating problem with value function iteration and policy function iteration instead of backward induction. There are advantages to using this method. "
-
-# ╔═╡ f1f49ce4-6697-4a3c-b153-db2c3b646f12
-md" ## Policy function iteration "
-
-# ╔═╡ c9cddd21-82a0-498a-88e2-c33febc28877
-md" ## Time iteration "
-
-# ╔═╡ 06ad7123-da44-45ac-aae1-9bb2eda3664c
-md" An alternative to VFI and PFI is time iteration. This can be applied to the cake eating problem. We will later apply these techniques to the optimal growth problem when we get to stochastic dynamic programming problems. "
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1899,25 +1887,21 @@ version = "0.9.1+5"
 # ╟─60a84858-5aa2-47d5-a5af-3821e7de313f
 # ╟─728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
 # ╟─3f18f963-ad85-4c75-ab8c-64ac3cbf312c
-# ╠═fd4d1601-5a71-4ce1-a3bd-5d34776502f9
-# ╠═b22748fb-9acb-4105-9fbe-654daf34dbf4
+# ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
 # ╟─c5ea0324-8e8c-49d1-88f6-3abc4278aefa
-# ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
+# ╟─4716e611-3342-4c3e-afc2-5afd8de2fc15
+# ╠═aa534428-e995-4885-bfeb-135ad92129a4
 # ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
-# ╠═7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
-# ╠═b71abd7b-191f-4044-91a9-d0f4e4883f88
-# ╠═6f2eac77-4ad3-4da7-95a7-c958ccf270cd
+# ╟─7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
+# ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
+# ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
 # ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
 # ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
+# ╠═b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
 # ╠═b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╠═23bdbe50-8544-4bb9-9e91-ba7397ca4db2
 # ╠═8ec82051-79b0-4cd7-8585-163ffde2b290
-# ╟─0c415e88-d258-47dc-83e2-ebcfc2ceaf9f
-# ╟─8d819c3c-c9bd-4d89-bd74-4a585174772f
-# ╟─f1f49ce4-6697-4a3c-b153-db2c3b646f12
-# ╟─c9cddd21-82a0-498a-88e2-c33febc28877
-# ╟─06ad7123-da44-45ac-aae1-9bb2eda3664c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

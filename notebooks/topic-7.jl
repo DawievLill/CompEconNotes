@@ -40,10 +40,10 @@ md" # Dynamic programming I"
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" Method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
 
-We will utlise backward induction, value function iteration, policy function iteration and time iteration. In the next session on dynamic programming we will move on to projection methods and then finally the endogenous grid methods to solve more complicated dynamic programming problems. "
+In this session we cover some basic discrete deterministic dynamic programming problems. We will first look at models with a finite time horizon and then move on to models with an inifinite time horizon. The techniques we will utilise include backward induction, value function iteration and policy function iteration. "
 
 # ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
-md" ## Backward induction"
+md" ## Discrete deterministic problems "
 
 # ╔═╡ 21d809ee-8cac-499c-8234-7873fdc4b334
 md" The first problem is one that is often encountered in computer science and is effective in explaining the main idea behind dynamic programming. "
@@ -173,7 +173,7 @@ end
 md" This example is useful to get an idea of what dynamic programming is about. Now let us move to more complex problems. We will also need to talk about some of the theory surrounding dynamic programming. We will not delve too deeply into the theory, but rather provide sources that give a good overview of theorethical constructs. Dynamic programming can become quite technical and it is isnt witin the scope of these sessions to provide a rigorous training in these methods. "
 
 # ╔═╡ b844d7eb-b152-4c37-9922-a0223f3b5589
-md" ### Cake eating problem [🍰 ≅ 😁]"
+md" ### Finite time cake eating problem [🍰 ≅ 😁]"
 
 # ╔═╡ e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
 md" This problem is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. The notes presented here are almost an exact copy of the ones used by **Florian Oswald**. "
@@ -204,27 +204,29 @@ This value function specifies the maximium attainable sum of current and furure 
 
 $R_{t+1} = R_t - a_t = g(R_t, a_t)$
 
-which is known as the **transition function**. While $a_t$ is referred to as the control variable, $R_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function). In the case with uncertainty we will have to introduce Markov chains to describe the transition function. Fortunately our example is simle enough that we don't have to talk about that yet.  "
+which is known as the **transition function**. While $a_t$ is referred to as the control variable, $R_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function).  "
 
 
 
 # ╔═╡ db4c8010-a33f-4e78-bea4-b3168c5ce72b
 md" #### Bellman equation "
 
-# ╔═╡ 60a84858-5aa2-47d5-a5af-3821e7de313f
-md" The relationship between $V_{t}(R_{t})$ and $V_{t+1}(R_{t+1})$ is given by 
+# ╔═╡ 246e0451-111d-423c-a76f-eb4339b2d285
+md" Dynamic programming is an analytical approach in which a multiperiod model is decomposed into a sequence of two period models. The idea of dynamic programming is based on the Principle of Optimality,
+
+> An optimal policy has the property that, whatever the initial state and decision are, the remaining decisions must constitute an optimal policy with regard to the state resulting from the first decision.
+
+Bellman's Principle implies that the value function must satisfy Bellman's recursion equation. This relationship between $V_{t}(R_{t})$ and $V_{t+1}(R_{t+1})$ is given by 
 
 $$V_{t}\left(R_{t}\right)=\max _{0 \leq a_{t} \leq R_{t}}\left[C_{t}\left(a_{t}\right)+V_{t+1}\left(g\left(R_{t}, a_{t}\right)\right)\right]$$ 
 
-> The value of having $R_t$ resources left in period $t$ is the value of optimizing current spending (the $\max C_t(a_t)$ part) plus the value of then having $g(R_t,a_t)$ units left going forward
+The value of having $R_t$ resources left in period $t$ is the value of optimizing current spending (the $\max C_t(a_t)$ part) plus the value of then having $g(R_t,a_t)$ units left going forward
 
 This equation is commonly known as the _Bellman Equation_.
-Given $R_t$ we could just try out different $a_t$ and see which gives the highest value. But...what on earth is $V_{t+1}(\cdot)$? 🤔
-
-"
+Given $R_t$ we could just try out different $a_t$ and see which gives the highest value. But...what on earth is $V_{t+1}(\cdot)$? 🤔"
 
 # ╔═╡ 728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
-md" #### Finite time backward induction "
+md" #### Backward induction "
 
 # ╔═╡ 3f18f963-ad85-4c75-ab8c-64ac3cbf312c
 md" One way in which we could do this is by saying that time is finite and stops at $T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(R) = 0$. Therefore the last period is going to be
@@ -239,9 +241,45 @@ This is also easy to solve. We know the answer to $V_{T}\left(R_{T}\right)$ from
 
 $\max _{0 \leq a_{T-1} \leq R_{T-1}} C_{T-1}\left(a_{T-1}\right)$
 
-This iterative procedure will work all the way till we reach the first period. If the control variable is discrete we do not need assumptions of the payoff function (other than it is finite). Let us showcase the method with an example. In this case we have that $C_t(a_t) = \sqrt{a_t}$ and $V_{T+1}(R) = 0$. 
+This iterative procedure will work all the way till we reach the first period. If the control variable is discrete we do not need assumptions of the payoff function (other than it is finite).
 
 "
+
+# ╔═╡ fc6640d2-f2de-4d09-8787-39954cc835b4
+md" ### Backward induction example"
+
+# ╔═╡ a897d516-60e9-4b96-9f1f-f7dea164f392
+md" Below we provide an example to illustrate the idea of bakward induction. Imagine a case with two periods where we have that the per period utility function is given by $C_t(a_t) = \sqrt{a_t}$. 
+
+Optimal choice for the different periods are as follows, 
+
+Period $2$: $V_2(R_2) = \sqrt{R_2}$ because $a_2(R_2)=R_2$ where $R_2$ are the available resources in period $2$.
+
+Period $1$: $V_1(R_1) = \max_{a_1} \sqrt{R_1} + \beta V_2(R_1 - a_1)$"
+
+# ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
+md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. In this case, we have that we have a maximum of $4$ resources. "
+
+# ╔═╡ be62b6ff-a947-47ab-8905-6ac631abf8e6
+@bind max_R Slider(0:100, show_value = true, default = 5)
+
+# ╔═╡ d9a659a2-d0dd-45bb-bb5b-fb85f0208819
+grid_R2 = range(0, max_R, step=1) |> collect # Using a pipe operator (similar to one from R)
+
+# ╔═╡ 11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
+V2 = sqrt.(grid_R2)
+
+# ╔═╡ f2075369-02b7-4262-a543-91da85169e65
+plot(grid_R2, V2, xlab = "R", ylab = "Value",label = L"V_T", m = (:circle), leg = :bottomright, line = 1.5)
+
+# ╔═╡ 8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
+md" Say that we want to find the value of $R_2 = 2$. We have to reference the relevant index point for 2. The index in R2 is 3 since we have 1-based indexing in _Julia_. "
+
+# ╔═╡ 594c9efe-5deb-4de7-ac80-1c93953b5849
+@bind idx Slider(1:max_R+1,show_value = true, default = 1)
+
+# ╔═╡ 546e9f28-659f-4582-8d46-6aabd36f630d
+grid_R2[idx], V2[idx]
 
 # ╔═╡ fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # @bind highR Slider(2:200,show_value = true, default = 20)
@@ -398,6 +436,12 @@ end
 
 # ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
 bar(1:nperiods,a[:, end], leg = false, title = "Given R_t = $(Rspace[end]), take action...",xlab = "period")
+
+# ╔═╡ 796cd6f8-c61a-4a90-b7d3-e0680f59b513
+md" ### Infinite time cake eating problem [∞🍰 = 😍]"
+
+# ╔═╡ ceff4993-7237-4d4d-be1a-f30dc1dfeac2
+md" We will continue our example of the cake eating problem, but now extend it to infinite time. This means that will introduce value function, policy function and time iteration techniques. In the next session we will introduce uncertainty in finite time, once again with the cake-eating problem and then talk about infinite time problems with uncertainty. "
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1884,24 +1928,36 @@ version = "0.9.1+5"
 # ╟─398a316b-fc53-444a-aea7-169231c95f4b
 # ╟─b0ca2d8d-dfa9-4fed-b34d-90167e950153
 # ╟─db4c8010-a33f-4e78-bea4-b3168c5ce72b
-# ╟─60a84858-5aa2-47d5-a5af-3821e7de313f
+# ╟─246e0451-111d-423c-a76f-eb4339b2d285
 # ╟─728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
 # ╟─3f18f963-ad85-4c75-ab8c-64ac3cbf312c
+# ╟─fc6640d2-f2de-4d09-8787-39954cc835b4
+# ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
+# ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
+# ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
+# ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
+# ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
+# ╠═f2075369-02b7-4262-a543-91da85169e65
+# ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
+# ╠═594c9efe-5deb-4de7-ac80-1c93953b5849
+# ╠═546e9f28-659f-4582-8d46-6aabd36f630d
 # ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
-# ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
-# ╟─c5ea0324-8e8c-49d1-88f6-3abc4278aefa
-# ╟─4716e611-3342-4c3e-afc2-5afd8de2fc15
-# ╠═aa534428-e995-4885-bfeb-135ad92129a4
-# ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
+# ╟─7b63094f-ddde-4dff-911a-58d8fc7226a2
+# ╠═c5ea0324-8e8c-49d1-88f6-3abc4278aefa
+# ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
+# ╟─aa534428-e995-4885-bfeb-135ad92129a4
+# ╟─b40713e0-54db-4b49-8d35-a5b68f71ac89
 # ╟─7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
 # ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
 # ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
-# ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
-# ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
-# ╠═b22748fb-9acb-4105-9fbe-654daf34dbf4
+# ╟─d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
+# ╟─7529e1a7-c41c-49ec-8885-6c7c14093700
+# ╟─b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
-# ╠═b1e0e8e1-858f-4f12-a272-7197a117af25
-# ╠═23bdbe50-8544-4bb9-9e91-ba7397ca4db2
-# ╠═8ec82051-79b0-4cd7-8585-163ffde2b290
+# ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
+# ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
+# ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
+# ╟─796cd6f8-c61a-4a90-b7d3-e0680f59b513
+# ╟─ceff4993-7237-4d4d-be1a-f30dc1dfeac2
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

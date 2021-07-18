@@ -182,7 +182,7 @@ md" This problem is more closely related to economics. It is a consumption-savin
 md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. "
 
 # ╔═╡ e5ef57d1-e00b-4005-913a-7d6579c9c59c
-md" In this cake eating (🍰) problem you are given a certain budget of resources $R$ to spend (eat) over $t$ dates. In this example $R$ refers to the size of the cake. You take an action $a_t$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $C_t(a_t)$ be the reward / utility that results from the action that you take in period $t$.
+md" In this cake eating (🍰) problem you are given a certain budget of resources $K$ to spend (eat) over $t$ dates. In this example $K$ refers to the size of the cake. You take an action $c_t$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $U_t(c_t)$ be the reward / utility that results from the action that you take in period $t$.
 
 In this example the action is the consumption of cake, so this can be viewed as a consumption-savings problem. However, to keep things general we will refer to action instead of consumption. Now let us frame the problem more formally. "
 
@@ -192,19 +192,19 @@ md" #### Budgeting problem "
 # ╔═╡ b0ca2d8d-dfa9-4fed-b34d-90167e950153
 md" The goal is to maximise total utility subject to a resource constraint.
 
-$$\max _{a} \sum_{t \in \mathcal{T}} C_{t}\left(a_{t}\right) \quad \text{s.t.} \quad \sum_{t \in \mathcal{T}} a_{t} = R$$ 
+$$\max _{c} \sum_{t \in \mathcal{T}} U_{t}\left(c_{t}\right) \quad \text{s.t.} \quad \sum_{t \in \mathcal{T}} c_{t} = K$$ 
 
-For this example we will not allow borrowing, so $a_t \geq 0$. For this problem our control variable is the action $a_t$. We want to choose the best action in each period. To choose the best action available in each period we want a list of all the values for $a_t$ in each period given the resources available in that period. We seek a best policy that prescribes the action that should be taken at each state at each point in time to maximise rewards. We can represent the values with a function, called the **value function**.
+For this example we will not allow borrowing, so $c_t \geq 0$. For this problem our control variable is the action $c_t$. We want to choose the best action in each period. To choose the best action available in each period we want a list of all the values for $c_t$ in each period given the resources available in that period. We seek a best policy that prescribes the action that should be taken at each state at each point in time to maximise rewards. We can represent the values with a function, called the **value function**.
 
 This value function is a function of the resources available in that period. In more mathematical terms, 
 
-$V_{t}(R_{t}) = \text{value of having } R_{t} \text{ resources left to allocate to dates } t, t+1$
+$V_{t}(K_{t}) = \text{value of having } K_{t} \text{ resources left to allocate to dates } t, t+1$
 
 This value function specifies the maximium attainable sum of current and furure rewards given the state and time period. The value of resources evolve according to the following equation
 
-$R_{t+1} = R_t - a_t = g(R_t, a_t)$
+$K_{t+1} = K_t - c_t = g(K_t, c_t)$
 
-which is known as the **transition function**. While $a_t$ is referred to as the control variable, $R_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function).  "
+which is known as the **transition function**. While $a_t$ is referred to as the control variable, $K_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function).  "
 
 
 
@@ -216,73 +216,125 @@ md" Dynamic programming is an analytical approach in which a multiperiod model i
 
 > An optimal policy has the property that, whatever the initial state and decision are, the remaining decisions must constitute an optimal policy with regard to the state resulting from the first decision.
 
-Bellman's Principle implies that the value function must satisfy Bellman's recursion equation. This relationship between $V_{t}(R_{t})$ and $V_{t+1}(R_{t+1})$ is given by 
+Bellman's Principle implies that the value function must satisfy Bellman's recursion equation. This relationship between $V_{t}(K_{t})$ and $V_{t+1}(K_{t+1})$ is given by 
 
-$$V_{t}\left(R_{t}\right)=\max _{0 \leq a_{t} \leq R_{t}}\left[C_{t}\left(a_{t}\right)+V_{t+1}\left(g\left(R_{t}, a_{t}\right)\right)\right]$$ 
+$$V_{t}\left(K_{t}\right)=\max _{0 \leq c_{t} \leq K_{t}}\left[U_{t}\left(c_{t}\right)+V_{t+1}\left(g\left(K_{t}, c_{t}\right)\right)\right]$$ 
 
-The value of having $R_t$ resources left in period $t$ is the value of optimizing current spending (the $\max C_t(a_t)$ part) plus the value of then having $g(R_t,a_t)$ units left going forward
+The value of having $K_t$ resources left in period $t$ is the value of optimizing current spending (the $\max U_t(c_t)$ part) plus the value of then having $g(K_t, c_t)$ units left going forward
 
 This equation is commonly known as the _Bellman Equation_.
-Given $R_t$ we could just try out different $a_t$ and see which gives the highest value. But...what on earth is $V_{t+1}(\cdot)$? 🤔"
+Given $K_t$ we could just try out different $c_t$ and see which gives the highest value. But...what on earth is $V_{t+1}(\cdot)$? 🤔"
 
 # ╔═╡ 728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
 md" #### Backward induction "
 
 # ╔═╡ 3f18f963-ad85-4c75-ab8c-64ac3cbf312c
-md" One way in which we could do this is by saying that time is finite and stops at $T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(R) = 0$. Therefore the last period is going to be
+md" One way in which we could do this is by saying that time is finite and stops at $T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(K) = 0$. Therefore the last period is going to be
 
-$$V_{T}\left(R_{T}\right)=\max _{0 \leq a_{T-1} \leq R_{T}} C_{T}\left(a_{T}\right)$$
+$$V_{T}\left(K_{T}\right)=\max _{0 \leq c_{T-1} \leq K_{T}} U_{T}\left(c_{T}\right)$$
 
-To maximise this we simply choose the value for $a_T$ that provides the highest payoff. This period's maximisation problem is then quite easy to solve. Now consider the problem at $T-1$: 
+To maximise this we simply choose the value for $c_T$ that provides the highest payoff. This period's maximisation problem is then quite easy to solve. Now consider the problem at $T-1$: 
 
-$V_{T-1}\left(R_{T-1}\right)=\max _{0 \leq a_{T-1} \leq R_{T-1}}\left[C_{T-1}\left(a_{T-1}\right)+V_{T}\left(g\left(R_{T-1}, a_{T-1}\right)\right)\right]$
+$V_{T-1}\left(K_{T-1}\right)=\max _{0 \leq c_{T-1} \leq K_{T-1}}\left[U_{T-1}\left(c_{T-1}\right)+V_{T}\left(g\left(K_{T-1}, c_{T-1}\right)\right)\right]$
 
-This is also easy to solve. We know the answer to $V_{T}\left(R_{T}\right)$ from the previous iteration. This means that we know the future. For period $T-1$ we are now left with solving the final piece of the puzzle, namely 
+This is also easy to solve. We know the answer to $V_{T}\left(K_{T}\right)$ from the previous iteration. This means that we know the future. For period $T-1$ we are now left with solving the final piece of the puzzle, namely 
 
-$\max _{0 \leq a_{T-1} \leq R_{T-1}} C_{T-1}\left(a_{T-1}\right)$
+$\max _{0 \leq c_{T-1} \leq K_{T-1}} U_{T-1}\left(c_{T-1}\right)$
 
 This iterative procedure will work all the way till we reach the first period. If the control variable is discrete we do not need assumptions of the payoff function (other than it is finite).
 
 "
 
 # ╔═╡ fc6640d2-f2de-4d09-8787-39954cc835b4
-md" ### Backward induction example"
+md" ### Backward induction example ($T = 2$)"
 
 # ╔═╡ a897d516-60e9-4b96-9f1f-f7dea164f392
-md" Below we provide an example to illustrate the idea of bakward induction. Imagine a case with two periods where we have that the per period utility function is given by $C_t(a_t) = \sqrt{a_t}$. 
+md" Below we provide an example to illustrate the idea of bakward induction. Imagine a case with two periods where we have that the per period utility function is given by $U_t(c_t) = \sqrt{c_t}$. 
 
 Optimal choice for the different periods are as follows, 
 
-Period $2$: $V_2(R_2) = \sqrt{R_2}$ because $a_2(R_2)=R_2$ where $R_2$ are the available resources in period $2$.
+Period $2$: $V_2(K_2) = \sqrt{K_2}$ because $c_2(K_2)=K_2$ where $K_2$ are the available resources in period $2$.
 
-Period $1$: $V_1(R_1) = \max_{a_1} \sqrt{R_1} + \beta V_2(R_1 - a_1)$"
+Period $1$: $V_1(K_1) = \max_{c_1} \sqrt{K_1} + \beta V_2(K_1 - c_1)$"
 
 # ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. In this case, we have that we have a maximum of $4$ resources. "
 
 # ╔═╡ be62b6ff-a947-47ab-8905-6ac631abf8e6
-@bind max_R Slider(0:100, show_value = true, default = 5)
+@bind max_K Slider(0:100, show_value = true, default = 5)
 
 # ╔═╡ d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-grid_R2 = range(0, max_R, step=1) |> collect # Using a pipe operator (similar to one from R)
+grid_K2 = range(0, max_K, step=1) |> collect # Using a pipe operator (similar to one from R)
 
 # ╔═╡ 11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
-V2 = sqrt.(grid_R2)
+V2 = sqrt.(grid_K2)
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
-plot(grid_R2, V2, xlab = "R", ylab = "Value",label = L"V_T", m = (:circle), leg = :bottomright, line = 1.5)
+plot(grid_K2, V2, xlab = "Resources (Cake size)", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
 
 # ╔═╡ 8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
-md" Say that we want to find the value of $R_2 = 2$. We have to reference the relevant index point for 2. The index in R2 is 3 since we have 1-based indexing in _Julia_. "
+md" Say that we want to find the value of $K_2 = 2$. We have to reference the relevant index point for 2. The index in $K_2$ is 3 since we have 1-based indexing in _Julia_. Next we find the optimal consumption in period $1$ given a level of $K_1$."
 
-# ╔═╡ 594c9efe-5deb-4de7-ac80-1c93953b5849
-@bind idx Slider(1:max_R+1,show_value = true, default = 1)
+# ╔═╡ ed53fb3c-9fe6-47d5-b465-3af3369f9177
+@bind K1 Slider(0:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1.  
 
-# ╔═╡ 546e9f28-659f-4582-8d46-6aabd36f630d
-grid_R2[idx], V2[idx]
+# ╔═╡ d609467a-6898-430f-9fc7-70cecf9cb3d0
+C1 = 0 # Is this value optimal? Should not be, in fact it would be our least likely event. 
+
+# ╔═╡ be24ede3-87c7-402c-adbc-2f003e5099a0
+β = 0.99
+
+# ╔═╡ 8e14ac14-af81-4bd6-bdac-f850bb9020e9
+V1_guess = fill(NaN, K1 + 1) # Initialise with NaN. What is the difference between missing and NaN?
+
+# ╔═╡ 9300d7d9-9563-4f85-b835-54a8db884317
+K2 = K1 - C1 # How much cake is left in the second period after we made our decision in the first period. 
+
+# ╔═╡ 53bdea85-8d59-4669-85ca-04119131064a
+begin
+	V1_guess[1] = sqrt.(C1) .+ β .* V2[K2 + 1] # Fill the first value of our value function with the Bellman equation
+	V1_guess
+end
+
+# ╔═╡ b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
+function backward_induction1(K1, C1, max_K, grid_K2 = range(0, max_K, step=1) |> collect,
+		V2 = sqrt.(grid_K2); β = 0.99)
+	
+	# Function not written to be elegant, mostly for exposition and to be self-contained. 
+	
+	V1_guess = fill(NaN, K1 + 1)
+	
+	for i_guess in 0:K1 # Running this loop over the state space
+		C1 = i_guess # Start with a guess of zero consumption and then moving on to higher levels. 
+		K2 = K1 - C1 # Cake left after consumption in the first period gets consumed in second period. 
+		V1_guess[i_guess + 1] = sqrt.(C1) .+ β .* V2[K2 + 1]  # Value associated with cake consumed across both periods (taking control variables C1 and K2 into account)
+	end
+	
+	idx_max = argmax(V1_guess) # Pick out the position of the argument that maximises the value function
+	# Note, max function provides the actual value, while argmax gives index value. 
+	V1, C1 = round(V1_guess[idx_max], digits = 3), idx_max
+	md" The optimal consumption is $C_1 \rightarrow$ $C1 with associated value of $V1"
+	plot(V1_guess, xlab = "Consumption (Optimal at $C1)", ylab = "Value (Optimal at $V1)", label = L"V_1", line = 2
+	)
+end
+
+# ╔═╡ 437462d4-2dd1-4ef9-aa7d-b0cb64bef455
+md" Below we provide a graph of the different values associated with consumption for different levels of cake in period 1. "
+
+# ╔═╡ 18b69513-700f-4300-b578-4742112a23ca
+@bind K1_new Slider(0:100, show_value = true, default = 3)
+
+# ╔═╡ 9705b46b-b513-436e-b389-eec70305e5e5
+backward_induction1(K1_new, 0, 100) # provides the optimal consumption and value associated with it. 
 
 # ╔═╡ fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # @bind highR Slider(2:200,show_value = true, default = 20)
+
+# ╔═╡ c8533761-ae1d-47a2-9860-ad88ecca2d34
+md" ### Backward induction example ($T > 2$)"
+
+# ╔═╡ 547def39-8a65-48bc-bb30-d28d016cd6fa
+md" Let us consider the same example but with an arbitrary number of periods (even approaching infinity if we wish). We will start with 500 time periods. The solution remains largely the same."
 
 # ╔═╡ 7b63094f-ddde-4dff-911a-58d8fc7226a2
 begin
@@ -290,18 +342,18 @@ begin
 	points = 500; # The number of points on the grid 
 	
 	# Lower and upper limits of the state space. In this case this represents the size of the cake. 	
-	lowR = 1e-6;
-	highR = 30.0 # slider below
+	lowK = 1e-6;
+	highK = 30.0 # slider below
 	
 	# Log and then exponentiate for more points towards zero, which makes a nicer plot
-	Rspace = exp.(range(log(lowR), stop = log(highR), length = points)); # The state space
-	aT = Rspace; # Consume whatever is left -- Consume all resources in this case, since it is all left.
-	VT = sqrt.(aT);  # Utility of that consumption
+	Kspace = exp.(range(log(lowK), stop = log(highK), length = points)); # The state space
+	cT = Kspace; # Consume whatever is left -- Consume all resources in this case, since it is all left.
+	VT = sqrt.(cT);  # Utility of that consumption
 end
 
 # ╔═╡ c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 function plotVT()
-	plot(Rspace, VT, xlab = "R", ylab = "Value",label = L"V_T", m = (:circle), leg = :bottomright)
+	plot(Kspace, VT, xlab = "K", ylab = "Value",label = L"V_T", m = (:circle), leg = :bottomright)
 end
 
 # ╔═╡ 4716e611-3342-4c3e-afc2-5afd8de2fc15
@@ -1937,12 +1989,22 @@ version = "0.9.1+5"
 # ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
 # ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
 # ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
-# ╠═f2075369-02b7-4262-a543-91da85169e65
+# ╟─f2075369-02b7-4262-a543-91da85169e65
 # ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
-# ╠═594c9efe-5deb-4de7-ac80-1c93953b5849
-# ╠═546e9f28-659f-4582-8d46-6aabd36f630d
+# ╠═ed53fb3c-9fe6-47d5-b465-3af3369f9177
+# ╠═d609467a-6898-430f-9fc7-70cecf9cb3d0
+# ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
+# ╠═8e14ac14-af81-4bd6-bdac-f850bb9020e9
+# ╠═9300d7d9-9563-4f85-b835-54a8db884317
+# ╠═53bdea85-8d59-4669-85ca-04119131064a
+# ╠═b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
+# ╟─437462d4-2dd1-4ef9-aa7d-b0cb64bef455
+# ╟─18b69513-700f-4300-b578-4742112a23ca
+# ╟─9705b46b-b513-436e-b389-eec70305e5e5
 # ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
-# ╟─7b63094f-ddde-4dff-911a-58d8fc7226a2
+# ╟─c8533761-ae1d-47a2-9860-ad88ecca2d34
+# ╟─547def39-8a65-48bc-bb30-d28d016cd6fa
+# ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
 # ╠═c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 # ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
 # ╟─aa534428-e995-4885-bfeb-135ad92129a4

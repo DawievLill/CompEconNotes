@@ -264,10 +264,13 @@ md" Let us look at things from a numerical perspective. First, we construct a gr
 @bind max_K Slider(0:100, show_value = true, default = 5)
 
 # ╔═╡ d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-grid_K2 = range(0, max_K, step=1) |> collect # Using a pipe operator (similar to one from R)
+grid_K2 = range(0, stop = max_K, step=1) |> collect # Using a pipe operator (similar to one from R)
+
+# ╔═╡ a25b4e49-46c0-4c7d-b80e-e108614ec288
+C2 = grid_K2 # Consume all available resources
 
 # ╔═╡ 11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
-V2 = sqrt.(grid_K2)
+V2 = sqrt.(C2)
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
 plot(grid_K2, V2, xlab = "Resources (Cake size)", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
@@ -276,7 +279,7 @@ plot(grid_K2, V2, xlab = "Resources (Cake size)", ylab = "Value",label = L"V_2",
 md" Say that we want to find the value of $K_2 = 2$. We have to reference the relevant index point for 2. The index in $K_2$ is 3 since we have 1-based indexing in _Julia_. Next we find the optimal consumption in period $1$ given a level of $K_1$."
 
 # ╔═╡ ed53fb3c-9fe6-47d5-b465-3af3369f9177
-@bind K1 Slider(0:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1.  
+@bind K1 Slider(1:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1.  
 
 # ╔═╡ d609467a-6898-430f-9fc7-70cecf9cb3d0
 C1 = 0 # Is this value optimal? Should not be, in fact it would be our least likely event. 
@@ -313,19 +316,22 @@ function backward_induction1(K1, C1, max_K, grid_K2 = range(0, max_K, step=1) |>
 	idx_max = argmax(V1_guess) # Pick out the position of the argument that maximises the value function
 	# Note, max function provides the actual value, while argmax gives index value. 
 	V1, C1 = round(V1_guess[idx_max], digits = 3), idx_max
-	md" The optimal consumption is $C_1 \rightarrow$ $C1 with associated value of $V1"
-	plot(V1_guess, xlab = "Consumption (Optimal at $C1)", ylab = "Value (Optimal at $V1)", label = L"V_1", line = 2
-	)
+	#md" The optimal consumption is $C_1 \rightarrow$ $C1 with associated value of $V1"
+	#plot(V1_guess, xlab = "Consumption (Optimal at $C1)", ylab = "Value (Optimal at $V1)", label = L"V_1", line = 2)
 end
 
 # ╔═╡ 437462d4-2dd1-4ef9-aa7d-b0cb64bef455
 md" Below we provide a graph of the different values associated with consumption for different levels of cake in period 1. "
 
 # ╔═╡ 18b69513-700f-4300-b578-4742112a23ca
-@bind K1_new Slider(0:100, show_value = true, default = 3)
+@bind K1_new Slider(0:max_K, show_value = true, default = 3)
 
-# ╔═╡ 9705b46b-b513-436e-b389-eec70305e5e5
-backward_induction1(K1_new, 0, 100) # provides the optimal consumption and value associated with it. 
+# ╔═╡ 53c21b1b-088f-4604-9246-fc6796c3e256
+begin
+	v_collect = [backward_induction1(i, 0, max_K)[1] for i in 0:K1_new] 
+	plot(v_collect, xlab = L"K_1", ylab = "Value",label = L"V_1", m = (:circle), leg = :bottomright, line = 2)
+	
+end
 
 # ╔═╡ fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # @bind highR Slider(2:200,show_value = true, default = 20)
@@ -342,13 +348,13 @@ begin
 	points = 500; # The number of points on the grid 
 	
 	# Lower and upper limits of the state space. In this case this represents the size of the cake. 	
-	lowK = 1e-6;
-	highK = 30.0 # slider below
+	lowK = 1e-6; # Lowest possible of value of K
+	highK = 30.0 # Highest value that K can take, given that consumption is zero. 
 	
 	# Log and then exponentiate for more points towards zero, which makes a nicer plot
 	Kspace = exp.(range(log(lowK), stop = log(highK), length = points)); # The state space
-	cT = Kspace; # Consume whatever is left -- Consume all resources in this case, since it is all left.
-	VT = sqrt.(cT);  # Utility of that consumption
+	CT = Kspace; # Consume whatever is left -- Consume all resources in this case, since it is all left.
+	VT = sqrt.(CT);  # Utility of that consumption -- This is known for VT, since there is no VT + 1
 end
 
 # ╔═╡ c5ea0324-8e8c-49d1-88f6-3abc4278aefa
@@ -360,31 +366,33 @@ end
 plotVT()
 
 # ╔═╡ aa534428-e995-4885-bfeb-135ad92129a4
-md" As we stated in our discussion, we now have an answer for "
+md" As we stated in our discussion, now look to an answer for $V_{T-1}$, given that we have the function $V_{T}$."
 
 # ╔═╡ b40713e0-54db-4b49-8d35-a5b68f71ac89
 begin
-	# period T-1 
-	# now for each value in Rspace, we need to decide how much to consume
-	w = zeros(points) # temporary vector for each choice of R 
-	VT_1 = zeros(points) # optimal value in T-1 at each state of R 
-	ix = 0 # optimal index of action in T-1 at each state of R
-	aT_1 = zeros(points) # optimal action in T-1 at each state of R
+	# solving problem for period T-1 
+	# now for each value in Kspace, we need to decide how much to consume
+	
+	# Initialise some vectors 
+	w = zeros(points) # temporary vector for each choice of K -- could also use NaN as before. 
+	VT_1 = zeros(points) # optimal value in T-1 at each state of K 
+	ix = 0 # optimal index of action in T-1 at each state of K
+	CT_1 = zeros(points) # optimal action in T-1 at each state of K
 
-	for (ir, r) in enumerate(Rspace) # for all possible R-values
-        # loop over all possible action choices
-        for (ia, achoice) in enumerate(Rspace)
-            if r <= achoice   # check whether that choice is feasible
-                w[ia] = -Inf
+	for (ik, k) in enumerate(Kspace) # for all possible K-values (enumerate loops over entire state space and also creates an index ik)
+        # in our inner loop we want to loop over all possible action choices
+        for (ic, c_choice) in enumerate(Kspace)
+            if k <= c_choice   # check whether that choice is feasible 
+                w[ik] = -Inf   # If the choice is feasible, then assign this value to first element
             else
-				r1 = r - achoice  # tomorrow's R
-				jr = argmin(abs.(Rspace .- r1))  # index of that value in Rspace
-                w[ia] = sqrt(achoice) + VT[jr]   # value of that achoice
+				k1 = k - c_choice  # tomorrow's K
+				jk = argmin(abs.(Kspace .- k1))  # index of that value in Kspace
+                w[ic] = sqrt(c_choice) + VT[jk]   # value of that c_choice
             end
         end
         # find best action
-        VT_1[ir], ix = findmax(w) # stores Value und policy (index of optimal choice)
-		aT_1[ir] = Rspace[ix]  # record optimal action level
+        VT_1[ik], ix = findmax(w) # stores Value and policy (index of optimal choice)
+		CT_1[ik] = Kspace[ix]  # record optimal action level
 		
     end
 end
@@ -392,16 +400,16 @@ end
 # ╔═╡ 7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
 let
 	pv = plotVT()
-	plot!(pv, Rspace, VT_1, label = L"V_{T-1}", m = (:star))
+	plot!(pv, Kspace, VT_1, label = L"V_{T-1}", m = (:star))
 end
 
 # ╔═╡ b71abd7b-191f-4044-91a9-d0f4e4883f88
-plotaT() = plot(Rspace, aT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "R")
+plotaT() = plot(Kspace, CT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "K")
 
 # ╔═╡ 6f2eac77-4ad3-4da7-95a7-c958ccf270cd
 let
 	pa = plotaT()
-	plot!(pa, Rspace, aT_1, label = L"a_{T-1}")
+	plot!(pa, Kspace, CT_1, label = L"a_{T-1}")
 end
 
 # ╔═╡ d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
@@ -458,15 +466,15 @@ end
 @bind nperiods Slider(2:20,show_value = true, default = 5)
 
 # ╔═╡ 86f2d8ca-ea32-4558-8133-bce4789ad105
-V,a = backwards(Rspace, nperiods);
+V,C = backwards(Kspace, nperiods);
 
 # ╔═╡ b1e0e8e1-858f-4f12-a272-7197a117af25
 let
 	cg = cgrad(:viridis)
     cols = cg[range(0.0,stop=1.0,length = nperiods)]
-	pv = plot(Rspace, V[1,:], xlab = "R", ylab = "Value",label = L"V_1",leg = :bottomright, color = cols[1])
+	pv = plot(Kspace, V[1,:], xlab = "K", ylab = "Value",label = L"V_1",leg = :bottomright, color = cols[1])
 	for it in 2:nperiods
-		plot!(pv, Rspace, V[it,:], label = L"V_{%$(it)}", color = cols[it])
+		plot!(pv, Kspace, V[it,:], label = L"V_{%$(it)}", color = cols[it])
 	end
 	pv
 end
@@ -475,19 +483,19 @@ end
 let
 	cg = cgrad(:viridis)
     cols = cg[range(0.0,stop=1.0,length = nperiods)]
-	pa = plot(Rspace, a[1,:], xlab = "R", ylab = "Action",label = L"a_1",leg = :topleft, color = cols[1])
+	pa = plot(Kspace, C[1,:], xlab = "K", ylab = "Action",label = L"c_1",leg = :topleft, color = cols[1])
 	for it in 2:nperiods
-		plot!(pa, Rspace, a[it,:], label = L"a_{%$(it)}", color = cols[it])
+		plot!(pa, Kspace, C[it,:], label = L"c_{%$(it)}", color = cols[it])
 	end
-	pv = plot(Rspace, V[1,:], xlab = "R", ylab = "Value",label = L"V_1",leg = :bottomright, color = cols[1])
+	pv = plot(Kspace, V[1,:], xlab = "K", ylab = "Value",label = L"V_1",leg = :bottomright, color = cols[1])
 	for it in 2:nperiods
-		plot!(pv, Rspace, V[it,:], label = L"V_{%$(it)}", color = cols[it])
+		plot!(pv, Kspace, V[it,:], label = L"V_{%$(it)}", color = cols[it])
 	end
 	plot(pv,pa, layout = (1,2))
 end
 
 # ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
-bar(1:nperiods,a[:, end], leg = false, title = "Given R_t = $(Rspace[end]), take action...",xlab = "period")
+bar(1:nperiods,C[:, end], leg = false, title = "Given K_t = $(Kspace[end]), take action...",xlab = "period")
 
 # ╔═╡ 796cd6f8-c61a-4a90-b7d3-e0680f59b513
 md" ### Infinite time cake eating problem [∞🍰 = 😍]"
@@ -1988,6 +1996,7 @@ version = "0.9.1+5"
 # ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 # ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
 # ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
+# ╠═a25b4e49-46c0-4c7d-b80e-e108614ec288
 # ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
 # ╟─f2075369-02b7-4262-a543-91da85169e65
 # ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
@@ -2000,7 +2009,7 @@ version = "0.9.1+5"
 # ╠═b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 # ╟─437462d4-2dd1-4ef9-aa7d-b0cb64bef455
 # ╟─18b69513-700f-4300-b578-4742112a23ca
-# ╟─9705b46b-b513-436e-b389-eec70305e5e5
+# ╟─53c21b1b-088f-4604-9246-fc6796c3e256
 # ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # ╟─c8533761-ae1d-47a2-9860-ad88ecca2d34
 # ╟─547def39-8a65-48bc-bb30-d28d016cd6fa
@@ -2008,17 +2017,17 @@ version = "0.9.1+5"
 # ╠═c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 # ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
 # ╟─aa534428-e995-4885-bfeb-135ad92129a4
-# ╟─b40713e0-54db-4b49-8d35-a5b68f71ac89
-# ╟─7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
-# ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
+# ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
+# ╠═7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
+# ╠═b71abd7b-191f-4044-91a9-d0f4e4883f88
 # ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
-# ╟─d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
-# ╟─7529e1a7-c41c-49ec-8885-6c7c14093700
+# ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
+# ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
 # ╟─b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
 # ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
-# ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
+# ╠═8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─796cd6f8-c61a-4a90-b7d3-e0680f59b513
 # ╟─ceff4993-7237-4d4d-be1a-f30dc1dfeac2
 # ╟─00000000-0000-0000-0000-000000000001

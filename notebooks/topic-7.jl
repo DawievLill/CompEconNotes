@@ -182,7 +182,7 @@ md" This problem is more closely related to economics. It is a consumption-savin
 md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. "
 
 # ╔═╡ e5ef57d1-e00b-4005-913a-7d6579c9c59c
-md" In this cake eating (🍰) problem you are given a certain budget of resources $K$ to spend (eat) over $t$ dates. In this example $K$ refers to the size of the cake. You take an action $c_t$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $U_t(c_t)$ be the reward / utility that results from the action that you take in period $t$.
+md" In this cake eating (🍰) problem you are given a certain budget of resources $K$ to spend (eat) over $t$ dates. In this example $K$ refers to the size of the cake. You take an action $c_t \in \mathbb{N}$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $U_t(c_t)$ be the reward / utility that results from the action that you take in period $t$.
 
 In this example the action is the consumption of cake, so this can be viewed as a consumption-savings problem. However, to keep things general we will refer to action instead of consumption. Now let us frame the problem more formally. "
 
@@ -198,13 +198,13 @@ For this example we will not allow borrowing, so $c_t \geq 0$. For this problem 
 
 This value function is a function of the resources available in that period. In more mathematical terms, 
 
-$V_{t}(K_{t}) = \text{value of having } K_{t} \text{ resources left to allocate to dates } t, t+1$
+$V_{t}^{\star}(K_{t}) = \max _{c_{1}, c_{2}, \ldots, c_{T}}\left\{U_{t}(c_{1})+\beta U_{t}(c_{2})+\beta^{2} U_{t}(c_{3})+\cdots+\beta^{T} U_{t}(c_{T})\right\}$
 
 This value function specifies the maximium attainable sum of current and furure rewards given the state and time period. The value of resources evolve according to the following equation
 
 $K_{t+1} = K_t - c_t = g(K_t, c_t)$
 
-which is known as the **transition function**. While $a_t$ is referred to as the control variable, $K_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function).  "
+which is known as the **transition function**. While $c_t$ is referred to as the control variable, $K_t$ represents the state variable. The state and action spaces are considered finite in this example. Since our problem is deterministic in nature, the next period's state is known with certainty once the current period's state and action are known (which is reflected in the transition function).  "
 
 
 
@@ -300,7 +300,7 @@ begin
 end
 
 # ╔═╡ b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
-function backward_induction1(K1, C1, max_K, grid_K2 = range(0, max_K, step=1) |> collect,
+function backward_induction1(K1, max_K, grid_K2 = range(0, max_K, step=1) |> collect,
 		V2 = sqrt.(grid_K2); β = 0.99)
 	
 	# Function not written to be elegant, mostly for exposition and to be self-contained. 
@@ -328,7 +328,7 @@ md" Below we provide a graph of the different values associated with consumption
 
 # ╔═╡ 53c21b1b-088f-4604-9246-fc6796c3e256
 begin
-	v_collect = [backward_induction1(i, 0, max_K)[1] for i in 0:K1_new] 
+	v_collect = [backward_induction1(i, max_K)[1] for i in 0:K1_new] 
 	plot(v_collect, xlab = L"K_1", ylab = "Value",label = L"V_1", m = (:circle), leg = :bottomright, line = 2)
 	
 end

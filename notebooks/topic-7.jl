@@ -38,7 +38,7 @@ html"""
 md" # Dynamic programming I"
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
-md" Method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
+md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
 
 In this session we cover some basic discrete deterministic dynamic programming problems. We will first look at models with a finite time horizon and then move on to models with an inifinite time horizon. The techniques we will utilise include backward induction, value function iteration and policy function iteration. "
 
@@ -404,12 +404,12 @@ let
 end
 
 # ╔═╡ b71abd7b-191f-4044-91a9-d0f4e4883f88
-plotaT() = plot(Kspace, CT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "K")
+plotaT() = plot(Kspace, CT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "K", line = 2)
 
 # ╔═╡ 6f2eac77-4ad3-4da7-95a7-c958ccf270cd
 let
 	pa = plotaT()
-	plot!(pa, Kspace, CT_1, label = L"a_{T-1}")
+	plot!(pa, Kspace, CT_1, label = L"a_{T-1}", line = 2)
 end
 
 # ╔═╡ d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
@@ -503,6 +503,82 @@ md" ### Infinite time cake eating problem [∞🍰 = 😍]"
 # ╔═╡ ceff4993-7237-4d4d-be1a-f30dc1dfeac2
 md" We will continue our example of the cake eating problem, but now extend it to infinite time. This means that will introduce value function, policy function and time iteration techniques. In the next session we will introduce uncertainty in finite time, once again with the cake-eating problem and then talk about infinite time problems with uncertainty. "
 
+# ╔═╡ 2bc47bdd-d6b2-4ff0-96e2-6f8c84dfcf58
+md" #### Value function iteration "
+
+# ╔═╡ 5a0b4906-d0a4-4f7e-868d-863d5e236f58
+md" The following notes are basically an abbreviated version of the notes from [QuantEcon](https://python.quantecon.org/cake_eating_numerical.html), The Bellman equation for the infinite time cake eating problem is given by, 
+
+$$V(K) = \max_{0\leq c \leq K} \{u(c) + \beta V(K-c)\} \quad \text{for all } K \geq 0$$
+
+where the utility function is a CRRA utility function. Notice the removal of time subscritps when compared to the finite time case. Anlaytical solutions for the optimal policy and value function are given by the following code. We want to find these analytical solutions with numerical methods.  "
+
+# ╔═╡ d26d70f6-768d-4611-ae77-9d5f678a8560
+begin
+	c_star(x, β, γ) = (1 - β ^ (1/γ)) * x
+	v_star(x, β, γ) = (1 - β ^ (1 / γ)) ^ (-γ) * (x ^ (1-γ) / (1-γ))
+end
+
+# ╔═╡ 9365cbdb-092a-47b2-9517-5387609775bd
+md" Value function approximation basically entails the following steps:
+
+1. Take initial guess of the value function $V$
+2. Obtain an update $W$, which is defined by 
+
+$$W(K) = \max_{0\leq c \leq K} \{u(c) + \beta V(K - c)\}$$
+3. Stop if $W$ is approximately equal to $V$, otherwise set $V = W$ and go back to step $2$.
+
+While these steps explain the general idea quite well, it is not practical as an algorithm to solve our problem. Let us expand more on these steps to provide us with an algorithm that we can take to the computer. The basic outline of the VFI algorithm that we need to follow is the following. 
+
+1. Set the appropriate parameter values for the model
+2. Define a grid of admissable values for the state variable $K$
+3. Provide initial guess for the value funtion $V$ and choose stopping criterion $\varepsilon > 0$
+4. Start the iteration, for each $K_i$, $i = 1, \ldots, N$ compute
+
+$$W(K_i) = \max_{0\leq c \leq K_{i}} \{u(c) + \beta V(K_{i} - c)\}$$
+
+5. Stop if $d(W, V) < \varepsilon$, otherwise set $V = W$ and go back to step $4$
+6. Plot value and policy functions
+7. Compare with analytical solutions (provided above) "
+
+
+# ╔═╡ 60912ad4-c766-4b70-b843-baed710e29ce
+begin
+	# Step 1: Set up the appropriate parameter values for the model
+	β₂ 				= 0.96 		# Discount factor
+	γ₂ 				= 1.5 		# Degree of relative risk aversion
+end
+
+# ╔═╡ adc503f5-6f65-4f6a-ba10-965f78f52e9e
+begin
+	# Step 2: Define a grid of values for the state variable 
+	K_grid_min 		= 1e-3 		# Don't include zero here. Numerically more stable 
+	K_grid_max 		= 2.5 		# Size of the cake
+	K_grid_size 	= 120 		# Size of the grid
+	
+	# Set up the grid
+	K_grid          = range(K_grid_min, K_grid_max, length = K_grid_size)
+end
+
+# ╔═╡ cd71f975-5058-46a4-80d8-0d410f19cbf1
+begin 
+	# Step 3: Initial guess for the value function and stopping criterion
+	n₂ = K_grid_size  			# Number of grid points
+	v₀ = zeros(n₂, 1) 			# Initial guess is an array of zeros that have the same dimension as number of grid points.  
+	
+	# Tolerance level for stopping criterion
+	ε = 1e-7
+end
+
+# ╔═╡ b42a3a5f-03d3-44ff-902a-4c868d68baf2
+
+
+# ╔═╡ 33371855-af4f-4be7-b6ad-39a38fdb12c9
+md" #### Fitted value function iteration "
+
+# ╔═╡ 2fba5422-a46d-4606-8c21-c0df54f3544b
+md" This method is the same as the value function iteration from before, but uses interpolation techniques. "
+
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
 
@@ -544,22 +620,6 @@ where $K_0$ is given. The numerical approximation that we are going to implement
 
 $$V(K_i) = \max_{i'=1,2,\dots,n} u(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
 
-# ╔═╡ 669ec723-330a-4e01-a945-39b5718a514b
-md" As we will soon see, here is the basic outline of the VFI algorithm that we need to follow. 
-
-1. Set the appropriate parameter values 
-2. Define a grid for the state variable $K \in [0, 2]$
-3. Initialise the value funtion $V$ (initial guess)
-4. Start the iteration, repeatedly calculate new version of $V$
-5. Stop of $d(V^{r}, V^{r-1}) < \text{tol}$
-6. Plot value and policy functions
-7. Compare with analytical solutions 
-
-Let us get started! "
-
-
-
-
 # ╔═╡ 3a1eff09-d8f2-4ac7-ab21-0ba0f8157d82
 begin
 	# This is the first step. Let us define our parameters that we are going to use for this problem.  
@@ -572,25 +632,6 @@ begin
 	kgrid     	= 1e-2:(grid_max-1e-2)/(n-1):grid_max  # equispaced grid that starts at zero and ends at 2.
 	f(x) 		= x^α  # defines the production function f(k). Different from the cake eating problem
 	tol 		= 1e-9 # Tolerance
-end
-
-# ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
-# Below is an example of what a docstring looks like for a function. 
-
-"""
-# Bellman Operator
-
-# Inputs
-`grid`: grid of values of state variable
-
-`v0`: current guess of value function
-
-# Output
-`v1`: next guess of value function
-
-`pol`: corresponding policy function 
-"""
-function bellman_operator(grid, v0)
 end
 
 # ╔═╡ e6b624ea-537a-4315-a331-f949776544db
@@ -611,6 +652,51 @@ begin
 	k_star(k) = ab * k.^α₁   
 	c_star(k) = (1-ab) * k.^α₁  
 	ufun(x) = log.(x)
+end
+
+# ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
+# Below is an example of what a docstring looks like for a function. 
+
+"""
+# Bellman Operator
+
+# Inputs
+`grid`: grid of values of state variable
+
+`v0`: current guess of value function
+
+`n` : number of grid points (default at `n₁` = 150 for now)
+
+# Output
+`v1`: next guess of value function
+
+`pol`: corresponding policy function 
+"""
+function bellman_operator(grid, v0, n = n₁)
+	
+	# Initialise the different vectors
+	v1  = zeros(n)     # next guess
+    pol = zeros(Int,n)     # policy function
+    w   = zeros(n)   # temporary vector 
+
+	# we need to loop over the states (outer loop) and choices (inner loop)
+    # loop over current states
+    # current capital
+    for (i,k) in enumerate(grid)
+
+        # loop over all possible kprime choices
+        for (iprime, kprime) in enumerate(grid)
+            if f(k) - kprime < 0   #check for negative consumption
+                w[iprime] = -Inf
+            else
+                w[iprime] = ufun(f(k) - kprime) + beta * v0[iprime]
+            end
+        end
+        # find maximal choice
+        v1[i], pol[i] = findmax(w)     # stores value und policy (index of optimal choice) 
+    end
+    return (v1, pol)   # return both value and policy function
+	
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2129,7 +2215,7 @@ version = "0.9.1+5"
 # ╟─aa534428-e995-4885-bfeb-135ad92129a4
 # ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
 # ╠═7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
-# ╠═b71abd7b-191f-4044-91a9-d0f4e4883f88
+# ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
 # ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
 # ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
 # ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
@@ -2140,6 +2226,16 @@ version = "0.9.1+5"
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─796cd6f8-c61a-4a90-b7d3-e0680f59b513
 # ╟─ceff4993-7237-4d4d-be1a-f30dc1dfeac2
+# ╟─2bc47bdd-d6b2-4ff0-96e2-6f8c84dfcf58
+# ╟─5a0b4906-d0a4-4f7e-868d-863d5e236f58
+# ╠═d26d70f6-768d-4611-ae77-9d5f678a8560
+# ╟─9365cbdb-092a-47b2-9517-5387609775bd
+# ╠═60912ad4-c766-4b70-b843-baed710e29ce
+# ╠═adc503f5-6f65-4f6a-ba10-965f78f52e9e
+# ╠═cd71f975-5058-46a4-80d8-0d410f19cbf1
+# ╠═b42a3a5f-03d3-44ff-902a-4c868d68baf2
+# ╟─33371855-af4f-4be7-b6ad-39a38fdb12c9
+# ╟─2fba5422-a46d-4606-8c21-c0df54f3544b
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
@@ -2147,8 +2243,7 @@ version = "0.9.1+5"
 # ╟─e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
 # ╟─caa19eec-f786-4515-87d7-69914c01f308
 # ╟─8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
-# ╟─744e54e1-08ef-40fe-b398-d36cab7de232
-# ╟─669ec723-330a-4e01-a945-39b5718a514b
+# ╠═744e54e1-08ef-40fe-b398-d36cab7de232
 # ╠═3a1eff09-d8f2-4ac7-ab21-0ba0f8157d82
 # ╠═828e7015-3b57-44fb-8cc4-0a7727245981
 # ╠═e6b624ea-537a-4315-a331-f949776544db

@@ -282,7 +282,7 @@ md" Say that we want to find the value of $K_2 = 2$. We have to reference the re
 @bind K1 Slider(1:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1.  
 
 # ╔═╡ d609467a-6898-430f-9fc7-70cecf9cb3d0
-C1 = 0 # Is this value optimal? Should not be, in fact it would be our least likely event. 
+C1 = 0 # Is this value optimal? Should not be, in fact it would be our least likely consumption value. 
 
 # ╔═╡ be24ede3-87c7-402c-adbc-2f003e5099a0
 β = 0.99
@@ -507,7 +507,111 @@ md" We will continue our example of the cake eating problem, but now extend it t
 md" ## Optimal growth problem" 
 
 # ╔═╡ bfeff134-00d8-4ca5-9902-6b8dde5facd3
-md" Another example where dynamic programming is often used is the optimal growth problem. This is a simple extension of the cake eating problem that we encountered in the previous section. We will cover the solution to this problem through value and policy function iteration. We will also touch on projection methods for the optimal growth model." 
+md" Another example where dynamic programming is often used is the optimal growth problem. This is a simple extension of the cake eating problem that we encountered in the previous section. We will cover the solution to this problem through value and policy function iteration. We will also touch on projection methods for the optimal growth model. I will not go into detail on the dynamic programming theory, we will simply take a look at the model setup and how to solve the given problem. " 
+
+# ╔═╡ f4654f14-6bef-452f-a9af-ec62613ad20b
+md" Payoffs over time for the optimal growth model are
+
+$$U=\sum_{t=1}^{\infty}\beta^{t}u\left(K_{t},c_{t}\right)$$
+
+where $\beta<1$ is a discount factor, $K_{t}$ is the state, $c_{t}$ is the control. As we stated in the previous section, the state evolves according to $K_{t+1} = g(K_t, c_t)$. History of decisions is contained in the state variable. For this example we assume that both the payoff $u$ and transition function $g$ are stationary (do not depend on time). Problem can then be written as 
+
+$$V(K)=\max_{K'\in\Gamma(K)}u(K,K')+\beta v(K')$$
+
+In this case $\Gamma(K)$ is the constraint set (or feasible set) for $K'$ when the current state is $K$."
+
+# ╔═╡ 5a3df38d-2973-421e-8da0-a190653af20f
+md" ### Value funtion iteration "
+
+# ╔═╡ e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
+md" The first method that we will use to solve this problem is value function iteration. We have already used this method for the cake eating problem, but let illustrate it for the optimal growth problem as well. Remember that for value function iteration we want to find the fixed point of the functional equation by iteration. We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
+
+# ╔═╡ caa19eec-f786-4515-87d7-69914c01f308
+md" #### Discrete DP VFI "
+
+# ╔═╡ 8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
+md" We start with discrete dynamic programming, which means that we will look at a discrete state and action space. We solve the functional problem on the real line (which has continuous support) on a finite set of grid points only. This method is quite robust and easy to understand, but is known for being slow. Eventually, given an increased number of grid points to evaluate across and enough iterations one should approximate the true solution, but this can take a lot of time. This is especially true if the state space is mutlidimensional, which brings in the curse of dimensionality. " 
+
+# ╔═╡ 744e54e1-08ef-40fe-b398-d36cab7de232
+md" The theorethical setup for the deterministic optimal growth model is as follows, 
+
+$$\begin{aligned}
+   V(K) &= \max_{0<K'<f(K)} u(f(K) - K') + \beta V(K')\\
+  f(K)  & = K^\alpha
+\end{aligned}$$
+
+where $K_0$ is given. The numerical approximation that we are going to implement is the following:
+
+$$V(K_i) = \max_{i'=1,2,\dots,n} u(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
+
+# ╔═╡ 669ec723-330a-4e01-a945-39b5718a514b
+md" As we will soon see, here is the basic outline of the VFI algorithm that we need to follow. 
+
+1. Set the appropriate parameter values 
+2. Define a grid for the state variable $K \in [0, 2]$
+3. Initialise the value funtion $V$ (initial guess)
+4. Start the iteration, repeatedly calculate new version of $V$
+5. Stop of $d(V^{r}, V^{r-1}) < \text{tol}$
+6. Plot value and policy functions
+7. Compare with analytical solutions 
+
+Let us get started! "
+
+
+
+
+# ╔═╡ 3a1eff09-d8f2-4ac7-ab21-0ba0f8157d82
+begin
+	# This is the first step. Let us define our parameters that we are going to use for this problem.  
+	# We would not normally define these parameters within the global scope like this, but for simplicity let us continue in this fashion. Rather use the Parameters.jl package to properly define parameters in a struct. 
+	α₁     		= 0.65
+	β₁      	= 0.95
+	grid_max  	= 2  # upper bound of capital grid
+	n₁         	= 150  # number of grid points
+	N_iter   	= 3000  # maximum number of iterations
+	kgrid     	= 1e-2:(grid_max-1e-2)/(n-1):grid_max  # equispaced grid that starts at zero and ends at 2.
+	f(x) 		= x^α  # defines the production function f(k). Different from the cake eating problem
+	tol 		= 1e-9 # Tolerance
+end
+
+# ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
+# Below is an example of what a docstring looks like for a function. 
+
+"""
+# Bellman Operator
+
+# Inputs
+`grid`: grid of values of state variable
+
+`v0`: current guess of value function
+
+# Output
+`v1`: next guess of value function
+
+`pol`: corresponding policy function 
+"""
+function bellman_operator(grid, v0)
+end
+
+# ╔═╡ e6b624ea-537a-4315-a331-f949776544db
+
+
+# ╔═╡ b661b098-1d33-4470-8082-f3972e738e91
+md" A closed form solution to this problem can be found if we choose $u(x) = \ln(x)$, but this will not always be the case. This is a very special type of problem that allows an analytic solution. "
+
+# ╔═╡ 018646cc-912f-4ac9-9158-ebead586d663
+begin
+	# constructing the analytic solution to the problem. Useful for comparison wiht numerical answer.  
+	ab        = α₁ * β₁
+	c₁        = (log(1 - ab) + log(ab) * ab / (1 - ab)) / (1 - β₁)
+	c₂        = α₁ / (1 - ab)
+	
+	# optimal analytical values
+	v_star(k) = c₁ .+ c₂ .* log.(k)  
+	k_star(k) = ab * k.^α₁   
+	c_star(k) = (1-ab) * k.^α₁  
+	ufun(x) = log.(x)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2038,5 +2142,17 @@ version = "0.9.1+5"
 # ╟─ceff4993-7237-4d4d-be1a-f30dc1dfeac2
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
+# ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
+# ╟─5a3df38d-2973-421e-8da0-a190653af20f
+# ╟─e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
+# ╟─caa19eec-f786-4515-87d7-69914c01f308
+# ╟─8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
+# ╟─744e54e1-08ef-40fe-b398-d36cab7de232
+# ╟─669ec723-330a-4e01-a945-39b5718a514b
+# ╠═3a1eff09-d8f2-4ac7-ab21-0ba0f8157d82
+# ╠═828e7015-3b57-44fb-8cc4-0a7727245981
+# ╠═e6b624ea-537a-4315-a331-f949776544db
+# ╟─b661b098-1d33-4470-8082-f3972e738e91
+# ╠═018646cc-912f-4ac9-9158-ebead586d663
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

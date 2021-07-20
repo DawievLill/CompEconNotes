@@ -42,14 +42,11 @@ md" Method to solve dynamic problems in economics, and other disciplines. Useful
 
 In this session we cover some basic discrete deterministic dynamic programming problems. We will first look at models with a finite time horizon and then move on to models with an inifinite time horizon. The techniques we will utilise include backward induction, value function iteration and policy function iteration. "
 
-# ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
-md" ## Discrete deterministic problems "
-
 # ╔═╡ 21d809ee-8cac-499c-8234-7873fdc4b334
 md" The first problem is one that is often encountered in computer science and is effective in explaining the main idea behind dynamic programming. "
 
 # ╔═╡ 3e79f184-a3e8-44a0-9609-19827522d86a
-md" ### Shortest path problem "
+md" ## Shortest path problem "
 
 # ╔═╡ 340698bc-e27a-442b-a6fe-4b7c7ed3bd16
 md"""
@@ -172,11 +169,14 @@ end
 # ╔═╡ d2de514f-ae9d-4d89-ba5e-e5a2d4c55081
 md" This example is useful to get an idea of what dynamic programming is about. Now let us move to more complex problems. We will also need to talk about some of the theory surrounding dynamic programming. We will not delve too deeply into the theory, but rather provide sources that give a good overview of theorethical constructs. Dynamic programming can become quite technical and it is isnt witin the scope of these sessions to provide a rigorous training in these methods. "
 
-# ╔═╡ b844d7eb-b152-4c37-9922-a0223f3b5589
-md" ### Finite time cake eating problem [🍰 ≅ 😁]"
+# ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
+md" ## Cake eating problems "
 
 # ╔═╡ e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
-md" This problem is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. The notes presented here are almost an exact copy of the ones used by **Florian Oswald**. "
+md" This class of problems is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. The notes presented here are almost an exact copy of the ones used by **Florian Oswald**. "
+
+# ╔═╡ b844d7eb-b152-4c37-9922-a0223f3b5589
+md" ### Finite time cake eating problem [🍰 ≅ 😁]"
 
 # ╔═╡ ba5f4d25-2ed0-4d5b-8f84-25f10dc0ad82
 md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. "
@@ -502,6 +502,12 @@ md" ### Infinite time cake eating problem [∞🍰 = 😍]"
 
 # ╔═╡ ceff4993-7237-4d4d-be1a-f30dc1dfeac2
 md" We will continue our example of the cake eating problem, but now extend it to infinite time. This means that will introduce value function, policy function and time iteration techniques. In the next session we will introduce uncertainty in finite time, once again with the cake-eating problem and then talk about infinite time problems with uncertainty. "
+
+# ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
+md" ## Optimal growth problem" 
+
+# ╔═╡ bfeff134-00d8-4ca5-9902-6b8dde5facd3
+md" Another example where dynamic programming is often used is the optimal growth problem. This is a simple extension of the cake eating problem that we encountered in the previous section. We will cover the solution to this problem through value and policy function iteration. We will also touch on projection methods for the optimal growth model." 
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1969,7 +1975,6 @@ version = "0.9.1+5"
 # ╟─c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
-# ╟─1fa1bdc2-a076-42be-9540-1d20ebcffeb5
 # ╟─21d809ee-8cac-499c-8234-7873fdc4b334
 # ╟─3e79f184-a3e8-44a0-9609-19827522d86a
 # ╟─340698bc-e27a-442b-a6fe-4b7c7ed3bd16
@@ -1981,8 +1986,9 @@ version = "0.9.1+5"
 # ╟─fd77c87a-ac60-4507-a251-19cb4b82088a
 # ╟─0c7a94ba-dd82-4015-9c39-adaec2e424f5
 # ╟─d2de514f-ae9d-4d89-ba5e-e5a2d4c55081
-# ╟─b844d7eb-b152-4c37-9922-a0223f3b5589
+# ╟─1fa1bdc2-a076-42be-9540-1d20ebcffeb5
 # ╟─e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
+# ╟─b844d7eb-b152-4c37-9922-a0223f3b5589
 # ╟─ba5f4d25-2ed0-4d5b-8f84-25f10dc0ad82
 # ╟─e5ef57d1-e00b-4005-913a-7d6579c9c59c
 # ╟─398a316b-fc53-444a-aea7-169231c95f4b
@@ -2027,8 +2033,10 @@ version = "0.9.1+5"
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
 # ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
-# ╠═8ec82051-79b0-4cd7-8585-163ffde2b290
+# ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─796cd6f8-c61a-4a90-b7d3-e0680f59b513
 # ╟─ceff4993-7237-4d4d-be1a-f30dc1dfeac2
+# ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
+# ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -18,11 +18,15 @@ begin
 	using ApproxFun
 	using Colors
 	using Images
+	using Interpolations
 	using LaTeXStrings
+	using NLsolve
 	using Optim
 	using Parameters
 	using Plots
 	using PlutoUI
+	using QuantEcon
+	using Random
 end
 
 # ╔═╡ c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
@@ -198,7 +202,7 @@ For this example we will not allow borrowing, so $c_t \geq 0$. For this problem 
 
 This value function is a function of the resources available in that period. In more mathematical terms, 
 
-$V_{t}^{\star}(K_{t}) = \max _{c_{1}, c_{2}, \ldots, c_{T}}\left\{U_{t}(c_{1})+\beta U_{t}(c_{2})+\beta^{2} U_{t}(c_{3})+\cdots+\beta^{T} U_{t}(c_{T})\right\}$
+$V_{t}(K_{t}) = \max _{c_{1}, c_{2}, \ldots, c_{T}}\left\{U_{t}(c_{1})+\beta U_{t}(c_{2})+\beta^{2} U_{t}(c_{3})+\cdots+\beta^{T} U_{t}(c_{T})\right\}$
 
 This value function specifies the maximium attainable sum of current and furure rewards given the state and time period. The value of resources evolve according to the following equation
 
@@ -305,11 +309,11 @@ function backward_induction1(K1, max_K, grid_K2 = range(0, max_K, step=1) |> col
 	
 	# Function not written to be elegant, mostly for exposition and to be self-contained. 
 	
-	V1_guess = fill(NaN, K1 + 1)
+	V1_guess = zeros(K1 + 1) # Fill with (K1 + 1) zeros
 	
 	for i_guess in 0:K1 # Running this loop over the state space
 		C1 = i_guess # Start with a guess of zero consumption and then moving on to higher levels. 
-		K2 = K1 - C1 # Cake left after consumption in the first period gets consumed in second period. 
+		K2 = K1 - i_guess # Cake left after consumption in the first period gets consumed in second period. 
 		V1_guess[i_guess + 1] = sqrt.(C1) .+ β .* V2[K2 + 1]  # Value associated with cake consumed across both periods (taking control variables C1 and K2 into account)
 	end
 	
@@ -428,6 +432,7 @@ function Vperiod(grid::Vector,vplus::Vector)
 	Vt = zeros(points) # optimal value in T-1 at each state of R
 	ix = 0 # optimal action index in T-1 at each state of R
 	at = zeros(points) # optimal action in T-1 at each state of R
+	
 	for (ir,r) in enumerate(grid) # for all possible R-values
 		# loop over all possible action choices
 		for (ia,achoice) in enumerate(grid)
@@ -526,9 +531,20 @@ md" Value function approximation basically entails the following steps:
 2. Obtain an update $W$, which is defined by 
 
 $$W(K) = \max_{0\leq c \leq K} \{u(c) + \beta V(K - c)\}$$
-3. Stop if $W$ is approximately equal to $V$, otherwise set $V = W$ and go back to step $2$.
+3. Stop if $W$ is approximately equal to $V$, otherwise set $V = W$ and go back to step $2$."
 
-While these steps explain the general idea quite well, it is not practical as an algorithm to solve our problem. Let us expand more on these steps to provide us with an algorithm that we can take to the computer. The basic outline of the VFI algorithm that we need to follow is the following. 
+
+# ╔═╡ 46ae99d1-c362-483f-918f-d51723eb2bfc
+md" #### Bellman operator " 
+
+# ╔═╡ fdc584a9-1086-4126-aa08-a772c71bf8c8
+md" Have brief discussion on the Bellman operator here. "
+
+# ╔═╡ b2f96156-bd23-4767-8ec8-38215a8f4b63
+md" #### VFI implementation "
+
+# ╔═╡ 51c0c398-81d0-4e93-9907-34f3f39be2e4
+md" While the general steps provided above explain the general idea quite well, it is not practical as an algorithm to solve our problem. Let us expand more on these steps to provide us with an algorithm that we can take to the computer. The basic outline of the VFI algorithm that we need to follow is the following. 
 
 1. Set the appropriate parameter values for the model
 2. Define a grid of admissable values for the state variable $K$
@@ -541,12 +557,12 @@ $$W(K_i) = \max_{0\leq c \leq K_{i}} \{u(c) + \beta V(K_{i} - c)\}$$
 6. Plot value and policy functions
 7. Compare with analytical solutions (provided above) "
 
-
 # ╔═╡ 60912ad4-c766-4b70-b843-baed710e29ce
 begin
 	# Step 1: Set up the appropriate parameter values for the model
 	β₂ 				= 0.96 		# Discount factor
 	γ₂ 				= 1.5 		# Degree of relative risk aversion
+	maxit           = 300 		# Maximum number of iterations
 end
 
 # ╔═╡ adc503f5-6f65-4f6a-ba10-965f78f52e9e
@@ -564,20 +580,60 @@ end
 begin 
 	# Step 3: Initial guess for the value function and stopping criterion
 	n₂ = K_grid_size  			# Number of grid points
-	v₀ = zeros(n₂, 1) 			# Initial guess is an array of zeros that have the same dimension as number of grid points.  
+	v₀ = zeros(n₂) 				# Initial guess is an array of zeros that have the same dimension as number of grid points.  
 	
 	# Tolerance level for stopping criterion
-	ε = 1e-7
+	ε = 1e-9
 end
-
-# ╔═╡ b42a3a5f-03d3-44ff-902a-4c868d68baf2
-
 
 # ╔═╡ 33371855-af4f-4be7-b6ad-39a38fdb12c9
 md" #### Fitted value function iteration "
 
 # ╔═╡ 2fba5422-a46d-4606-8c21-c0df54f3544b
-md" This method is the same as the value function iteration from before, but uses interpolation techniques. "
+md" This method is quite similar to the value function iteration from before, but uses interpolation techniques. The general process looks like the following 
+
+The process looks like this:
+
+1. Begin with array of values $\{ V_0, \ldots, V_I \}$  representing the values of initial function $V$ on the grid points $\{ K_0, \ldots, K_I \}$.  
+2. Build a function $\hat{V}$ on the state space $\mathbb{R}_+$ by linear interpolation, based on these data points.  
+3. Obtain and record the value $T \hat{V}(x_i)$ on each grid point $K_i$  by repeatedly solving the maximization problem.  
+4. Unless some stopping condition is satisfied, set $\{ V_0, \ldots, V_I \} = \{ T \hat V(K_0), \ldots, T \hat V(K_I) \}$ and go to step $2$.     "
+
+# ╔═╡ 507514d4-d369-4950-9198-428561aecfd9
+md" ##### Quick detour on interpolation "
+
+# ╔═╡ ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
+md" We have covered the topic of function approximation via linear interapolation before, but let us have a quick recap before we continue. Suppose that we have a function $h(x) = 2\cos(6x) + \sin(14x) + 2.5$ and we are trying to approximate this function with piecewise linear interpolation, we could use the Interpolations.jl module. Consider the following:"
+
+# ╔═╡ 1229edd5-45cf-41f1-ad66-72af83a0a2e3
+begin
+	CS1 = 0.2
+	CS2 = 0.1
+	CS3 = 0.05
+end
+
+# ╔═╡ 71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
+@bind C_name Select(["CS1" => "5 Points", "CS2" => "10 Points", "CS3" => "20 Points"])
+
+# ╔═╡ 1a3e85a7-a292-487e-804c-b408cd508498
+c_size = Dict("CS1" => CS1, "CS2" => CS2, "CS3" => CS3)[C_name]
+
+# ╔═╡ 597f6e04-3580-4214-b7f2-77db8286d864
+begin
+	h(x) = 2 .* cos.(6x) .+ sin.(14x) .+ 2.5
+	c_grid = 0:c_size:1
+	h_grid = range(0,  1, length = 150)
+	
+	Ah = LinearInterpolation(c_grid, h(c_grid))
+	
+	plt = plot(xlim = (0,1), ylim = (0,6))
+	plot!(plt, h, h_grid, color = :blue, lw = 2, alpha = 0.8, label = "true function")
+	plot!(plt, h_grid, Ah.(h_grid), color = :green, lw = 2, alpha = 0.8,
+	      label = "linear approximation")
+	plot!(plt, h, c_grid, seriestype = :sticks, linestyle = :dash, linewidth = 2, alpha = 0.5,
+	      label = "")
+	plot!(plt, legend = :top)
+end
 
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
@@ -654,6 +710,64 @@ begin
 	ufun(x) = log.(x)
 end
 
+# ╔═╡ cee63396-35ea-4b34-9f4a-cf8c91ab6971
+# Step 4: Start the iteration
+
+# We will first define the Bellman operator before we can start the iteration. We will need this operator to perform the iteration. 
+
+"""
+# Bellman Operator
+
+# Inputs
+`grid`: grid of values of state variable
+
+`v0`: current guess of value function
+
+`n` : number of grid points 
+
+# Output
+`v1`: next guess of value function
+
+`pol`: corresponding policy function 
+"""
+function bellman_operator_cake(grid, v0, n)
+    
+    v₁  = zeros(n)     		# next guess
+    pol = zeros(Int,n)     	# policy function
+    w   = zeros(n)   		# temporary vector 
+
+    # we need to loop over the states (outer loop) and choices (inner loop)
+    
+	# current capital
+    for (ik, k) in enumerate(grid)
+
+        # loop over all possible choices for the choice variable
+        for (ic, c) in enumerate(grid)
+			kprime = k - c 
+			jk = argmin(abs.(grid .- kprime)) # Think about this step in particular. Why is this done?
+		    w[ic] = ufun(c) .+ β₂ .* v0[jk]
+        end
+        # find maximal choice
+        v₁[ik], pol[ik] = findmax(w)     # stores value und policy (index of optimal choice)
+    end
+    return (v₁, pol)   # return both value and policy function
+end
+
+# ╔═╡ 910d60df-d94b-4576-a8c9-03ba5e3cb2bb
+bellman_operator_cake(K_grid, v₀, n₂) # Don't know if the result is correct. 
+
+# ╔═╡ 3031cb5a-1839-4756-b977-924f63799cd8
+function VFI_cake()
+    v_init = zeros(n₂)
+	for iter in 1:maxit 
+        v_next = bellman_operator_cake(K_grid, v₀, n₂)  # returns a tuple: (v1,pol)
+        v_init = v_next[1]  # update guess 
+    end
+end
+
+# ╔═╡ 9f9fc1fe-3d15-4ae4-b644-5f5cc6a29fed
+VFI_cake()
+
 # ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
 # Below is an example of what a docstring looks like for a function. 
 
@@ -699,27 +813,40 @@ function bellman_operator(grid, v0, n = n₁)
 	
 end
 
+# ╔═╡ 4bc01bd5-17ef-42a7-b829-5bd369b938f3
+md" #### Fitted value function iteration "
+
+# ╔═╡ b91e35d1-9cf4-43fd-b1f1-c90bd75b8790
+md" Fitted value function iteration, as illustrated in the previous example is perhaps a bit easier to implement. "
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 ApproxFun = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+QuantEcon = "fcd29c91-0bd7-5a09-975d-7ac3f643a60c"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 ApproxFun = "~0.12.5"
 Colors = "~0.12.8"
 Images = "~0.24.1"
+Interpolations = "~0.13.3"
 LaTeXStrings = "~1.2.1"
+NLsolve = "~4.5.1"
 Optim = "~1.3.0"
 Parameters = "~0.12.2"
 Plots = "~1.18.2"
 PlutoUI = "~0.7.9"
+QuantEcon = "~0.16.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -746,9 +873,9 @@ version = "0.12.5"
 
 [[ApproxFunBase]]
 deps = ["AbstractFFTs", "BandedMatrices", "BlockArrays", "BlockBandedMatrices", "Calculus", "DSP", "DomainSets", "DualNumbers", "FFTW", "FastGaussQuadrature", "FillArrays", "InfiniteArrays", "IntervalSets", "LazyArrays", "LinearAlgebra", "LowRankApprox", "SparseArrays", "SpecialFunctions", "StaticArrays", "Statistics", "Test", "ToeplitzMatrices"]
-git-tree-sha1 = "df2a30a3242c12ded166d8cfabd77e7cb466945b"
+git-tree-sha1 = "bab00664565c82f38f562372951ca9b131072b5b"
 uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
-version = "0.4.5"
+version = "0.3.14"
 
 [[ApproxFunFourier]]
 deps = ["AbstractFFTs", "ApproxFunBase", "DomainSets", "FFTW", "FastTransforms", "InfiniteArrays", "IntervalSets", "LinearAlgebra", "Reexport"]
@@ -758,9 +885,9 @@ version = "0.2.9"
 
 [[ApproxFunOrthogonalPolynomials]]
 deps = ["AbstractFFTs", "ApproxFunBase", "BandedMatrices", "BlockArrays", "BlockBandedMatrices", "DomainSets", "FFTW", "FastGaussQuadrature", "FastTransforms", "FillArrays", "IntervalSets", "LinearAlgebra", "Reexport", "SpecialFunctions", "Statistics"]
-git-tree-sha1 = "faf6a0ebd9275c334aab3fc9bb0be48a93876bb1"
+git-tree-sha1 = "a7329c5310e4c70e93516b96756c6cf5beafe905"
 uuid = "b70543e2-c0d9-56b8-a290-0d4d6d4de211"
-version = "0.4.1"
+version = "0.3.10"
 
 [[ApproxFunSingularities]]
 deps = ["ApproxFunBase", "ApproxFunOrthogonalPolynomials", "DomainSets", "IntervalSets", "LinearAlgebra", "Reexport", "Statistics"]
@@ -771,17 +898,23 @@ version = "0.2.2"
 [[ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
+[[ArnoldiMethod]]
+deps = ["LinearAlgebra", "Random", "StaticArrays"]
+git-tree-sha1 = "f87e559f87a45bece9c9ed97458d3afe98b1ebb9"
+uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
+version = "0.1.0"
+
 [[ArrayInterface]]
 deps = ["IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
-git-tree-sha1 = "045ff5e1bc8c6fb1ecb28694abba0a0d55b5f4f5"
+git-tree-sha1 = "a71d224f61475b93c9e196e83c17c6ac4dedacfa"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "3.1.17"
+version = "3.1.18"
 
 [[ArrayLayouts]]
-deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "0f7998147ff3d112fad027c894b6b6bebf867154"
+deps = ["Compat", "FillArrays", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "8f6af27c33b766f19fa6cfe46e629775cda81f88"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "0.7.3"
+version = "0.4.11"
 
 [[Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -799,13 +932,19 @@ uuid = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 version = "0.4.3"
 
 [[BandedMatrices]]
-deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "6facee700024bdc7bc870657d235848043f5564c"
+deps = ["ArrayLayouts", "Compat", "FillArrays", "LinearAlgebra", "Random", "SparseArrays"]
+git-tree-sha1 = "8c83ee44dc9835263760ad4e77ed4eed4b3490c1"
 uuid = "aae01518-5342-5314-be14-df237901396f"
-version = "0.16.9"
+version = "0.15.25"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Statistics", "UUIDs"]
+git-tree-sha1 = "c31ebabde28d102b602bada60ce8922c266d205b"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.1.1"
 
 [[BinaryProvider]]
 deps = ["Libdl", "Logging", "SHA"]
@@ -814,16 +953,16 @@ uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 version = "0.5.10"
 
 [[BlockArrays]]
-deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "a37151e369c618aebaff8b95b9db2f603246e160"
+deps = ["ArrayLayouts", "Compat", "FillArrays", "LinearAlgebra"]
+git-tree-sha1 = "824b1094a47d7da81f9ff77cb56c3341f2f92097"
 uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "0.15.3"
+version = "0.12.14"
 
 [[BlockBandedMatrices]]
-deps = ["ArrayLayouts", "BandedMatrices", "BlockArrays", "FillArrays", "LinearAlgebra", "MatrixFactorizations", "SparseArrays", "Statistics"]
-git-tree-sha1 = "d6c449df788a7340c1350dc3ae67c409a85b39d1"
+deps = ["ArrayLayouts", "BandedMatrices", "BlockArrays", "Distributed", "FillArrays", "LinearAlgebra", "MatrixFactorizations", "Pkg", "SharedArrays", "SparseArrays", "Statistics"]
+git-tree-sha1 = "50374b927844af8c21d31db10b833af39493eaca"
 uuid = "ffab5731-97b5-5995-9138-79e8c1846df0"
-version = "0.10.7"
+version = "0.9.5"
 
 [[Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -856,9 +995,21 @@ version = "0.2.2"
 
 [[ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "dcc25ff085cf548bc8befad5ce048391a7c07d40"
+git-tree-sha1 = "f53ca8d41e4753c41cdafa6ec5f7ce914b34be54"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "0.10.11"
+version = "0.10.13"
+
+[[CodecBzip2]]
+deps = ["Bzip2_jll", "Libdl", "TranscodingStreams"]
+git-tree-sha1 = "2e62a725210ce3c3c2e1a3080190e7ca491f18d7"
+uuid = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
+version = "0.7.2"
+
+[[CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "ded953804d019afa9a3f98981d99b33e3db7b6da"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.0"
 
 [[ColorSchemes]]
 deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random", "StaticArrays"]
@@ -974,6 +1125,12 @@ version = "0.10.3"
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
+[[Distributions]]
+deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "StaticArrays", "Statistics", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "501c11d708917ca09ce357bed163dbaf0f30229f"
+uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
+version = "0.23.12"
+
 [[DocStringExtensions]]
 deps = ["LibGit2"]
 git-tree-sha1 = "a32185f5428d3986f47c2ab78b1f216d5e6cc96f"
@@ -1050,10 +1207,10 @@ uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
 version = "3.3.9+8"
 
 [[FastGaussQuadrature]]
-deps = ["LinearAlgebra", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "5829b25887e53fb6730a9df2ff89ed24baa6abf6"
+deps = ["LinearAlgebra", "SpecialFunctions"]
+git-tree-sha1 = "6ea5f7b4aecce0e3a14ca1da03f62f86148c8fa3"
 uuid = "442a2c76-b920-505d-bb47-c5924d526838"
-version = "0.4.7"
+version = "0.4.5"
 
 [[FastTransforms]]
 deps = ["AbstractFFTs", "ArrayLayouts", "BinaryProvider", "DSP", "FFTW", "FastGaussQuadrature", "FastTransforms_jll", "FillArrays", "Libdl", "LinearAlgebra", "Reexport", "SpecialFunctions", "Test", "ToeplitzMatrices"]
@@ -1075,15 +1232,15 @@ version = "1.10.1"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "693210145367e7685d8604aee33d9bfb85db8b31"
+git-tree-sha1 = "502b3de6039d5b78c76118423858d981349f3823"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.11.9"
+version = "0.9.7"
 
 [[FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "f6f80c8f934efd49a286bb5315360be66956dfc4"
+git-tree-sha1 = "8b3c09b56acaf3c0e581c66638b85c8650ee9dca"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.8.0"
+version = "2.8.1"
 
 [[FixedPointNumbers]]
 deps = ["Statistics"]
@@ -1143,15 +1300,15 @@ version = "0.57.5"
 
 [[GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Pkg", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "e14907859a1d3aee73a019e7b3c98e9e7b8b5b3e"
+git-tree-sha1 = "eaf96e05a880f3db5ded5a5a8a7817ecba3c7392"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.57.3+0"
+version = "0.58.0+0"
 
 [[GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
-git-tree-sha1 = "15ff9a14b9e1218958d3530cc288cf31465d9ae2"
+git-tree-sha1 = "4136b8a5668341e58398bb472754bff4ba0456ff"
 uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-version = "0.3.13"
+version = "0.3.12"
 
 [[Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -1283,15 +1440,10 @@ uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 version = "0.5.1"
 
 [[InfiniteArrays]]
-deps = ["ArrayLayouts", "DSP", "FillArrays", "Infinities", "LazyArrays", "LinearAlgebra", "Statistics"]
-git-tree-sha1 = "81b4318932ff7691e164d5e0a98b55e2992c78c6"
+deps = ["DSP", "FillArrays", "LazyArrays", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "aa50bca542c26505efb399290eb5f83e995517bc"
 uuid = "4858937d-0d70-526a-a4dd-2d5cb5dd786c"
-version = "0.10.8"
-
-[[Infinities]]
-git-tree-sha1 = "06570a7404df6901f0fa09733dde6f7ae4c68b0a"
-uuid = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
-version = "0.1.0"
+version = "0.8.2"
 
 [[Inflate]]
 git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
@@ -1354,6 +1506,12 @@ git-tree-sha1 = "81690084b6198a2e1da36fcfda16eeca9f9f24e4"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.1"
 
+[[JSONSchema]]
+deps = ["HTTP", "JSON", "ZipFile"]
+git-tree-sha1 = "b84ab8139afde82c7c65ba2b792fe12e01dd7307"
+uuid = "7d188eb4-7ad8-530c-ae41-71a32a6d4692"
+version = "0.3.3"
+
 [[JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "d735490ac75c5cb9f1b00d8b5509c11984dc6943"
@@ -1385,9 +1543,9 @@ version = "0.15.6"
 
 [[LazyArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "MatrixFactorizations", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "bbd9faba414e9c8442f4cfa86de353a2434534fa"
+git-tree-sha1 = "1e9f6f50e6b39b2cabb18d5f0fafdd45d9c2a28f"
 uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
-version = "0.21.10"
+version = "0.18.1"
 
 [[LazyArtifacts]]
 deps = ["Artifacts", "Pkg"]
@@ -1466,6 +1624,12 @@ git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
 
+[[LightGraphs]]
+deps = ["ArnoldiMethod", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
+git-tree-sha1 = "432428df5f360964040ed60418dd5601ecd240b6"
+uuid = "093fc24a-ae57-5d10-9952-331d41423f4d"
+version = "1.3.5"
+
 [[LineSearches]]
 deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
 git-tree-sha1 = "f27132e551e959b3667d8c93eae90973225032dd"
@@ -1516,11 +1680,23 @@ version = "0.4.0"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
+[[MathOptInterface]]
+deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "JSON", "JSONSchema", "LinearAlgebra", "MutableArithmetics", "OrderedCollections", "SparseArrays", "Test", "Unicode"]
+git-tree-sha1 = "575644e3c05b258250bb599e57cf73bbf1062901"
+uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+version = "0.9.22"
+
+[[MathProgBase]]
+deps = ["LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "9abbe463a1e9fc507f12a69e7f29346c2cdc472c"
+uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
+version = "0.7.8"
+
 [[MatrixFactorizations]]
-deps = ["ArrayLayouts", "LinearAlgebra", "Printf", "Random"]
-git-tree-sha1 = "24814f4e65b4521ba081ccaaea9f5c6533c462a2"
+deps = ["ArrayLayouts", "LinearAlgebra", "Random"]
+git-tree-sha1 = "292e5f9f0761f3511edfb5420b4feadd9ba165b0"
 uuid = "a3b82374-2e81-5b9e-98ce-41277c0e4c87"
-version = "0.8.4"
+version = "0.6.1"
 
 [[MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
@@ -1561,11 +1737,35 @@ version = "0.3.3"
 [[MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 
+[[MutableArithmetics]]
+deps = ["LinearAlgebra", "SparseArrays", "Test"]
+git-tree-sha1 = "3927848ccebcc165952dc0d9ac9aa274a87bfe01"
+uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
+version = "0.2.20"
+
 [[NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
 git-tree-sha1 = "50608f411a1e178e0129eab4110bd56efd08816f"
 uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
 version = "7.8.0"
+
+[[NLopt]]
+deps = ["MathOptInterface", "MathProgBase", "NLopt_jll"]
+git-tree-sha1 = "d80cb3327d1aeef0f59eacf225e000f86e4eee0a"
+uuid = "76087f3c-5699-56af-9a33-bf431cd00edd"
+version = "0.6.3"
+
+[[NLopt_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "2b597c46900f5f811bec31f0dcc88b45744a2a09"
+uuid = "079eb43e-fd8e-5478-9966-2cf3e3edb778"
+version = "2.7.0+0"
+
+[[NLsolve]]
+deps = ["Distances", "LineSearches", "LinearAlgebra", "NLSolversBase", "Printf", "Reexport"]
+git-tree-sha1 = "019f12e9a1a7880459d0173c182e6a99365d7ac1"
+uuid = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
+version = "4.5.1"
 
 [[NaNMath]]
 git-tree-sha1 = "bfe47e760d60b82b66b61d2d44128b62e3a369fb"
@@ -1588,9 +1788,9 @@ version = "1.0.0"
 
 [[OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "2bf78c5fd7fa56d2bbf1efbadd45c1b8789e6f57"
+git-tree-sha1 = "4f825c6da64aebaa22cc058ecfceed1ab9af1c7e"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.10.2"
+version = "1.10.3"
 
 [[Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1636,6 +1836,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "b2a7af664e098055a7529ad1a900ded962bca488"
 uuid = "2f80f16e-611a-54ab-bc61-aa92de5b98fc"
 version = "8.44.0+0"
+
+[[PDMats]]
+deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse", "Test"]
+git-tree-sha1 = "95a4038d1011dfdbde7cecd2ad0ac411e53ab1bc"
+uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
+version = "0.10.1"
 
 [[PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
@@ -1719,6 +1925,11 @@ git-tree-sha1 = "00cfd92944ca9c760982747e9a1d0d5d86ab1e5a"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.2.2"
 
+[[Primes]]
+git-tree-sha1 = "afccf037da52fa596223e5a0e331ff752e0e845c"
+uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
+version = "0.5.0"
+
 [[Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -1734,6 +1945,18 @@ deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll
 git-tree-sha1 = "ad368663a5e20dbb8d6dc2fddeefe4dae0781ae8"
 uuid = "ea2cea3b-5b76-57ae-a6ef-0a8af62496e1"
 version = "5.15.3+0"
+
+[[QuadGK]]
+deps = ["DataStructures", "LinearAlgebra"]
+git-tree-sha1 = "12fbe86da16df6679be7521dfb39fbc861e1dc7b"
+uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+version = "2.4.1"
+
+[[QuantEcon]]
+deps = ["DSP", "DataStructures", "Distributions", "FFTW", "LightGraphs", "LinearAlgebra", "Markdown", "NLopt", "Optim", "Pkg", "Primes", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "Test"]
+git-tree-sha1 = "4e2dc3044303aa2cbf6e321cb9af3982f6774e6a"
+uuid = "fcd29c91-0bd7-5a09-975d-7ac3f643a60c"
+version = "0.16.2"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1774,6 +1997,18 @@ deps = ["UUIDs"]
 git-tree-sha1 = "4036a3bd08ac7e968e27c203d45f5fff15020621"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.1.3"
+
+[[Rmath]]
+deps = ["Random", "Rmath_jll"]
+git-tree-sha1 = "bf3188feca147ce108c76ad82c2792c57abe7b1f"
+uuid = "79098fc4-a85e-5d69-aa6a-4863f24498fa"
+version = "0.7.0"
+
+[[Rmath_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "68db32dff12bb6127bac73c209881191bf0efbb7"
+uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
+version = "0.3.0+0"
 
 [[Rotations]]
 deps = ["LinearAlgebra", "StaticArrays", "Statistics"]
@@ -1823,10 +2058,10 @@ deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
-deps = ["ChainRulesCore", "LogExpFunctions", "OpenSpecFun_jll"]
-git-tree-sha1 = "a50550fa3164a8c46747e62063b4d774ac1bcf49"
+deps = ["OpenSpecFun_jll"]
+git-tree-sha1 = "d8d8b8a9f4119829410ecd706da4cc8594a1e020"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "1.5.1"
+version = "0.10.3"
 
 [[StackViews]]
 deps = ["OffsetArrays"]
@@ -1836,15 +2071,15 @@ version = "0.1.1"
 
 [[Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "2740ea27b66a41f9d213561a04573da5d3823d4b"
+git-tree-sha1 = "62701892d172a2fa41a1f829f66d2b0db94a9a63"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.2.5"
+version = "0.3.0"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "a43a7b58a6e7dc933b2fa2e0ca653ccf8bb8fd0e"
+git-tree-sha1 = "da4cf579416c81994afd6322365d00916c79b8ae"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.2.6"
+version = "0.12.5"
 
 [[Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1861,11 +2096,21 @@ git-tree-sha1 = "2f6792d523d7448bbe2fec99eca9218f06cc746d"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.33.8"
 
+[[StatsFuns]]
+deps = ["LogExpFunctions", "Rmath", "SpecialFunctions"]
+git-tree-sha1 = "30cd8c360c54081f806b1ee14d2eecbef3c04c49"
+uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
+version = "0.9.8"
+
 [[StructArrays]]
-deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "000e168f5cc9aded17b6999a560b7c11dda69095"
+deps = ["Adapt", "DataAPI", "Tables"]
+git-tree-sha1 = "44b3afd37b17422a62aea25f04c1f7e09ce6b07f"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.0"
+version = "0.5.1"
+
+[[SuiteSparse]]
+deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
+uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [[Suppressor]]
 git-tree-sha1 = "a819d77f31f83e5792a76081eee1ea6342ab8787"
@@ -1925,6 +2170,12 @@ deps = ["AbstractFFTs", "FFTW", "LinearAlgebra", "StatsBase"]
 git-tree-sha1 = "39731ea29652305b1eeb7ab0d1085533db307191"
 uuid = "c751599d-da0a-543b-9d20-d0a503d91d24"
 version = "0.6.3"
+
+[[TranscodingStreams]]
+deps = ["Random", "Test"]
+git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.9.5"
 
 [[URIs]]
 git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
@@ -2099,6 +2350,12 @@ git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
 
+[[ZipFile]]
+deps = ["Libdl", "Printf", "Zlib_jll"]
+git-tree-sha1 = "c3a5637e27e914a7a445b8d0ad063d701931e9f7"
+uuid = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
+version = "0.9.3"
+
 [[Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
@@ -2230,12 +2487,25 @@ version = "0.9.1+5"
 # ╟─5a0b4906-d0a4-4f7e-868d-863d5e236f58
 # ╠═d26d70f6-768d-4611-ae77-9d5f678a8560
 # ╟─9365cbdb-092a-47b2-9517-5387609775bd
+# ╟─46ae99d1-c362-483f-918f-d51723eb2bfc
+# ╟─fdc584a9-1086-4126-aa08-a772c71bf8c8
+# ╟─b2f96156-bd23-4767-8ec8-38215a8f4b63
+# ╟─51c0c398-81d0-4e93-9907-34f3f39be2e4
 # ╠═60912ad4-c766-4b70-b843-baed710e29ce
 # ╠═adc503f5-6f65-4f6a-ba10-965f78f52e9e
 # ╠═cd71f975-5058-46a4-80d8-0d410f19cbf1
-# ╠═b42a3a5f-03d3-44ff-902a-4c868d68baf2
+# ╠═cee63396-35ea-4b34-9f4a-cf8c91ab6971
+# ╠═910d60df-d94b-4576-a8c9-03ba5e3cb2bb
+# ╠═3031cb5a-1839-4756-b977-924f63799cd8
+# ╠═9f9fc1fe-3d15-4ae4-b644-5f5cc6a29fed
 # ╟─33371855-af4f-4be7-b6ad-39a38fdb12c9
 # ╟─2fba5422-a46d-4606-8c21-c0df54f3544b
+# ╟─507514d4-d369-4950-9198-428561aecfd9
+# ╟─ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
+# ╟─1229edd5-45cf-41f1-ad66-72af83a0a2e3
+# ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
+# ╟─1a3e85a7-a292-487e-804c-b408cd508498
+# ╟─597f6e04-3580-4214-b7f2-77db8286d864
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
@@ -2249,5 +2519,7 @@ version = "0.9.1+5"
 # ╠═e6b624ea-537a-4315-a331-f949776544db
 # ╟─b661b098-1d33-4470-8082-f3972e738e91
 # ╠═018646cc-912f-4ac9-9158-ebead586d663
+# ╟─4bc01bd5-17ef-42a7-b829-5bd369b938f3
+# ╟─b91e35d1-9cf4-43fd-b1f1-c90bd75b8790
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

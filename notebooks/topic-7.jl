@@ -45,12 +45,9 @@ md" # Dynamic programming I"
 md" ## Still quite incomplete and incoherent. Needs some theory! "
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
-md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
+md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. It is quite sseful in several areas of economics, but I have mostly used it in macroeconomic applications. It is therefore natural to me that most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem and optimal growth problem.
 
-In this session we cover some basic discrete deterministic dynamic programming problems. We will first look at models with a finite time horizon and then move on to models with an inifinite time horizon. The techniques we will utilise include backward induction, value function iteration and policy function iteration. "
-
-# ╔═╡ 21d809ee-8cac-499c-8234-7873fdc4b334
-md" The first problem is one that is often encountered in computer science and is effective in explaining the main idea behind dynamic programming. "
+In this session we cover some basic discrete deterministic dynamic programming problems. We will first look at models with a finite time horizon and then move on to models with an inifinite time horizon. The techniques we will utilise include backward induction and two versions of value function iteration. "
 
 # ╔═╡ 3e79f184-a3e8-44a0-9609-19827522d86a
 md" ## Shortest path problem "
@@ -186,7 +183,7 @@ md" This class of problems is more closely related to economics. It is a consump
 md" ### Finite time cake eating problem [🍰 ≅ 😁]"
 
 # ╔═╡ ba5f4d25-2ed0-4d5b-8f84-25f10dc0ad82
-md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. "
+md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. When these optimisation problems are framed in a dynamic programming context, we have nice tools to take advantage of the recursive structure. "
 
 # ╔═╡ e5ef57d1-e00b-4005-913a-7d6579c9c59c
 md" In this cake eating (🍰) problem you are given a certain budget of resources $K$ to spend (eat) over $t$ dates. In this example $K$ refers to the size of the cake. You take an action $c_t \in \mathbb{N}$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $U_t(c_t)$ be the reward / utility that results from the action that you take in period $t$.
@@ -535,10 +532,9 @@ $$V(K_i) = \max_{i'=1,2,\dots,n} u(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
 md" ### Value funtion iteration "
 
 # ╔═╡ e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
-md" The first method that we will use to solve this problem is value function iteration. We have already used this method for the cake eating problem, but let illustrate it for the optimal growth problem as well. Remember that for value function iteration we want to find the fixed point of the functional equation by iteration. We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
+md" The first method that we will use to solve this problem is value function iteration. We have already used something similar to this method for the cake eating problem, but let illustrate it for the optimal growth problem as well. For value function iteration we want to find the fixed point of the functional equation by iteration. 
 
-# ╔═╡ caa19eec-f786-4515-87d7-69914c01f308
-md" #### Discrete DP VFI "
+We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
 
 # ╔═╡ 8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
 md" We start with discrete dynamic programming, which means that we will look at a discrete state and action space. We solve the functional problem on the real line (which has continuous support) on a finite set of grid points only. This method is quite robust and easy to understand, but is known for being slow. Eventually, given an increased number of grid points to evaluate across and enough iterations one should approximate the true solution, but this can take a lot of time. This is especially true if the state space is mutlidimensional, which brings in the curse of dimensionality. " 
@@ -563,8 +559,9 @@ md" #### VFI implementation "
 # ╔═╡ 60912ad4-c766-4b70-b843-baed710e29ce
 begin
 	# Step 1: Set up the appropriate parameter values for the model
-	β₂ 				= 0.96 		# Discount factor
-	γ₂ 				= 1.5 		# Degree of relative risk aversion
+	α               = 0.65
+	#β 				= 0.96 		# Discount factor (already defined in global scope of this notebook)
+	γ 				= 1.5 		# Degree of relative risk aversion
 	maxit           = 300 		# Maximum number of iterations
 end
 
@@ -595,14 +592,14 @@ md" A closed form solution to this problem can be found if we choose $u(x) = \ln
 # ╔═╡ 018646cc-912f-4ac9-9158-ebead586d663
 begin
 	# constructing the analytic solution to the problem. Useful for comparison wiht numerical answer.  
-	ab        = α₁ * β₁
-	c₁        = (log(1 - ab) + log(ab) * ab / (1 - ab)) / (1 - β₁)
-	c₂        = α₁ / (1 - ab)
+	ab        = α * β
+	c₁        = (log(1 - ab) + log(ab) * ab / (1 - ab)) / (1 - β)
+	c₂        = α / (1 - ab)
 	
 	# optimal analytical values
 	v_star(k) = c₁ .+ c₂ .* log.(k)  
-	k_star(k) = ab * k.^α₁   
-	c_star(k) = (1-ab) * k.^α₁  
+	k_star(k) = ab * k.^α   
+	c_star(k) = (1-ab) * k.^α  
 	ufun(x) = log.(x)
 end
 
@@ -724,7 +721,7 @@ function FVFI(w, grid, iter)
 	plt = plot(grid, w, color = :black, linewidth = 2, alpha = 0.8, label = lb)
 	
 	for i in 1:iter
-		w = bellman_fitted(w, grid, β₂, log, k -> k^0.65)
+		w = bellman_fitted(w, grid, β, log, k -> k^0.65)
 		plot!(K_grid, w, color = RGBA(i/iter, 0.2, 1 - i/iter, 0.8), linewidth = 2, alpha = 0.7,
 	          label = "")
 	end
@@ -2347,7 +2344,6 @@ version = "0.9.1+5"
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
 # ╟─058c997b-390b-4b8e-b203-20879e0673a4
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
-# ╟─21d809ee-8cac-499c-8234-7873fdc4b334
 # ╟─3e79f184-a3e8-44a0-9609-19827522d86a
 # ╟─340698bc-e27a-442b-a6fe-4b7c7ed3bd16
 # ╟─08bf10d7-0221-40e8-99ac-4087ad459add
@@ -2411,7 +2407,6 @@ version = "0.9.1+5"
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
 # ╟─5a3df38d-2973-421e-8da0-a190653af20f
 # ╟─e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
-# ╟─caa19eec-f786-4515-87d7-69914c01f308
 # ╟─8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
 # ╟─51c0c398-81d0-4e93-9907-34f3f39be2e4
 # ╟─b2f96156-bd23-4767-8ec8-38215a8f4b63
@@ -2429,11 +2424,11 @@ version = "0.9.1+5"
 # ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
 # ╟─1a3e85a7-a292-487e-804c-b408cd508498
 # ╟─597f6e04-3580-4214-b7f2-77db8286d864
-# ╟─91778068-9af3-4f28-bf76-aa19c9df3e45
-# ╟─d111bb6f-f6ce-44bd-a40d-0d442d6484d0
+# ╠═91778068-9af3-4f28-bf76-aa19c9df3e45
+# ╠═d111bb6f-f6ce-44bd-a40d-0d442d6484d0
 # ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be
 # ╟─128ec2e2-3b38-49cd-b507-c1f5fb051491
-# ╟─07e571b5-9e5f-4690-89b6-4fc166c94a1b
+# ╠═07e571b5-9e5f-4690-89b6-4fc166c94a1b
 # ╟─d31741a8-5184-45d8-8a62-0db938c9a372
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

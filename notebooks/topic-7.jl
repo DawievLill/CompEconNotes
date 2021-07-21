@@ -41,6 +41,9 @@ html"""
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
 md" # Dynamic programming I"
 
+# ╔═╡ 058c997b-390b-4b8e-b203-20879e0673a4
+md" ## Come back to this to round everything off! "
+
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
 
@@ -586,55 +589,6 @@ begin
 	ε = 1e-9
 end
 
-# ╔═╡ 33371855-af4f-4be7-b6ad-39a38fdb12c9
-md" #### Fitted value function iteration "
-
-# ╔═╡ 2fba5422-a46d-4606-8c21-c0df54f3544b
-md" This method is quite similar to the value function iteration from before, but uses interpolation techniques. The general process looks like the following 
-
-The process looks like this:
-
-1. Begin with array of values $\{ V_0, \ldots, V_I \}$  representing the values of initial function $V$ on the grid points $\{ K_0, \ldots, K_I \}$.  
-2. Build a function $\hat{V}$ on the state space $\mathbb{R}_+$ by linear interpolation, based on these data points.  
-3. Obtain and record the value $T \hat{V}(x_i)$ on each grid point $K_i$  by repeatedly solving the maximization problem.  
-4. Unless some stopping condition is satisfied, set $\{ V_0, \ldots, V_I \} = \{ T \hat V(K_0), \ldots, T \hat V(K_I) \}$ and go to step $2$.     "
-
-# ╔═╡ 507514d4-d369-4950-9198-428561aecfd9
-md" ##### Quick detour on interpolation "
-
-# ╔═╡ ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
-md" We have covered the topic of function approximation via linear interapolation before, but let us have a quick recap before we continue. Suppose that we have a function $h(x) = 2\cos(6x) + \sin(14x) + 2.5$ and we are trying to approximate this function with piecewise linear interpolation, we could use the Interpolations.jl module. Consider the following:"
-
-# ╔═╡ 1229edd5-45cf-41f1-ad66-72af83a0a2e3
-begin
-	CS1 = 0.2
-	CS2 = 0.1
-	CS3 = 0.05
-end
-
-# ╔═╡ 71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
-@bind C_name Select(["CS1" => "5 Points", "CS2" => "10 Points", "CS3" => "20 Points"])
-
-# ╔═╡ 1a3e85a7-a292-487e-804c-b408cd508498
-c_size = Dict("CS1" => CS1, "CS2" => CS2, "CS3" => CS3)[C_name]
-
-# ╔═╡ 597f6e04-3580-4214-b7f2-77db8286d864
-begin
-	h(x) = 2 .* cos.(6x) .+ sin.(14x) .+ 2.5
-	c_grid = 0:c_size:1
-	h_grid = range(0,  1, length = 150)
-	
-	Ah = LinearInterpolation(c_grid, h(c_grid))
-	
-	plt = plot(xlim = (0,1), ylim = (0,6))
-	plot!(plt, h, h_grid, color = :blue, lw = 2, alpha = 0.8, label = "true function")
-	plot!(plt, h_grid, Ah.(h_grid), color = :green, lw = 2, alpha = 0.8,
-	      label = "linear approximation")
-	plot!(plt, h, c_grid, seriestype = :sticks, linestyle = :dash, linewidth = 2, alpha = 0.5,
-	      label = "")
-	plot!(plt, legend = :top)
-end
-
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
 
@@ -816,8 +770,87 @@ end
 # ╔═╡ 4bc01bd5-17ef-42a7-b829-5bd369b938f3
 md" #### Fitted value function iteration "
 
-# ╔═╡ b91e35d1-9cf4-43fd-b1f1-c90bd75b8790
-md" Fitted value function iteration, as illustrated in the previous example is perhaps a bit easier to implement. "
+# ╔═╡ 2fba5422-a46d-4606-8c21-c0df54f3544b
+md" The final topic for this session is fitted value function iteration. This method is quite similar to the value function iteration from before, but uses interpolation techniques. The general process looks like the following 
+
+The process looks like this:
+
+1. Begin with array of values $\{ V_0, \ldots, V_I \}$  representing the values of initial function $V$ on the grid points $\{ K_0, \ldots, K_I \}$.  
+2. Build a function $\hat{V}$ on the state space $\mathbb{R}_+$ by linear interpolation, based on these data points.  
+3. Obtain and record the value $T \hat{V}(x_i)$ on each grid point $K_i$  by repeatedly solving the maximization problem.  
+4. Unless some stopping condition is satisfied, set $\{ V_0, \ldots, V_I \} = \{ T \hat V(K_0), \ldots, T \hat V(K_I) \}$ and go to step $2$.     "
+
+# ╔═╡ 507514d4-d369-4950-9198-428561aecfd9
+md" ##### Quick detour on interpolation "
+
+# ╔═╡ ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
+md" We have covered the topic of function approximation via linear interapolation before, but let us have a quick recap before we continue. Suppose that we have a function $h(x) = 2\cos(6x) + \sin(14x) + 2.5$ and we are trying to approximate this function with piecewise linear interpolation, we could use the Interpolations.jl module. Consider the following:"
+
+# ╔═╡ 1229edd5-45cf-41f1-ad66-72af83a0a2e3
+begin
+	CS1 = 0.2
+	CS2 = 0.1
+	CS3 = 0.05
+end
+
+# ╔═╡ 71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
+@bind C_name Select(["CS1" => "5 Points", "CS2" => "10 Points", "CS3" => "20 Points"])
+
+# ╔═╡ 1a3e85a7-a292-487e-804c-b408cd508498
+c_size = Dict("CS1" => CS1, "CS2" => CS2, "CS3" => CS3)[C_name]
+
+# ╔═╡ 597f6e04-3580-4214-b7f2-77db8286d864
+begin
+	h(x) = 2 .* cos.(6x) .+ sin.(14x) .+ 2.5
+	c_grid = 0:c_size:1
+	h_grid = range(0,  1, length = 150)
+	
+	Ah = LinearInterpolation(c_grid, h(c_grid))
+	
+	plt = plot(xlim = (0,1), ylim = (0,6))
+	plot!(plt, h, h_grid, color = :black, lw = 2, alpha = 0.7, label = "true function")
+	plot!(plt, h_grid, Ah.(h_grid), color = :green, lw = 2, alpha = 0.8,
+	      label = "linear approximation")
+	plot!(plt, h, c_grid, seriestype = :sticks, linestyle = :dash, linewidth = 2, alpha = 0.5,
+	      label = "")
+	plot!(plt, legend = :top)
+end
+
+# ╔═╡ 91778068-9af3-4f28-bf76-aa19c9df3e45
+function bellman_fitted(w, grid, β, u, f)
+    w_func = LinearInterpolation(grid, w)
+	
+    # objective for each grid point
+    objectives = (c -> u(c) + β * (w_func.(f(y - c))) for y in grid)
+	
+    results = maximize.(objectives, 1e-10, grid) # solver result for each grid point
+  
+	Tw = Optim.maximum.(results)
+    return Tw
+end
+
+# ╔═╡ d111bb6f-f6ce-44bd-a40d-0d442d6484d0
+function FVFI(w, grid, iter)
+	
+	lb = "initial condition"
+	plt = plot(grid, w, color = :black, linewidth = 2, alpha = 0.8, label = lb)
+	
+	for i in 1:iter
+		w = bellman_fitted(w, grid, β₂, log, k -> k^0.65)
+		plot!(K_grid, w, color = RGBA(i/iter, 0.2, 1 - i/iter, 0.8), linewidth = 2, alpha = 0.7,
+	          label = "")
+	end
+	plot!(plt, legend = :bottomright)
+end
+
+# ╔═╡ cac96345-ee00-40ef-b8ae-3b7fdbfea9be
+w_new = 0.5 * log.(K_grid); 
+
+# ╔═╡ 128ec2e2-3b38-49cd-b507-c1f5fb051491
+iterations = @bind iter Slider(5:200, show_value = true, default = 5)
+
+# ╔═╡ 07e571b5-9e5f-4690-89b6-4fc166c94a1b
+FVFI(w_new, K_grid, iter)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2421,6 +2454,7 @@ version = "0.9.1+5"
 # ╟─7fffd413-6ebe-49d2-b426-1428aee5ae26
 # ╟─c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
+# ╟─058c997b-390b-4b8e-b203-20879e0673a4
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
 # ╟─21d809ee-8cac-499c-8234-7873fdc4b334
 # ╟─3e79f184-a3e8-44a0-9609-19827522d86a
@@ -2478,7 +2512,7 @@ version = "0.9.1+5"
 # ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
 # ╟─b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
-# ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
+# ╠═b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─796cd6f8-c61a-4a90-b7d3-e0680f59b513
@@ -2498,14 +2532,6 @@ version = "0.9.1+5"
 # ╠═910d60df-d94b-4576-a8c9-03ba5e3cb2bb
 # ╠═3031cb5a-1839-4756-b977-924f63799cd8
 # ╠═9f9fc1fe-3d15-4ae4-b644-5f5cc6a29fed
-# ╟─33371855-af4f-4be7-b6ad-39a38fdb12c9
-# ╟─2fba5422-a46d-4606-8c21-c0df54f3544b
-# ╟─507514d4-d369-4950-9198-428561aecfd9
-# ╟─ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
-# ╟─1229edd5-45cf-41f1-ad66-72af83a0a2e3
-# ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
-# ╟─1a3e85a7-a292-487e-804c-b408cd508498
-# ╟─597f6e04-3580-4214-b7f2-77db8286d864
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
@@ -2520,6 +2546,17 @@ version = "0.9.1+5"
 # ╟─b661b098-1d33-4470-8082-f3972e738e91
 # ╠═018646cc-912f-4ac9-9158-ebead586d663
 # ╟─4bc01bd5-17ef-42a7-b829-5bd369b938f3
-# ╟─b91e35d1-9cf4-43fd-b1f1-c90bd75b8790
+# ╟─2fba5422-a46d-4606-8c21-c0df54f3544b
+# ╟─507514d4-d369-4950-9198-428561aecfd9
+# ╟─ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
+# ╟─1229edd5-45cf-41f1-ad66-72af83a0a2e3
+# ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
+# ╟─1a3e85a7-a292-487e-804c-b408cd508498
+# ╠═597f6e04-3580-4214-b7f2-77db8286d864
+# ╠═91778068-9af3-4f28-bf76-aa19c9df3e45
+# ╠═d111bb6f-f6ce-44bd-a40d-0d442d6484d0
+# ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be
+# ╟─128ec2e2-3b38-49cd-b507-c1f5fb051491
+# ╟─07e571b5-9e5f-4690-89b6-4fc166c94a1b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

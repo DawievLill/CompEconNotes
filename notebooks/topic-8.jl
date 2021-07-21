@@ -67,7 +67,7 @@ function T(w, grid, β, u, f, shocks; compute_policy = false)
 end
 
 # ╔═╡ dc3e797b-368a-4d1f-84bc-635b6f836833
-md" #### Value function iteration "
+md" #### Fitted value function iteration "
 
 # ╔═╡ 831241b0-d8a2-4ee9-a0fc-3c744395b511
 md" #### Policy function iteration "

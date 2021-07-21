@@ -42,7 +42,7 @@ html"""
 md" # Dynamic programming I"
 
 # ╔═╡ 058c997b-390b-4b8e-b203-20879e0673a4
-md" ## Come back to this to round everything off! "
+md" ## Still quite incomplete and incoherent. Needs some theory! "
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. Useful in several areas of economics. Most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem.
@@ -177,7 +177,7 @@ end
 md" This example is useful to get an idea of what dynamic programming is about. Now let us move to more complex problems. We will also need to talk about some of the theory surrounding dynamic programming. We will not delve too deeply into the theory, but rather provide sources that give a good overview of theorethical constructs. Dynamic programming can become quite technical and it is isnt witin the scope of these sessions to provide a rigorous training in these methods. "
 
 # ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
-md" ## Cake eating problems "
+md" ## Discrete dynamic programming "
 
 # ╔═╡ e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
 md" This class of problems is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. The notes presented here are almost an exact copy of the ones used by **Florian Oswald**. "
@@ -505,46 +505,43 @@ end
 # ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
 bar(1:nperiods,C[:, end], leg = false, title = "Given K_t = $(Kspace[end]), take action...",xlab = "period")
 
-# ╔═╡ 796cd6f8-c61a-4a90-b7d3-e0680f59b513
-md" ### Infinite time cake eating problem [∞🍰 = 😍]"
+# ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
+md" ## Optimal growth problem" 
 
-# ╔═╡ ceff4993-7237-4d4d-be1a-f30dc1dfeac2
-md" We will continue our example of the cake eating problem, but now extend it to infinite time. This means that will introduce value function, policy function and time iteration techniques. In the next session we will introduce uncertainty in finite time, once again with the cake-eating problem and then talk about infinite time problems with uncertainty. "
+# ╔═╡ bfeff134-00d8-4ca5-9902-6b8dde5facd3
+md" Another example where dynamic programming is often used is the optimal growth problem. This is a simple extension of the cake eating problem that we encountered in the previous section. I will not go into detail on the dynamic programming theory, we will simply take a look at the model setup and how to solve the given problem. " 
 
-# ╔═╡ 2bc47bdd-d6b2-4ff0-96e2-6f8c84dfcf58
-md" #### Value function iteration "
+# ╔═╡ f4654f14-6bef-452f-a9af-ec62613ad20b
+md" Payoffs over time for the optimal growth model are
 
-# ╔═╡ 5a0b4906-d0a4-4f7e-868d-863d5e236f58
-md" The following notes are basically an abbreviated version of the notes from [QuantEcon](https://python.quantecon.org/cake_eating_numerical.html), The Bellman equation for the infinite time cake eating problem is given by, 
+$$U=\sum_{t=1}^{\infty}\beta^{t}u\left(K_{t},c_{t}\right)$$
 
-$$V(K) = \max_{0\leq c \leq K} \{u(c) + \beta V(K-c)\} \quad \text{for all } K \geq 0$$
+where $\beta<1$ is a discount factor, $K_{t}$ is the state, $c_{t}$ is the control. As we stated in the previous section, the state evolves according to $K_{t+1} = g(K_t, c_t)$. History of decisions is contained in the state variable. For this example we assume that both the payoff $u$ and transition function $g$ are stationary (do not depend on time). Problem can then be written as 
 
-where the utility function is a CRRA utility function. Notice the removal of time subscritps when compared to the finite time case. Anlaytical solutions for the optimal policy and value function are given by the following code. We want to find these analytical solutions with numerical methods.  "
+$$V(K)=\max_{K'\in\Gamma(K)}u(K,K')+\beta v(K')$$
 
-# ╔═╡ d26d70f6-768d-4611-ae77-9d5f678a8560
-begin
-	c_star(x, β, γ) = (1 - β ^ (1/γ)) * x
-	v_star(x, β, γ) = (1 - β ^ (1 / γ)) ^ (-γ) * (x ^ (1-γ) / (1-γ))
-end
+In this case $\Gamma(K)$ is the constraint set (or feasible set) for $K'$ when the current state is $K$. The setup for the deterministic optimal growth model is then as follows, 
 
-# ╔═╡ 9365cbdb-092a-47b2-9517-5387609775bd
-md" Value function approximation basically entails the following steps:
+$$\begin{aligned}
+   V(K) &= \max_{0<K'<f(K)} u(f(K) - K') + \beta V(K')\\
+  f(K)  & = K^\alpha
+\end{aligned}$$
 
-1. Take initial guess of the value function $V$
-2. Obtain an update $W$, which is defined by 
+where $K_0$ is given. The numerical approximation that we are going to implement is the following:
 
-$$W(K) = \max_{0\leq c \leq K} \{u(c) + \beta V(K - c)\}$$
-3. Stop if $W$ is approximately equal to $V$, otherwise set $V = W$ and go back to step $2$."
+$$V(K_i) = \max_{i'=1,2,\dots,n} u(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
 
+# ╔═╡ 5a3df38d-2973-421e-8da0-a190653af20f
+md" ### Value funtion iteration "
 
-# ╔═╡ 46ae99d1-c362-483f-918f-d51723eb2bfc
-md" #### Bellman operator " 
+# ╔═╡ e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
+md" The first method that we will use to solve this problem is value function iteration. We have already used this method for the cake eating problem, but let illustrate it for the optimal growth problem as well. Remember that for value function iteration we want to find the fixed point of the functional equation by iteration. We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
 
-# ╔═╡ fdc584a9-1086-4126-aa08-a772c71bf8c8
-md" Have brief discussion on the Bellman operator here. "
+# ╔═╡ caa19eec-f786-4515-87d7-69914c01f308
+md" #### Discrete DP VFI "
 
-# ╔═╡ b2f96156-bd23-4767-8ec8-38215a8f4b63
-md" #### VFI implementation "
+# ╔═╡ 8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
+md" We start with discrete dynamic programming, which means that we will look at a discrete state and action space. We solve the functional problem on the real line (which has continuous support) on a finite set of grid points only. This method is quite robust and easy to understand, but is known for being slow. Eventually, given an increased number of grid points to evaluate across and enough iterations one should approximate the true solution, but this can take a lot of time. This is especially true if the state space is mutlidimensional, which brings in the curse of dimensionality. " 
 
 # ╔═╡ 51c0c398-81d0-4e93-9907-34f3f39be2e4
 md" While the general steps provided above explain the general idea quite well, it is not practical as an algorithm to solve our problem. Let us expand more on these steps to provide us with an algorithm that we can take to the computer. The basic outline of the VFI algorithm that we need to follow is the following. 
@@ -559,6 +556,9 @@ $$W(K_i) = \max_{0\leq c \leq K_{i}} \{u(c) + \beta V(K_{i} - c)\}$$
 5. Stop if $d(W, V) < \varepsilon$, otherwise set $V = W$ and go back to step $4$
 6. Plot value and policy functions
 7. Compare with analytical solutions (provided above) "
+
+# ╔═╡ b2f96156-bd23-4767-8ec8-38215a8f4b63
+md" #### VFI implementation "
 
 # ╔═╡ 60912ad4-c766-4b70-b843-baed710e29ce
 begin
@@ -589,64 +589,6 @@ begin
 	ε = 1e-9
 end
 
-# ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
-md" ## Optimal growth problem" 
-
-# ╔═╡ bfeff134-00d8-4ca5-9902-6b8dde5facd3
-md" Another example where dynamic programming is often used is the optimal growth problem. This is a simple extension of the cake eating problem that we encountered in the previous section. We will cover the solution to this problem through value and policy function iteration. We will also touch on projection methods for the optimal growth model. I will not go into detail on the dynamic programming theory, we will simply take a look at the model setup and how to solve the given problem. " 
-
-# ╔═╡ f4654f14-6bef-452f-a9af-ec62613ad20b
-md" Payoffs over time for the optimal growth model are
-
-$$U=\sum_{t=1}^{\infty}\beta^{t}u\left(K_{t},c_{t}\right)$$
-
-where $\beta<1$ is a discount factor, $K_{t}$ is the state, $c_{t}$ is the control. As we stated in the previous section, the state evolves according to $K_{t+1} = g(K_t, c_t)$. History of decisions is contained in the state variable. For this example we assume that both the payoff $u$ and transition function $g$ are stationary (do not depend on time). Problem can then be written as 
-
-$$V(K)=\max_{K'\in\Gamma(K)}u(K,K')+\beta v(K')$$
-
-In this case $\Gamma(K)$ is the constraint set (or feasible set) for $K'$ when the current state is $K$."
-
-# ╔═╡ 5a3df38d-2973-421e-8da0-a190653af20f
-md" ### Value funtion iteration "
-
-# ╔═╡ e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
-md" The first method that we will use to solve this problem is value function iteration. We have already used this method for the cake eating problem, but let illustrate it for the optimal growth problem as well. Remember that for value function iteration we want to find the fixed point of the functional equation by iteration. We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
-
-# ╔═╡ caa19eec-f786-4515-87d7-69914c01f308
-md" #### Discrete DP VFI "
-
-# ╔═╡ 8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
-md" We start with discrete dynamic programming, which means that we will look at a discrete state and action space. We solve the functional problem on the real line (which has continuous support) on a finite set of grid points only. This method is quite robust and easy to understand, but is known for being slow. Eventually, given an increased number of grid points to evaluate across and enough iterations one should approximate the true solution, but this can take a lot of time. This is especially true if the state space is mutlidimensional, which brings in the curse of dimensionality. " 
-
-# ╔═╡ 744e54e1-08ef-40fe-b398-d36cab7de232
-md" The theorethical setup for the deterministic optimal growth model is as follows, 
-
-$$\begin{aligned}
-   V(K) &= \max_{0<K'<f(K)} u(f(K) - K') + \beta V(K')\\
-  f(K)  & = K^\alpha
-\end{aligned}$$
-
-where $K_0$ is given. The numerical approximation that we are going to implement is the following:
-
-$$V(K_i) = \max_{i'=1,2,\dots,n} u(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
-
-# ╔═╡ 3a1eff09-d8f2-4ac7-ab21-0ba0f8157d82
-begin
-	# This is the first step. Let us define our parameters that we are going to use for this problem.  
-	# We would not normally define these parameters within the global scope like this, but for simplicity let us continue in this fashion. Rather use the Parameters.jl package to properly define parameters in a struct. 
-	α₁     		= 0.65
-	β₁      	= 0.95
-	grid_max  	= 2  # upper bound of capital grid
-	n₁         	= 150  # number of grid points
-	N_iter   	= 3000  # maximum number of iterations
-	kgrid     	= 1e-2:(grid_max-1e-2)/(n-1):grid_max  # equispaced grid that starts at zero and ends at 2.
-	f(x) 		= x^α  # defines the production function f(k). Different from the cake eating problem
-	tol 		= 1e-9 # Tolerance
-end
-
-# ╔═╡ e6b624ea-537a-4315-a331-f949776544db
-
-
 # ╔═╡ b661b098-1d33-4470-8082-f3972e738e91
 md" A closed form solution to this problem can be found if we choose $u(x) = \ln(x)$, but this will not always be the case. This is a very special type of problem that allows an analytic solution. "
 
@@ -664,65 +606,11 @@ begin
 	ufun(x) = log.(x)
 end
 
-# ╔═╡ cee63396-35ea-4b34-9f4a-cf8c91ab6971
+# ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
 # Step 4: Start the iteration
 
 # We will first define the Bellman operator before we can start the iteration. We will need this operator to perform the iteration. 
 
-"""
-# Bellman Operator
-
-# Inputs
-`grid`: grid of values of state variable
-
-`v0`: current guess of value function
-
-`n` : number of grid points 
-
-# Output
-`v1`: next guess of value function
-
-`pol`: corresponding policy function 
-"""
-function bellman_operator_cake(grid, v0, n)
-    
-    v₁  = zeros(n)     		# next guess
-    pol = zeros(Int,n)     	# policy function
-    w   = zeros(n)   		# temporary vector 
-
-    # we need to loop over the states (outer loop) and choices (inner loop)
-    
-	# current capital
-    for (ik, k) in enumerate(grid)
-
-        # loop over all possible choices for the choice variable
-        for (ic, c) in enumerate(grid)
-			kprime = k - c 
-			jk = argmin(abs.(grid .- kprime)) # Think about this step in particular. Why is this done?
-		    w[ic] = ufun(c) .+ β₂ .* v0[jk]
-        end
-        # find maximal choice
-        v₁[ik], pol[ik] = findmax(w)     # stores value und policy (index of optimal choice)
-    end
-    return (v₁, pol)   # return both value and policy function
-end
-
-# ╔═╡ 910d60df-d94b-4576-a8c9-03ba5e3cb2bb
-bellman_operator_cake(K_grid, v₀, n₂) # Don't know if the result is correct. 
-
-# ╔═╡ 3031cb5a-1839-4756-b977-924f63799cd8
-function VFI_cake()
-    v_init = zeros(n₂)
-	for iter in 1:maxit 
-        v_next = bellman_operator_cake(K_grid, v₀, n₂)  # returns a tuple: (v1,pol)
-        v_init = v_next[1]  # update guess 
-    end
-end
-
-# ╔═╡ 9f9fc1fe-3d15-4ae4-b644-5f5cc6a29fed
-VFI_cake()
-
-# ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
 # Below is an example of what a docstring looks like for a function. 
 
 """
@@ -851,6 +739,9 @@ iterations = @bind iter Slider(5:200, show_value = true, default = 5)
 
 # ╔═╡ 07e571b5-9e5f-4690-89b6-4fc166c94a1b
 FVFI(w_new, K_grid, iter)
+
+# ╔═╡ d31741a8-5184-45d8-8a62-0db938c9a372
+md" In the next session we will introduce a stochastic component to the problem, which means that there will be uncertainty in the model. In particular we will apply this to the cake eating and optimal growth models.  "
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2482,56 +2373,39 @@ version = "0.9.1+5"
 # ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
 # ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 # ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
-# ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-# ╠═a25b4e49-46c0-4c7d-b80e-e108614ec288
-# ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
+# ╟─d9a659a2-d0dd-45bb-bb5b-fb85f0208819
+# ╟─a25b4e49-46c0-4c7d-b80e-e108614ec288
+# ╟─11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
 # ╟─f2075369-02b7-4262-a543-91da85169e65
 # ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
-# ╠═ed53fb3c-9fe6-47d5-b465-3af3369f9177
-# ╠═d609467a-6898-430f-9fc7-70cecf9cb3d0
-# ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
-# ╠═8e14ac14-af81-4bd6-bdac-f850bb9020e9
-# ╠═9300d7d9-9563-4f85-b835-54a8db884317
-# ╠═53bdea85-8d59-4669-85ca-04119131064a
-# ╠═b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
+# ╟─ed53fb3c-9fe6-47d5-b465-3af3369f9177
+# ╟─d609467a-6898-430f-9fc7-70cecf9cb3d0
+# ╟─be24ede3-87c7-402c-adbc-2f003e5099a0
+# ╟─8e14ac14-af81-4bd6-bdac-f850bb9020e9
+# ╟─9300d7d9-9563-4f85-b835-54a8db884317
+# ╟─53bdea85-8d59-4669-85ca-04119131064a
+# ╟─b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 # ╟─437462d4-2dd1-4ef9-aa7d-b0cb64bef455
 # ╟─18b69513-700f-4300-b578-4742112a23ca
 # ╟─53c21b1b-088f-4604-9246-fc6796c3e256
 # ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # ╟─c8533761-ae1d-47a2-9860-ad88ecca2d34
 # ╟─547def39-8a65-48bc-bb30-d28d016cd6fa
-# ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
-# ╠═c5ea0324-8e8c-49d1-88f6-3abc4278aefa
+# ╟─7b63094f-ddde-4dff-911a-58d8fc7226a2
+# ╟─c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 # ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
 # ╟─aa534428-e995-4885-bfeb-135ad92129a4
-# ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
-# ╠═7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
+# ╟─b40713e0-54db-4b49-8d35-a5b68f71ac89
+# ╟─7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
 # ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
 # ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
-# ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
-# ╠═7529e1a7-c41c-49ec-8885-6c7c14093700
+# ╟─d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
+# ╟─7529e1a7-c41c-49ec-8885-6c7c14093700
 # ╟─b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
-# ╠═b1e0e8e1-858f-4f12-a272-7197a117af25
+# ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
-# ╟─796cd6f8-c61a-4a90-b7d3-e0680f59b513
-# ╟─ceff4993-7237-4d4d-be1a-f30dc1dfeac2
-# ╟─2bc47bdd-d6b2-4ff0-96e2-6f8c84dfcf58
-# ╟─5a0b4906-d0a4-4f7e-868d-863d5e236f58
-# ╠═d26d70f6-768d-4611-ae77-9d5f678a8560
-# ╟─9365cbdb-092a-47b2-9517-5387609775bd
-# ╟─46ae99d1-c362-483f-918f-d51723eb2bfc
-# ╟─fdc584a9-1086-4126-aa08-a772c71bf8c8
-# ╟─b2f96156-bd23-4767-8ec8-38215a8f4b63
-# ╟─51c0c398-81d0-4e93-9907-34f3f39be2e4
-# ╠═60912ad4-c766-4b70-b843-baed710e29ce
-# ╠═adc503f5-6f65-4f6a-ba10-965f78f52e9e
-# ╠═cd71f975-5058-46a4-80d8-0d410f19cbf1
-# ╠═cee63396-35ea-4b34-9f4a-cf8c91ab6971
-# ╠═910d60df-d94b-4576-a8c9-03ba5e3cb2bb
-# ╠═3031cb5a-1839-4756-b977-924f63799cd8
-# ╠═9f9fc1fe-3d15-4ae4-b644-5f5cc6a29fed
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
@@ -2539,10 +2413,12 @@ version = "0.9.1+5"
 # ╟─e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
 # ╟─caa19eec-f786-4515-87d7-69914c01f308
 # ╟─8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
-# ╠═744e54e1-08ef-40fe-b398-d36cab7de232
-# ╠═3a1eff09-d8f2-4ac7-ab21-0ba0f8157d82
+# ╟─51c0c398-81d0-4e93-9907-34f3f39be2e4
+# ╟─b2f96156-bd23-4767-8ec8-38215a8f4b63
+# ╠═60912ad4-c766-4b70-b843-baed710e29ce
+# ╠═adc503f5-6f65-4f6a-ba10-965f78f52e9e
+# ╠═cd71f975-5058-46a4-80d8-0d410f19cbf1
 # ╠═828e7015-3b57-44fb-8cc4-0a7727245981
-# ╠═e6b624ea-537a-4315-a331-f949776544db
 # ╟─b661b098-1d33-4470-8082-f3972e738e91
 # ╠═018646cc-912f-4ac9-9158-ebead586d663
 # ╟─4bc01bd5-17ef-42a7-b829-5bd369b938f3
@@ -2552,11 +2428,12 @@ version = "0.9.1+5"
 # ╟─1229edd5-45cf-41f1-ad66-72af83a0a2e3
 # ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
 # ╟─1a3e85a7-a292-487e-804c-b408cd508498
-# ╠═597f6e04-3580-4214-b7f2-77db8286d864
-# ╠═91778068-9af3-4f28-bf76-aa19c9df3e45
-# ╠═d111bb6f-f6ce-44bd-a40d-0d442d6484d0
+# ╟─597f6e04-3580-4214-b7f2-77db8286d864
+# ╟─91778068-9af3-4f28-bf76-aa19c9df3e45
+# ╟─d111bb6f-f6ce-44bd-a40d-0d442d6484d0
 # ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be
 # ╟─128ec2e2-3b38-49cd-b507-c1f5fb051491
 # ╟─07e571b5-9e5f-4690-89b6-4fc166c94a1b
+# ╟─d31741a8-5184-45d8-8a62-0db938c9a372
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

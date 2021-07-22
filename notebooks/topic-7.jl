@@ -42,7 +42,7 @@ html"""
 md" # Dynamic programming I"
 
 # ╔═╡ 058c997b-390b-4b8e-b203-20879e0673a4
-md" ## Still quite incomplete and incoherent. Needs some theory! "
+md" ## Still quite incomplete and incoherent. Needs work! "
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. It is quite sseful in several areas of economics, but I have mostly used it in macroeconomic applications. It is therefore natural to me that most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem and optimal growth problem.
@@ -183,10 +183,10 @@ md" This class of problems is more closely related to economics. It is a consump
 md" ### Finite time cake eating problem [🍰 ≅ 😁]"
 
 # ╔═╡ ba5f4d25-2ed0-4d5b-8f84-25f10dc0ad82
-md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. When these optimisation problems are framed in a dynamic programming context, we have nice tools to take advantage of the recursive structure. "
+md" We want to maximise total utility given some constraint. Our first intuition is to solve this as a constrained optimisation problem. This is entirely plausible. However, dynamic programming offers some distinct advantages, especially when it comes to numerical methods. "
 
 # ╔═╡ e5ef57d1-e00b-4005-913a-7d6579c9c59c
-md" In this cake eating (🍰) problem you are given a certain budget of resources $K$ to spend (eat) over $t$ dates. In this example $K$ refers to the size of the cake. You take an action $c_t \in \mathbb{N}$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $U_t(c_t)$ be the reward / utility that results from the action that you take in period $t$.
+md" In this cake eating (🍰) problem you are given a certain budget of resources $K$ to spend (consume) over $t$ dates. In this example $K$ refers to the size of the cake. You take an action $c_t \in \mathbb{N}$ at a specific date $t$. The action refers to how much to spend (or cake to eat) in the specified period. We let $U_t(c_t)$ be the reward / utility that results from the action that you take in period $t$.
 
 In this example the action is the consumption of cake, so this can be viewed as a consumption-savings problem. However, to keep things general we will refer to action instead of consumption. Now let us frame the problem more formally. "
 
@@ -226,16 +226,15 @@ $$V_{t}\left(K_{t}\right)=\max _{0 \leq c_{t} \leq K_{t}}\left[U_{t}\left(c_{t}\
 
 The value of having $K_t$ resources left in period $t$ is the value of optimizing current spending (the $\max U_t(c_t)$ part) plus the value of then having $g(K_t, c_t)$ units left going forward
 
-This equation is commonly known as the _Bellman Equation_.
-Given $K_t$ we could just try out different $c_t$ and see which gives the highest value. But...what on earth is $V_{t+1}(\cdot)$? 🤔"
+Practically, given $K_t$ we could just try out different $c_t$ and see which gives the highest value. How do we determine $V_{t+1}(\cdot)$? 🤔"
 
 # ╔═╡ 728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
 md" #### Backward induction "
 
 # ╔═╡ 3f18f963-ad85-4c75-ab8c-64ac3cbf312c
-md" One way in which we could do this is by saying that time is finite and stops at $T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(K) = 0$. Therefore the last period is going to be
+md" One way in which we could do this in our **finite time setup** is to specify that time stops at $t = T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(K) = 0$. It is not optimal to leave cake on the table! Therefore the last period is going to be
 
-$$V_{T}\left(K_{T}\right)=\max _{0 \leq c_{T-1} \leq K_{T}} U_{T}\left(c_{T}\right)$$
+$$V_{T}\left(K_{T}\right)=\max _{0 \leq c_{T} \leq K_{T}} U_{T}\left(c_{T}\right)$$
 
 To maximise this we simply choose the value for $c_T$ that provides the highest payoff. This period's maximisation problem is then quite easy to solve. Now consider the problem at $T-1$: 
 
@@ -261,20 +260,23 @@ Period $2$: $V_2(K_2) = \sqrt{K_2}$ because $c_2(K_2)=K_2$ where $K_2$ are the a
 
 Period $1$: $V_1(K_1) = \max_{c_1} \sqrt{K_1} + \beta V_2(K_1 - c_1)$"
 
-# ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
-md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. In this case, we have that we have a maximum of $4$ resources. "
+# ╔═╡ f17bd25f-a459-44b6-862e-5d8d7b5062c9
+md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. "
 
 # ╔═╡ be62b6ff-a947-47ab-8905-6ac631abf8e6
 @bind max_K Slider(0:100, show_value = true, default = 5)
 
+# ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
+md"  In this case, we have a maximum of $max_K resources in period 2. "
+
 # ╔═╡ d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-grid_K2 = range(0, stop = max_K, step=1) |> collect # Using a pipe operator (similar to one from R)
+grid_K2 = range(0, stop = max_K, step = 1) |> collect # Using a pipe operator (similar to one from R)
 
 # ╔═╡ a25b4e49-46c0-4c7d-b80e-e108614ec288
-C2 = grid_K2 # Consume all available resources
+C2 = grid_K2 # Consume all available resources at each grid point
 
 # ╔═╡ 11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
-V2 = sqrt.(C2)
+V2 = sqrt.(C2) # Apply the explicit function form for utility function
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
 plot(grid_K2, V2, xlab = "Resources (Cake size)", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
@@ -289,10 +291,10 @@ md" Say that we want to find the value of $K_2 = 2$. We have to reference the re
 C1 = 0 # Is this value optimal? Should not be, in fact it would be our least likely consumption value. 
 
 # ╔═╡ be24ede3-87c7-402c-adbc-2f003e5099a0
-β = 0.99
+β = 0.99 # Discount parameter
 
 # ╔═╡ 8e14ac14-af81-4bd6-bdac-f850bb9020e9
-V1_guess = fill(NaN, K1 + 1) # Initialise with NaN. What is the difference between missing and NaN?
+V1_guess = fill(NaN, K1 + 1) # Initialise with NaN. Could also do this with zeros -- zeros(K1 + 1)
 
 # ╔═╡ 9300d7d9-9563-4f85-b835-54a8db884317
 K2 = K1 - C1 # How much cake is left in the second period after we made our decision in the first period. 
@@ -303,6 +305,9 @@ begin
 	V1_guess
 end
 
+# ╔═╡ eff5cdcf-3a07-4d08-9152-39c0b71eac3b
+md" The function below encapsulates the logic that we have explored above in a neat container. _Julia_ is mostly meant for functional programming, so try to write with functions in mind. "
+
 # ╔═╡ b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 function backward_induction1(K1, max_K, grid_K2 = range(0, max_K, step=1) |> collect,
 		V2 = sqrt.(grid_K2); β = 0.99)
@@ -312,14 +317,16 @@ function backward_induction1(K1, max_K, grid_K2 = range(0, max_K, step=1) |> col
 	V1_guess = zeros(K1 + 1) # Fill with (K1 + 1) zeros
 	
 	for i_guess in 0:K1 # Running this loop over the state space
-		C1 = i_guess # Start with a guess of zero consumption and then moving on to higher levels. 
+		C1 = i_guess # Start with a guess of zero consumption and then moving on to higher levels.
+		
+		# NB In this routine the value for K2 is going to be the same as its position in the index
 		K2 = K1 - i_guess # Cake left after consumption in the first period gets consumed in second period. 
 		V1_guess[i_guess + 1] = sqrt.(C1) .+ β .* V2[K2 + 1]  # Value associated with cake consumed across both periods (taking control variables C1 and K2 into account)
 	end
 	
 	idx_max = argmax(V1_guess) # Pick out the position of the argument that maximises the value function
 	# Note, max function provides the actual value, while argmax gives index value. 
-	V1, C1 = round(V1_guess[idx_max], digits = 3), idx_max
+	V1, C1 = round(V1_guess[idx_max], digits = 3), (idx_max - 1)
 	#md" The optimal consumption is $C_1 \rightarrow$ $C1 with associated value of $V1"
 	#plot(V1_guess, xlab = "Consumption (Optimal at $C1)", ylab = "Value (Optimal at $V1)", label = L"V_1", line = 2)
 end
@@ -349,10 +356,10 @@ md" Let us consider the same example but with an arbitrary number of periods (ev
 # ╔═╡ 7b63094f-ddde-4dff-911a-58d8fc7226a2
 begin
 	# final period T
-	points = 500; # The number of points on the grid 
+	points = 500; # The number of points on the grid (let us keep this fixed for now)
 	
 	# Lower and upper limits of the state space. In this case this represents the size of the cake. 	
-	lowK = 1e-6; # Lowest possible of value of K
+	lowK = 1e-6; # Lowest possible of value of K (don't select 0, their are numerical consequences)
 	highK = 30.0 # Highest value that K can take, given that consumption is zero. 
 	
 	# Log and then exponentiate for more points towards zero, which makes a nicer plot
@@ -375,27 +382,28 @@ md" As we stated in our discussion, now look to an answer for $V_{T-1}$, given t
 # ╔═╡ b40713e0-54db-4b49-8d35-a5b68f71ac89
 begin
 	# solving problem for period T-1 
-	# now for each value in Kspace, we need to decide how much to consume
+	# now for each value in the state space [Kspace], we need to decide how much to consume
 	
 	# Initialise some vectors 
 	w = zeros(points) # temporary vector for each choice of K -- could also use NaN as before. 
 	VT_1 = zeros(points) # optimal value in T-1 at each state of K 
-	ix = 0 # optimal index of action in T-1 at each state of K
+	ix = 0 # optimal index of action in T-1 at each state of K (important to include!)
 	CT_1 = zeros(points) # optimal action in T-1 at each state of K
 
-	for (ik, k) in enumerate(Kspace) # for all possible K-values (enumerate loops over entire state space and also creates an index ik)
-        # in our inner loop we want to loop over all possible action choices
+	for (ik, k) in enumerate(Kspace) # for all possible K-values (enumerate loops over entire state space and also creates an index ik) -- index component is NB!
+        
+		# in our inner loop we want to loop over all possible action choices
         for (ic, c_choice) in enumerate(Kspace)
             if k <= c_choice   # check whether that choice is feasible 
                 w[ik] = -Inf   # If the choice is feasible, then assign this value to first element
             else
-				k1 = k - c_choice  # tomorrow's K
+				k1 = k - c_choice  # tomorrow's K 
 				jk = argmin(abs.(Kspace .- k1))  # index of that value in Kspace
                 w[ic] = sqrt(c_choice) + VT[jk]   # value of that c_choice
             end
         end
         # find best action
-        VT_1[ik], ix = findmax(w) # stores Value and policy (index of optimal choice)
+        VT_1[ik], ix = findmax(w) # stores value and policy (index of optimal choice)
 		CT_1[ik] = Kspace[ix]  # record optimal action level
 		
     end
@@ -547,7 +555,7 @@ md" While the general steps provided above explain the general idea quite well, 
 3. Provide initial guess for the value funtion $V$ and choose stopping criterion $\varepsilon > 0$
 4. Start the iteration, for each $K_i$, $i = 1, \ldots, N$ compute
 
-$$W(K_i) = \max_{0\leq c \leq K_{i}} \{u(c) + \beta V(K_{i} - c)\}$$
+$$W(K_i) = \max_{0 \leq K^{\prime} \leq f(K)} \{u(f(K_{i}) - K^{\prime}) + \beta V(K^{\prime})\}$$
 
 5. Stop if $d(W, V) < \varepsilon$, otherwise set $V = W$ and go back to step $4$
 6. Plot value and policy functions
@@ -585,6 +593,9 @@ begin
 	# Tolerance level for stopping criterion
 	ε = 1e-9
 end
+
+# ╔═╡ a8cbe356-218d-47f1-b62a-8fea4f6c1835
+md" Quick word about the Bellman operator and contraction mapping theorem here before we continue with iteration "
 
 # ╔═╡ b661b098-1d33-4470-8082-f3972e738e91
 md" A closed form solution to this problem can be found if we choose $u(x) = \ln(x)$, but this will not always be the case. This is a very special type of problem that allows an analytic solution. "
@@ -625,7 +636,7 @@ end
 
 `pol`: corresponding policy function 
 """
-function bellman_operator(grid, v0, n = n₁)
+function bellman_op(grid, v0, n, f; β = 0.96)
 	
 	# Initialise the different vectors
 	v1  = zeros(n)     # next guess
@@ -642,7 +653,7 @@ function bellman_operator(grid, v0, n = n₁)
             if f(k) - kprime < 0   #check for negative consumption
                 w[iprime] = -Inf
             else
-                w[iprime] = ufun(f(k) - kprime) + beta * v0[iprime]
+                w[iprime] = ufun(f(k) - kprime) + β * v0[iprime]
             end
         end
         # find maximal choice
@@ -650,6 +661,54 @@ function bellman_operator(grid, v0, n = n₁)
     end
     return (v1, pol)   # return both value and policy function
 	
+end
+
+# ╔═╡ 4f944394-1175-4fc3-b3ee-b2185cab821b
+b1 = bellman_op(K_grid, v₀, K_grid_size, k -> k^α)
+
+# ╔═╡ 86869393-2a2e-4539-98b2-a061c90897c3
+# VFI iterator
+#
+## input
+# `n`: number of grid points
+# output
+# `v_next`: tuple with value and policy functions after `n` iterations.
+function VFI(op)
+    v_init = zeros(n)     # initial guess
+    for iter in 1:N_iter
+        v_next = op(kgrid,v_init)  # returns a tuple: (v1,pol)
+        # check convergence
+        if maximum(abs,v_init.-v_next[1]) < tol
+            verrors = maximum(abs,v_next[1].-v_star(kgrid))
+            perrors = maximum(abs,v_next[2].-k_star(kgrid))
+            return (v = v_next[1], p =v_next[2], errv = verrors, errp = perrors, iter = iter)
+        elseif iter==N_iter
+            @warn "No solution found after $iter iterations"
+            return (v = v_next[1], p =v_next[2], errv = verrors, errp = perrors, iter = iter)
+        end
+        v_init = v_next[1]  # update guess 
+    end
+end
+
+# ╔═╡ da73f82c-8fe4-4aaf-8b0f-7e20cf27dfc6
+function VFI_converge(op::Function,steps)
+    v_init = zeros(n)     # initial guess
+	pl = plot(kgrid, v_star(kgrid), color = :red, label = "true")
+    for iter in 1:steps
+		plot!(pl, kgrid, v_init, label = "", color = :grey)
+        v_next = op(kgrid,v_init)  # returns a tuple: (v1,pol)
+        # check convergence
+        if maximum(abs,v_init.-v_next[1]) < tol
+            verrors = maximum(abs,v_next[1].-v_star(kgrid))
+            perrors = maximum(abs,v_next[2].-k_star(kgrid))
+            return (v = v_next[1], p =v_next[2], errv = verrors, errp = perrors, iter = iter)
+        elseif iter==N_iter
+            @warn "No solution found after $iter iterations"
+            return (v = v_next[1], p =v_next[2], errv = verrors, errp = perrors, iter = iter)
+        end
+        v_init = v_next[1]  # update guess 
+    end
+	pl
 end
 
 # ╔═╡ 4bc01bd5-17ef-42a7-b829-5bd369b938f3
@@ -662,14 +721,14 @@ The process looks like this:
 
 1. Begin with array of values $\{ V_0, \ldots, V_I \}$  representing the values of initial function $V$ on the grid points $\{ K_0, \ldots, K_I \}$.  
 2. Build a function $\hat{V}$ on the state space $\mathbb{R}_+$ by linear interpolation, based on these data points.  
-3. Obtain and record the value $T \hat{V}(x_i)$ on each grid point $K_i$  by repeatedly solving the maximization problem.  
+3. Obtain and record the value $T \hat{V}(K_i)$ on each grid point $K_i$  by repeatedly solving the maximization problem.  
 4. Unless some stopping condition is satisfied, set $\{ V_0, \ldots, V_I \} = \{ T \hat V(K_0), \ldots, T \hat V(K_I) \}$ and go to step $2$.     "
 
 # ╔═╡ 507514d4-d369-4950-9198-428561aecfd9
 md" ##### Quick detour on interpolation "
 
 # ╔═╡ ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
-md" We have covered the topic of function approximation via linear interapolation before, but let us have a quick recap before we continue. Suppose that we have a function $h(x) = 2\cos(6x) + \sin(14x) + 2.5$ and we are trying to approximate this function with piecewise linear interpolation, we could use the Interpolations.jl module. Consider the following:"
+md" We have covered the topic of function approximation via linear interapolation before, but let us have a quick recap before we continue. Suppose that we have a function $h(x) = 2\cos(6x) + \sin(14x) + 2.5$ and we are trying to approximate this function with piecewise linear interpolation, we could use the `Interpolations.jl` module. Consider the following:"
 
 # ╔═╡ 1229edd5-45cf-41f1-ad66-72af83a0a2e3
 begin
@@ -701,8 +760,23 @@ begin
 	plot!(plt, legend = :top)
 end
 
+# ╔═╡ fcca074c-8f19-42b3-b60e-a75cdad1311f
+md" In this example we only discretize the state space, not the the action (control) space. We are providing an approximation to the control space via our interpolation. We mentioned this before, in the algorithm above. We are building a function $\hat{V}$ on $\mathbb{R}_{+}$. The values for $K^{\prime}$ are potentially then **off the grid** that we construct for the state space. "
+
+# ╔═╡ 785151e1-f0b1-4788-833a-2db80120c876
+num_grid = @bind m Slider(0.1:0.1:2,show_value = true, default = 0.2)
+
+# ╔═╡ 4eea7313-37fe-48ea-b30a-94f4ccedd71d
+scatter(K_grid, ones(1), xlims = (0, m), ylims=(0.9,1.1),label = "State space")
+
+# ╔═╡ cbb90e8e-9656-4dfb-8103-6459fa46595e
+md" For our Bellman operator we will use the `maximize()` function from the `Optim.jl` package to perform our maximisation. We define a objective function for each $k_{i}$ and then optimise with respect to objective, while defining a lower and upper bound. "
+
+# ╔═╡ 2cef4d1b-39bd-4c24-8a3b-69c6da406e8f
+md" The QuantEcon example utilises this exact process, but uses $y_t$ as state variable instead of $K_t$. This delivers exactly the same result, so we look at their code implementation below. In general, the notes and code at QuantEcon are much better thought out than I can manage, so I utilise their code whenever possible."
+
 # ╔═╡ 91778068-9af3-4f28-bf76-aa19c9df3e45
-function bellman_fitted(w, grid, β, u, f)
+function bellman_fitted_y(w, grid, β, u, f)
     w_func = LinearInterpolation(grid, w)
 	
     # objective for each grid point
@@ -715,13 +789,13 @@ function bellman_fitted(w, grid, β, u, f)
 end
 
 # ╔═╡ d111bb6f-f6ce-44bd-a40d-0d442d6484d0
-function FVFI(w, grid, iter)
+function FVFI_y(w, grid, iter)
 	
 	lb = "initial condition"
 	plt = plot(grid, w, color = :black, linewidth = 2, alpha = 0.8, label = lb)
 	
 	for i in 1:iter
-		w = bellman_fitted(w, grid, β, log, k -> k^0.65)
+		w = bellman_fitted_y(w, grid, β, log, k -> k^0.65)
 		plot!(K_grid, w, color = RGBA(i/iter, 0.2, 1 - i/iter, 0.8), linewidth = 2, alpha = 0.7,
 	          label = "")
 	end
@@ -735,7 +809,7 @@ w_new = 0.5 * log.(K_grid);
 iterations = @bind iter Slider(5:200, show_value = true, default = 5)
 
 # ╔═╡ 07e571b5-9e5f-4690-89b6-4fc166c94a1b
-FVFI(w_new, K_grid, iter)
+FVFI_y(w_new, K_grid, iter)
 
 # ╔═╡ d31741a8-5184-45d8-8a62-0db938c9a372
 md" In the next session we will introduce a stochastic component to the problem, which means that there will be uncertainty in the model. In particular we will apply this to the cake eating and optimal growth models.  "
@@ -2367,22 +2441,24 @@ version = "0.9.1+5"
 # ╟─3f18f963-ad85-4c75-ab8c-64ac3cbf312c
 # ╟─fc6640d2-f2de-4d09-8787-39954cc835b4
 # ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
+# ╟─f17bd25f-a459-44b6-862e-5d8d7b5062c9
+# ╟─be62b6ff-a947-47ab-8905-6ac631abf8e6
 # ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
-# ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
-# ╟─d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-# ╟─a25b4e49-46c0-4c7d-b80e-e108614ec288
-# ╟─11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
+# ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
+# ╠═a25b4e49-46c0-4c7d-b80e-e108614ec288
+# ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
 # ╟─f2075369-02b7-4262-a543-91da85169e65
 # ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
-# ╟─ed53fb3c-9fe6-47d5-b465-3af3369f9177
-# ╟─d609467a-6898-430f-9fc7-70cecf9cb3d0
-# ╟─be24ede3-87c7-402c-adbc-2f003e5099a0
-# ╟─8e14ac14-af81-4bd6-bdac-f850bb9020e9
-# ╟─9300d7d9-9563-4f85-b835-54a8db884317
+# ╠═ed53fb3c-9fe6-47d5-b465-3af3369f9177
+# ╠═d609467a-6898-430f-9fc7-70cecf9cb3d0
+# ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
+# ╠═8e14ac14-af81-4bd6-bdac-f850bb9020e9
+# ╠═9300d7d9-9563-4f85-b835-54a8db884317
 # ╟─53bdea85-8d59-4669-85ca-04119131064a
-# ╟─b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
+# ╟─eff5cdcf-3a07-4d08-9152-39c0b71eac3b
+# ╠═b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 # ╟─437462d4-2dd1-4ef9-aa7d-b0cb64bef455
-# ╟─18b69513-700f-4300-b578-4742112a23ca
+# ╠═18b69513-700f-4300-b578-4742112a23ca
 # ╟─53c21b1b-088f-4604-9246-fc6796c3e256
 # ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # ╟─c8533761-ae1d-47a2-9860-ad88ecca2d34
@@ -2413,7 +2489,11 @@ version = "0.9.1+5"
 # ╠═60912ad4-c766-4b70-b843-baed710e29ce
 # ╠═adc503f5-6f65-4f6a-ba10-965f78f52e9e
 # ╠═cd71f975-5058-46a4-80d8-0d410f19cbf1
+# ╟─a8cbe356-218d-47f1-b62a-8fea4f6c1835
 # ╠═828e7015-3b57-44fb-8cc4-0a7727245981
+# ╠═4f944394-1175-4fc3-b3ee-b2185cab821b
+# ╠═86869393-2a2e-4539-98b2-a061c90897c3
+# ╠═da73f82c-8fe4-4aaf-8b0f-7e20cf27dfc6
 # ╟─b661b098-1d33-4470-8082-f3972e738e91
 # ╠═018646cc-912f-4ac9-9158-ebead586d663
 # ╟─4bc01bd5-17ef-42a7-b829-5bd369b938f3
@@ -2424,6 +2504,11 @@ version = "0.9.1+5"
 # ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
 # ╟─1a3e85a7-a292-487e-804c-b408cd508498
 # ╟─597f6e04-3580-4214-b7f2-77db8286d864
+# ╟─fcca074c-8f19-42b3-b60e-a75cdad1311f
+# ╟─785151e1-f0b1-4788-833a-2db80120c876
+# ╟─4eea7313-37fe-48ea-b30a-94f4ccedd71d
+# ╟─cbb90e8e-9656-4dfb-8103-6459fa46595e
+# ╟─2cef4d1b-39bd-4c24-8a3b-69c6da406e8f
 # ╠═91778068-9af3-4f28-bf76-aa19c9df3e45
 # ╠═d111bb6f-f6ce-44bd-a40d-0d442d6484d0
 # ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be

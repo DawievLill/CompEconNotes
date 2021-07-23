@@ -196,7 +196,7 @@ md" #### Budgeting problem "
 # ╔═╡ b0ca2d8d-dfa9-4fed-b34d-90167e950153
 md" The goal is to maximise total utility subject to a resource constraint.
 
-$$\max _{c} \sum_{t \in \mathcal{T}} U_{t}\left(c_{t}\right) \quad \text{s.t.} \quad \sum_{t \in \mathcal{T}} c_{t} = K$$ 
+$$\max _{c_t} \sum_{t \in \mathcal{T}} \beta^{t} U_{t}\left(c_{t}\right) \quad \text{s.t.} \quad \sum_{t \in \mathcal{T}} c_{t} = K$$ 
 
 For this example we will not allow borrowing, so $c_t \geq 0$. For this problem our control variable is the action $c_t$. We want to choose the best action in each period. To choose the best action available in each period we want a list of all the values for $c_t$ in each period given the resources available in that period. We seek a best policy that prescribes the action that should be taken at each state at each point in time to maximise rewards. We can represent the values with a function, called the **value function**.
 
@@ -222,9 +222,9 @@ md" Dynamic programming is an analytical approach in which a multiperiod model i
 
 Bellman's Principle implies that the value function must satisfy Bellman's recursion equation. This relationship between $V_{t}(K_{t})$ and $V_{t+1}(K_{t+1})$ is given by 
 
-$$V_{t}\left(K_{t}\right)=\max _{0 \leq c_{t} \leq K_{t}}\left[U_{t}\left(c_{t}\right)+V_{t+1}\left(g\left(K_{t}, c_{t}\right)\right)\right]$$ 
+$$V_{t}\left(K_{t}\right)=\max _{0 \leq c_{t} \leq K_{t}}\left[U_{t}\left(c_{t}\right)+\beta V_{t+1}\left(g\left(K_{t}, c_{t}\right)\right)\right]$$ 
 
-The value of having $K_t$ resources left in period $t$ is the value of optimizing current spending (the $\max U_t(c_t)$ part) plus the value of then having $g(K_t, c_t)$ units left going forward
+The value of having $K_t$ resources left in period $t$ is the value of optimizing current spending (the $\max U_t(c_t)$ part) plus the value of then having $g(K_t, c_t)$ units left going forward (i.e. the next state).
 
 Practically, given $K_t$ we could just try out different $c_t$ and see which gives the highest value. How do we determine $V_{t+1}(\cdot)$? 🤔"
 
@@ -232,13 +232,13 @@ Practically, given $K_t$ we could just try out different $c_t$ and see which giv
 md" #### Backward induction "
 
 # ╔═╡ 3f18f963-ad85-4c75-ab8c-64ac3cbf312c
-md" One way in which we could do this in our **finite time setup** is to specify that time stops at $t = T$. The value of leaving resources would then be zero, i.e. $V_{T+1}(K) = 0$. It is not optimal to leave cake on the table! Therefore the last period is going to be
+md" One way in which we could do this in our **finite time setup** is to specify that time stops at $t = T$ and then use a technique called backward induction. This method is available in all finite time horizon problems that allow dynamic programming structure. The value of leaving resources would then be zero, i.e. $V_{T+1}(K) = 0$. It is not optimal to leave cake on the table! Therefore the last period is going to be
 
 $$V_{T}\left(K_{T}\right)=\max _{0 \leq c_{T} \leq K_{T}} U_{T}\left(c_{T}\right)$$
 
 To maximise this we simply choose the value for $c_T$ that provides the highest payoff. This period's maximisation problem is then quite easy to solve. Now consider the problem at $T-1$: 
 
-$V_{T-1}\left(K_{T-1}\right)=\max _{0 \leq c_{T-1} \leq K_{T-1}}\left[U_{T-1}\left(c_{T-1}\right)+V_{T}\left(g\left(K_{T-1}, c_{T-1}\right)\right)\right]$
+$V_{T-1}\left(K_{T-1}\right)=\max _{0 \leq c_{T-1} \leq K_{T-1}}\left[U_{T-1}\left(c_{T-1}\right)+\beta V_{T}\left(g\left(K_{T-1}, c_{T-1}\right)\right)\right]$
 
 This is also easy to solve. We know the answer to $V_{T}\left(K_{T}\right)$ from the previous iteration. This means that we know the future. For period $T-1$ we are now left with solving the final piece of the puzzle, namely 
 
@@ -519,22 +519,22 @@ md" Another example where dynamic programming is often used is the optimal growt
 # ╔═╡ f4654f14-6bef-452f-a9af-ec62613ad20b
 md" Payoffs over time for the optimal growth model are
 
-$$U=\sum_{t=1}^{\infty}\beta^{t}u\left(K_{t},c_{t}\right)$$
+$$\sum_{t=1}^{\infty}\beta^{t}U\left(K_{t},c_{t}\right)$$
 
 where $\beta<1$ is a discount factor, $K_{t}$ is the state, $c_{t}$ is the control. As we stated in the previous section, the state evolves according to $K_{t+1} = g(K_t, c_t)$. History of decisions is contained in the state variable. For this example we assume that both the payoff $u$ and transition function $g$ are stationary (do not depend on time). Problem can then be written as 
 
-$$V(K)=\max_{K'\in\Gamma(K)}u(K,K')+\beta v(K')$$
+$$V(K)=\max_{K'\in\Gamma(K)}U(K,K')+\beta v(K')$$
 
 In this case $\Gamma(K)$ is the constraint set (or feasible set) for $K'$ when the current state is $K$. The setup for the deterministic optimal growth model is then as follows, 
 
 $$\begin{aligned}
-   V(K) &= \max_{0<K'<f(K)} u(f(K) - K') + \beta V(K')\\
+   V(K) &= \max_{0<K'<f(K)} U(f(K) - K') + \beta V(K')\\
   f(K)  & = K^\alpha
 \end{aligned}$$
 
 where $K_0$ is given. The numerical approximation that we are going to implement is the following:
 
-$$V(K_i) = \max_{i'=1,2,\dots,n} u(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
+$$V(K_i) = \max_{i'=1,2,\dots,n} U(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
 
 # ╔═╡ 5a3df38d-2973-421e-8da0-a190653af20f
 md" ### Value funtion iteration "
@@ -555,7 +555,7 @@ md" While the general steps provided above explain the general idea quite well, 
 3. Provide initial guess for the value funtion $V$ and choose stopping criterion $\varepsilon > 0$
 4. Start the iteration, for each $K_i$, $i = 1, \ldots, N$ compute
 
-$$W(K_i) = \max_{0 \leq K^{\prime} \leq f(K)} \{u(f(K_{i}) - K^{\prime}) + \beta V(K^{\prime})\}$$
+$$W(K_i) = \max_{0 \leq K^{\prime} \leq f(K)} \{U(f(K_{i}) - K^{\prime}) + \beta V(K^{\prime})\}$$
 
 5. Stop if $d(W, V) < \varepsilon$, otherwise set $V = W$ and go back to step $4$
 6. Plot value and policy functions
@@ -2506,7 +2506,7 @@ version = "0.9.1+5"
 # ╟─597f6e04-3580-4214-b7f2-77db8286d864
 # ╟─fcca074c-8f19-42b3-b60e-a75cdad1311f
 # ╟─785151e1-f0b1-4788-833a-2db80120c876
-# ╟─4eea7313-37fe-48ea-b30a-94f4ccedd71d
+# ╠═4eea7313-37fe-48ea-b30a-94f4ccedd71d
 # ╟─cbb90e8e-9656-4dfb-8103-6459fa46595e
 # ╟─2cef4d1b-39bd-4c24-8a3b-69c6da406e8f
 # ╠═91778068-9af3-4f28-bf76-aa19c9df3e45

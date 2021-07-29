@@ -264,7 +264,7 @@ Period $1$: $V_1(K_1) = \max_{c_1} \sqrt{K_1} + \beta V_2(K_1 - c_1)$"
 md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. "
 
 # ╔═╡ be62b6ff-a947-47ab-8905-6ac631abf8e6
-@bind max_K Slider(0:100, show_value = true, default = 5)
+CakeSize = @bind max_K Slider(0:100, show_value = true, default = 5)
 
 # ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 md"  In this case, we have a maximum of $max_K resources in period 2. "
@@ -276,37 +276,54 @@ grid_K2 = range(0, stop = max_K, step = 1) |> collect # Using a pipe operator (s
 C2 = grid_K2 # Consume all available resources at each grid point
 
 # ╔═╡ 11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
-V2 = sqrt.(C2) # Apply the explicit function form for utility function
+V2 = sqrt.(C2) # Apply the explicit functional form for utility function (sqrt) to each point with broadcasting.
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
 plot(grid_K2, V2, xlab = "Resources (Cake size)", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
 
 # ╔═╡ 8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
-md" Say that we want to find the value of $K_2 = 2$. We have to reference the relevant index point for 2. The index in $K_2$ is 3 since we have 1-based indexing in _Julia_. Next we find the optimal consumption in period $1$ given a level of $K_1$."
+md" Say that we want to find the value for $V_2$ at $K_2 = 2$. We have to reference the relevant index point for that value of $K_2$. The corresponding index value in $K_2$ is in the third position, and is indicated by a $3$ since we have $1$-based indexing in _Julia_. In Python we have zero based indexing, so the value for the index would have been $2$ instead. "
+
+# ╔═╡ f2346cf9-6b39-4617-8d1a-bf1949800be7
+idx = 3
+
+# ╔═╡ b32cc597-93bb-4bbc-9ece-196756298d63
+grid_K2[idx], V2[idx]
+
+# ╔═╡ 6a15eaed-fffb-4483-b82d-011028260afd
+md" Next we find the optimal consumption in period $1$ given a level of $K_1$. "
 
 # ╔═╡ ed53fb3c-9fe6-47d5-b465-3af3369f9177
-@bind K1 Slider(1:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1.  
-
-# ╔═╡ d609467a-6898-430f-9fc7-70cecf9cb3d0
-C1 = 0 # Is this value optimal? Should not be, in fact it would be our least likely consumption value. 
+K1_state = @bind K1 Slider(0:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1. This value is given! It is the state of our system.  
 
 # ╔═╡ be24ede3-87c7-402c-adbc-2f003e5099a0
-β = 0.99 # Discount parameter
+β = 0.99 # Discount factor
 
 # ╔═╡ 8e14ac14-af81-4bd6-bdac-f850bb9020e9
-V1_guess = fill(NaN, K1 + 1) # Initialise with NaN. Could also do this with zeros -- zeros(K1 + 1)
+V1_guess = zeros(K1 + 1) # Allocate memory to store the value of our guesses
+
+# ╔═╡ d609467a-6898-430f-9fc7-70cecf9cb3d0
+C1 = @bind C1 Slider(0:(K1 + 1), show_value = true, default = 0) # Test out assert error on last value. 
+
+# NB, C1 will not be the same as the index. First value is equal to zero. We need to correct for this later.
 
 # ╔═╡ 9300d7d9-9563-4f85-b835-54a8db884317
-K2 = K1 - C1 # How much cake is left in the second period after we made our decision in the first period. 
+K2 = K1 - C1 # Record how much capital is left for period 2. In this case the value for K2 is the not same as the index, so we need to correct for this in the next step. 
 
 # ╔═╡ 53bdea85-8d59-4669-85ca-04119131064a
 begin
-	V1_guess[1] = sqrt.(C1) .+ β .* V2[K2 + 1] # Fill the first value of our value function with the Bellman equation
+	# We can run this over different choices for consumption in the first period.  
+	
+	@assert K1 - C1 >= 0 "Consumption value not feasible" # Feasibility constraint
+	
+	V1_guess[C1 + 1] = sqrt.(C1) .+ β .* V2[K2 + 1] 
 	V1_guess
 end
 
 # ╔═╡ eff5cdcf-3a07-4d08-9152-39c0b71eac3b
-md" The function below encapsulates the logic that we have explored above in a neat container. _Julia_ is mostly meant for functional programming, so try to write with functions in mind. "
+md" The function below encapsulates the logic that we have explored above in a neat container. 
+
+_Julia_ is mostly meant for functional programming, so try to write with functions in mind. "
 
 # ╔═╡ b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 function backward_induction1(K1, max_K, grid_K2 = range(0, max_K, step=1) |> collect,
@@ -326,7 +343,7 @@ function backward_induction1(K1, max_K, grid_K2 = range(0, max_K, step=1) |> col
 	
 	idx_max = argmax(V1_guess) # Pick out the position of the argument that maximises the value function
 	# Note, max function provides the actual value, while argmax gives index value. 
-	V1, C1 = round(V1_guess[idx_max], digits = 3), (idx_max - 1)
+	V1, C1 = round(V1_guess[idx_max], digits = 3), idx_max
 	#md" The optimal consumption is $C_1 \rightarrow$ $C1 with associated value of $V1"
 	#plot(V1_guess, xlab = "Consumption (Optimal at $C1)", ylab = "Value (Optimal at $V1)", label = L"V_1", line = 2)
 end
@@ -356,16 +373,16 @@ md" Let us consider the same example but with an arbitrary number of periods (ev
 # ╔═╡ 7b63094f-ddde-4dff-911a-58d8fc7226a2
 begin
 	# final period T
-	points = 500; # The number of points on the grid (let us keep this fixed for now)
+	points = 500 # The number of points on the grid (let us keep this fixed for now)
 	
 	# Lower and upper limits of the state space. In this case this represents the size of the cake. 	
-	lowK = 1e-6; # Lowest possible of value of K (don't select 0, their are numerical consequences)
+	lowK = 1e-6 # Lowest possible of value of K (don't select 0, their are numerical consequences)
 	highK = 30.0 # Highest value that K can take, given that consumption is zero. 
 	
 	# Log and then exponentiate for more points towards zero, which makes a nicer plot
-	Kspace = exp.(range(log(lowK), stop = log(highK), length = points)); # The state space
-	CT = Kspace; # Consume whatever is left -- Consume all resources in this case, since it is all left.
-	VT = sqrt.(CT);  # Utility of that consumption -- This is known for VT, since there is no VT + 1
+	Kspace = exp.(range(log(lowK), stop = log(highK), length = points)) # The state space
+	CT = Kspace # Consume whatever is left -- Consume all resources in this case, since it is all left.
+	VT = sqrt.(CT)  # Utility of that consumption -- This is known for VT, since there is no VT + 1
 end
 
 # ╔═╡ c5ea0324-8e8c-49d1-88f6-3abc4278aefa
@@ -810,6 +827,9 @@ iterations = @bind iter Slider(5:200, show_value = true, default = 5)
 
 # ╔═╡ 07e571b5-9e5f-4690-89b6-4fc166c94a1b
 FVFI_y(w_new, K_grid, iter)
+
+# ╔═╡ 0554fa0b-8ce7-4747-8a21-fe06dbf6e449
+
 
 # ╔═╡ d31741a8-5184-45d8-8a62-0db938c9a372
 md" In the next session we will introduce a stochastic component to the problem, which means that there will be uncertainty in the model. In particular we will apply this to the cake eating and optimal growth models.  "
@@ -2442,19 +2462,22 @@ version = "0.9.1+5"
 # ╟─fc6640d2-f2de-4d09-8787-39954cc835b4
 # ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
 # ╟─f17bd25f-a459-44b6-862e-5d8d7b5062c9
-# ╟─be62b6ff-a947-47ab-8905-6ac631abf8e6
+# ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
 # ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 # ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
 # ╠═a25b4e49-46c0-4c7d-b80e-e108614ec288
 # ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
 # ╟─f2075369-02b7-4262-a543-91da85169e65
 # ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
+# ╠═f2346cf9-6b39-4617-8d1a-bf1949800be7
+# ╠═b32cc597-93bb-4bbc-9ece-196756298d63
+# ╟─6a15eaed-fffb-4483-b82d-011028260afd
 # ╠═ed53fb3c-9fe6-47d5-b465-3af3369f9177
-# ╠═d609467a-6898-430f-9fc7-70cecf9cb3d0
 # ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
 # ╠═8e14ac14-af81-4bd6-bdac-f850bb9020e9
+# ╠═d609467a-6898-430f-9fc7-70cecf9cb3d0
 # ╠═9300d7d9-9563-4f85-b835-54a8db884317
-# ╟─53bdea85-8d59-4669-85ca-04119131064a
+# ╠═53bdea85-8d59-4669-85ca-04119131064a
 # ╟─eff5cdcf-3a07-4d08-9152-39c0b71eac3b
 # ╠═b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 # ╟─437462d4-2dd1-4ef9-aa7d-b0cb64bef455
@@ -2463,7 +2486,7 @@ version = "0.9.1+5"
 # ╟─fd4d1601-5a71-4ce1-a3bd-5d34776502f9
 # ╟─c8533761-ae1d-47a2-9860-ad88ecca2d34
 # ╟─547def39-8a65-48bc-bb30-d28d016cd6fa
-# ╟─7b63094f-ddde-4dff-911a-58d8fc7226a2
+# ╠═7b63094f-ddde-4dff-911a-58d8fc7226a2
 # ╟─c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 # ╠═4716e611-3342-4c3e-afc2-5afd8de2fc15
 # ╟─aa534428-e995-4885-bfeb-135ad92129a4
@@ -2514,6 +2537,7 @@ version = "0.9.1+5"
 # ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be
 # ╟─128ec2e2-3b38-49cd-b507-c1f5fb051491
 # ╠═07e571b5-9e5f-4690-89b6-4fc166c94a1b
+# ╠═0554fa0b-8ce7-4747-8a21-fe06dbf6e449
 # ╟─d31741a8-5184-45d8-8a62-0db938c9a372
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

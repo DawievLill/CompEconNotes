@@ -41,9 +41,6 @@ html"""
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
 md" # Dynamic programming I"
 
-# ╔═╡ 058c997b-390b-4b8e-b203-20879e0673a4
-md" ## Still quite incomplete and incoherent. Needs work! "
-
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. It is quite sseful in several areas of economics, but I have mostly used it in macroeconomic applications. It is therefore natural to me that most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem and optimal growth problem.
 
@@ -2436,7 +2433,6 @@ version = "0.9.1+5"
 # ╟─7fffd413-6ebe-49d2-b426-1428aee5ae26
 # ╟─c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
-# ╟─058c997b-390b-4b8e-b203-20879e0673a4
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
 # ╟─3e79f184-a3e8-44a0-9609-19827522d86a
 # ╟─340698bc-e27a-442b-a6fe-4b7c7ed3bd16
@@ -2523,10 +2519,10 @@ version = "0.9.1+5"
 # ╟─2fba5422-a46d-4606-8c21-c0df54f3544b
 # ╟─507514d4-d369-4950-9198-428561aecfd9
 # ╟─ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
-# ╟─1229edd5-45cf-41f1-ad66-72af83a0a2e3
-# ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
-# ╟─1a3e85a7-a292-487e-804c-b408cd508498
-# ╟─597f6e04-3580-4214-b7f2-77db8286d864
+# ╠═1229edd5-45cf-41f1-ad66-72af83a0a2e3
+# ╠═71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
+# ╠═1a3e85a7-a292-487e-804c-b408cd508498
+# ╠═597f6e04-3580-4214-b7f2-77db8286d864
 # ╟─fcca074c-8f19-42b3-b60e-a75cdad1311f
 # ╟─785151e1-f0b1-4788-833a-2db80120c876
 # ╠═4eea7313-37fe-48ea-b30a-94f4ccedd71d

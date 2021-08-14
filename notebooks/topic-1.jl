@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -12,6 +12,18 @@ macro bind(def, element)
         el
     end
 end
+
+# ╔═╡ add65ba2-78c7-11eb-0eb6-771466c0c417
+import Pkg; Pkg.add("DecFP") 
+
+# ╔═╡ 844fa292-7b48-11eb-0f9c-c521a4125ce6
+Pkg.add("PlutoUI"); using PlutoUI
+
+# ╔═╡ 590bdbfe-857b-11eb-0e36-ff07c99cbfd7
+Pkg.add("GraphRecipes"); using GraphRecipes
+
+# ╔═╡ 654c2572-857b-11eb-21e2-71f7f731d658
+Pkg.add("Plots"); using Plots
 
 # ╔═╡ 5b44b6ec-7863-11eb-1ed4-3d0c9eadd065
 using Markdown
@@ -567,18 +579,6 @@ end
 
 # ╔═╡ 6dda76f6-78c6-11eb-0fe0-a36a5663dfd7
 md"We have done the calculation using floating point numbers, now we use the precise decimal representation for a comparison. Using this decimal representation is slow, so we would rather like to use floating point arithmetic. However, for the purpose of the example let us continue. "
-
-# ╔═╡ add65ba2-78c7-11eb-0eb6-771466c0c417
-import Pkg; Pkg.add("DecFP") 
-
-# ╔═╡ 844fa292-7b48-11eb-0f9c-c521a4125ce6
-Pkg.add("PlutoUI"); using PlutoUI
-
-# ╔═╡ 590bdbfe-857b-11eb-0e36-ff07c99cbfd7
-Pkg.add("GraphRecipes"); using GraphRecipes
-
-# ╔═╡ 654c2572-857b-11eb-21e2-71f7f731d658
-Pkg.add("Plots"); using Plots
 
 # ╔═╡ 70ab6652-7ab4-11eb-1309-8f833821ef88
 begin

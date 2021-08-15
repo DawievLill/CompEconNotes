@@ -22,7 +22,8 @@ begin
 	using Parameters
 	using Plots
 	using PlutoUI
-	using FastGaussQuadrature # Package to compute quadrature nodes and weights
+	using Polynomials
+	using FastGaussQuadrature
 	using SpecialFunctions
 end
 
@@ -35,11 +36,23 @@ html"""
 </style>
 """
 
+# ╔═╡ 0a31eff6-d5b0-47c2-8483-042770a77478
+md" The following packages were used for the session. Please star 
+⭐ the packages on Github to show appreciation. "
+
 # ╔═╡ 0ac4cb74-c027-4677-bd45-672f19035ce4
 md" # Function approximation "
 
+# ╔═╡ fba8e77d-9141-4f57-afdd-141bb1311a22
+md"""
+
+!!! warning "Reference"
+	A good reference for function approximation is the book by [Toby Driscoll](http://tobydriscoll.net/fnc-julia/frontmatter.html). These notes draw heavily form this book.
+
+"""
+
 # ╔═╡ 25b6e79e-37dc-4a67-8b56-fbaf9da41713
-md" In many of our economic applications we are often confronted with functions that don't have an analytic representation or are difficult to compute. This will be true for the value functions in our dynamic programming discussion for the next session. In order to numerically represent problematic functions on our computer we use approximations, which utilises a simpler function to approximate the more difficult one. Approximations will use data on the function in question. Normally we know some of the function values that correspond to some input points. 
+md" In many of our economic applications we are often confronted with functions that don't have an analytic representation or are difficult to compute. This will be true for the value functions in our dynamic programming discussion in one of the following sessions. In order to numerically represent problematic functions on our computer we use approximations, which utilises a simpler function to approximate the more difficult one. Approximations will use data on the function in question. Normally we know some of the function values that correspond to some input points. 
 
 The **goal** is to take our approximation to the data and determine what the function value is on some point that is outside of the finite set of points that we originally evaluated the function on. In economics we do this all the time. We make predictions based on observed data. The big difference with approximation is that we can choose the number of points at which we want to evaluate the function. We produce the data in function approximation. "
 
@@ -51,6 +64,66 @@ md" Following the work of Judd, we will focus on three general approaches to app
 3. Local approximations (perturbation methods)
 
 With interpolation we require that an approximation must pass through certain points of the function. The `residual` at each grid point needs to be zero with this class of methods. Finally, in the case of regression we would like to minimise some notion of distance without requiring that the points pass through the function in question. We won't focus too much of our attention on regression problems. In the case of local approximations we can approximate the function and it's derivative at a single point using Taylor series expansions. "
+
+# ╔═╡ 91fa7272-3e83-45c0-b787-87904d4381fb
+md" ## The interpolation problem "
+
+# ╔═╡ 29f3f1a7-c6c1-427a-8781-86ee7dbcd219
+md"""
+
+!!! note "The interpolation problem"
+	Given $n+1$ distinct points $(t_0,y_0)$, $(t_1,y_1),\ldots,(t_n,y_n)$, with $t_0<t_1<\ldots <t_n$ called **nodes**, the **interpolation problem** is to find a function $p(x)$, called the **interpolant**, such that $p(t_k)=y_k$ for $k=0,\dots,n$. -- from  [FNC (Chapter 5)](http://tobydriscoll.net/fnc-julia/localapprox/interpolation.html)
+
+"""
+
+# ╔═╡ 7e662cb3-8500-4381-ad13-0469f0dbf7eb
+md"""
+
+To solve this problem we would naturally suggest polynomials as the best way to approximate the function. Polynomials have nice properties and are easy to work with. However, polynomial interpolation can be a tricky business, as we will soon see. 
+
+"""
+
+# ╔═╡ 2cd62a7a-7573-4511-8c81-488de74ad8f5
+md"""
+
+Consider the following example. We are provided the following observations of an unknown function on $[-1, 1]$.
+
+"""
+
+# ╔═╡ 3eaa46e2-5847-4b4d-b48d-fe1142545a8b
+md"""
+points = $(@bind ν Slider(4:20, show_value=true, default=4))
+"""
+
+# ╔═╡ 87a1c372-1e7f-4d00-b897-7739ffdf19e8
+begin
+	t = range(-1, 1, length = ν + 1)
+	y = @. t^2 + t + 0.05 * sin(20 * t) # Broadcast the dot operator with a macro
+end
+
+# ╔═╡ 9771216f-9c98-42c7-98a9-ebc264a5ec0c
+scatter(t, y, label="data", leg=:top, color = :red)
+
+# ╔═╡ db94347c-df46-43ee-a7c0-0259c11c859f
+md"""
+
+We can compute the polynomial interpolant using the `fit` function in Julia. Let us see what this does for our generated data. 
+
+"""
+
+# ╔═╡ ef77b7b9-c2ee-4222-a926-5672678aedeb
+begin
+	p = Polynomials.fit(t, y, ν)     # interpolating polynomial
+	plot!(p, -1, 1, label="interpolant", color = :steelblue, lw = 2)
+end
+
+# ╔═╡ 770e4972-6927-4370-8258-25fc101461af
+md"""
+
+Shifting around the slider we see that as we increase the number of points, the polynomial interpolant exhibits some strange behaviour near the endpoints. In fact, interpolation by a polynomial at equally spaced nodes is ill-conditioned as the degree of the polynomial grows. 
+
+"""
+
 
 # ╔═╡ 9ffc49e0-056b-4029-87ce-2fee216277a5
 md"  ## Basis (functions) "
@@ -196,7 +269,9 @@ General advice for node placement is that we want more nodes where the function 
 md" ### Spectral methods "
 
 # ╔═╡ 507628c6-2c13-4ff5-a73f-c6f30c8e5a8c
-md" Spectral methods basically refer to the usage of a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. This theorem does not tell us which type of polynomial to use. This is something that we need to figure out for ourselves. "
+md" Spectral methods are differentiated from finite element methods in that basis functions are **nonzero over the entire domain** of the function. 
+
+Spectral methods basically refer to the usage of a polynomial basis. Polynomials are generally nonzero. The motivation for using polynomials originates form the famous **Weierstrass Theorem**. This theorem states that there exists a polynomial that approximates any continuous function over a compact (closed and bounded) domain arbitrarily well. This theorem does not tell us which type of polynomial to use. This is something that we need to figure out for ourselves. "
 
 # ╔═╡ b1f875af-4046-445e-a2fb-afca07f992ef
 md" There are many polynomial families that are well suited to approximate continuous and differentiable funcitons. However we will focus mostly on monomials and orthogonal polynomials. In the class of orthogonal polynomials most of our attention will be placed on Chebyshev polynomials. "
@@ -472,6 +547,9 @@ end
 # ╔═╡ 5e55cf7d-a076-45e1-8c54-c561be82857d
 md" ### Finite element methods "
 
+# ╔═╡ e5ab6234-6221-4ef2-b2b1-05f7e8751928
+md" We can also map data values to functions via finite element methods. With these methods, the basis functions are nonzero over **subintervals** of the domain of the function. Finite element methods include different versions of piecewise polynomials over segments of the domain. Our discussion will focus on different types of splines. "
+
 # ╔═╡ 0a9c73e1-68c1-4c17-bd48-98673b44d332
 md" ## Local methods " 
 
@@ -486,16 +564,18 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
-ApproxFun = "~0.12.5"
+ApproxFun = "~0.12.6"
 BasisMatrices = "~0.7.0"
 ChebyshevApprox = "~0.1.12"
 FastGaussQuadrature = "~0.4.5"
 Parameters = "~0.12.2"
-Plots = "~1.18.2"
+Plots = "~1.20.1"
 PlutoUI = "~0.7.9"
+Polynomials = "~1.2.1"
 SpecialFunctions = "~0.10.3"
 """
 
@@ -517,9 +597,9 @@ version = "3.3.1"
 
 [[ApproxFun]]
 deps = ["AbstractFFTs", "ApproxFunBase", "ApproxFunFourier", "ApproxFunOrthogonalPolynomials", "ApproxFunSingularities", "Calculus", "DomainSets", "DualNumbers", "FFTW", "FastTransforms", "LinearAlgebra", "RecipesBase", "Reexport", "SpecialFunctions"]
-git-tree-sha1 = "411ca0706d880fb1fe173a9925477a3fe26c564f"
+git-tree-sha1 = "cada9d687196534b6352543cd6a5004f60a5d646"
 uuid = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
-version = "0.12.5"
+version = "0.12.6"
 
 [[ApproxFunBase]]
 deps = ["AbstractFFTs", "BandedMatrices", "BlockArrays", "BlockBandedMatrices", "Calculus", "DSP", "DomainSets", "DualNumbers", "FFTW", "FastGaussQuadrature", "FillArrays", "InfiniteArrays", "IntervalSets", "LazyArrays", "LinearAlgebra", "LowRankApprox", "SparseArrays", "SpecialFunctions", "StaticArrays", "Statistics", "Test", "ToeplitzMatrices"]
@@ -529,9 +609,9 @@ version = "0.3.14"
 
 [[ApproxFunFourier]]
 deps = ["AbstractFFTs", "ApproxFunBase", "DomainSets", "FFTW", "FastTransforms", "InfiniteArrays", "IntervalSets", "LinearAlgebra", "Reexport"]
-git-tree-sha1 = "50f8608bc46db8918ac80345bd033570b2e69bde"
+git-tree-sha1 = "466d79352c83b8f59d22f4d34e1b569d9e7ebed4"
 uuid = "59844689-9c9d-51bf-9583-5b794ec66d30"
-version = "0.2.9"
+version = "0.2.10"
 
 [[ApproxFunOrthogonalPolynomials]]
 deps = ["AbstractFFTs", "ApproxFunBase", "BandedMatrices", "BlockArrays", "BlockBandedMatrices", "DomainSets", "FFTW", "FastGaussQuadrature", "FastTransforms", "FillArrays", "IntervalSets", "LinearAlgebra", "Reexport", "SpecialFunctions", "Statistics"]
@@ -541,9 +621,9 @@ version = "0.3.10"
 
 [[ApproxFunSingularities]]
 deps = ["ApproxFunBase", "ApproxFunOrthogonalPolynomials", "DomainSets", "IntervalSets", "LinearAlgebra", "Reexport", "Statistics"]
-git-tree-sha1 = "0d6851111d0cc741e845546bfc4a267a0f3a6433"
+git-tree-sha1 = "306ae33d5caf36903f102a0d133d90f3cd3ccb84"
 uuid = "f8fcb915-6b99-5be2-b79a-d6dbef8e6e7e"
-version = "0.2.2"
+version = "0.2.3"
 
 [[ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -586,9 +666,9 @@ version = "0.7.0"
 
 [[BenchmarkTools]]
 deps = ["JSON", "Logging", "Printf", "Statistics", "UUIDs"]
-git-tree-sha1 = "ffabdf5297c9038973a0a3724132aa269f38c448"
+git-tree-sha1 = "aa3aba5ed8f882ed01b71e09ca2ba0f77f44a99e"
 uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.1.0"
+version = "1.1.3"
 
 [[BinaryProvider]]
 deps = ["Libdl", "Logging", "SHA"]
@@ -645,10 +725,10 @@ uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.0"
 
 [[ColorSchemes]]
-deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random", "StaticArrays"]
-git-tree-sha1 = "ed268efe58512df8c7e224d2e170afd76dd6a417"
+deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
+git-tree-sha1 = "9995eb3977fbf67b86d0a0a0508e83017ded03f2"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.13.0"
+version = "3.14.0"
 
 [[ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -675,9 +755,9 @@ version = "0.3.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "dc7dedc2c2aa9faf59a55c622760a25cbefbe941"
+git-tree-sha1 = "344f143fa0ec67e47917848795ab19c6a455f32c"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "3.31.0"
+version = "3.32.0"
 
 [[CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -702,9 +782,9 @@ version = "1.7.0"
 
 [[DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "4437b64df1e0adccc3e5d1adbc3ac741095e4677"
+git-tree-sha1 = "7d9d316f04214f7efdbb6398d545446e246eff02"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.9"
+version = "0.18.10"
 
 [[DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -727,9 +807,9 @@ version = "1.0.3"
 
 [[DiffRules]]
 deps = ["NaNMath", "Random", "SpecialFunctions"]
-git-tree-sha1 = "214c3fcac57755cfda163d91c58893a8723f93e9"
+git-tree-sha1 = "3ed8fa7178a10d1cd0f1ca524f249ba6937490c0"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.0.2"
+version = "1.3.0"
 
 [[Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -818,9 +898,9 @@ version = "0.4.5"
 
 [[FastTransforms]]
 deps = ["AbstractFFTs", "ArrayLayouts", "BinaryProvider", "DSP", "FFTW", "FastGaussQuadrature", "FastTransforms_jll", "FillArrays", "Libdl", "LinearAlgebra", "Reexport", "SpecialFunctions", "Test", "ToeplitzMatrices"]
-git-tree-sha1 = "7c10535fb7b59bac11667749f2c1229ea755cad8"
+git-tree-sha1 = "9233e98fa60ed5bba640d14edce0c6303bf9f1e2"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.12.4"
+version = "0.12.5"
 
 [[FastTransforms_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "FFTW_jll", "JLLWrappers", "Libdl", "MPFR_jll", "OpenBLAS_jll", "Pkg"]
@@ -836,9 +916,9 @@ version = "0.9.7"
 
 [[FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "f6f80c8f934efd49a286bb5315360be66956dfc4"
+git-tree-sha1 = "8b3c09b56acaf3c0e581c66638b85c8650ee9dca"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.8.0"
+version = "2.8.1"
 
 [[FixedPointNumbers]]
 deps = ["Statistics"]
@@ -860,9 +940,9 @@ version = "0.4.2"
 
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "NaNMath", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "e2af66012e08966366a43251e1fd421522908be6"
+git-tree-sha1 = "b5e930ac60b613ef3406da6d4f42c35d8dc51419"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "0.10.18"
+version = "0.10.19"
 
 [[FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
@@ -892,15 +972,15 @@ uuid = "781609d7-10c4-51f6-84f2-b8444358ff6d"
 
 [[GR]]
 deps = ["Base64", "DelimitedFiles", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Printf", "Random", "Serialization", "Sockets", "Test", "UUIDs"]
-git-tree-sha1 = "b83e3125048a9c3158cbb7ca423790c7b1b57bea"
+git-tree-sha1 = "182da592436e287758ded5be6e32c406de3a2e47"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.57.5"
+version = "0.58.1"
 
 [[GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Pkg", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "e14907859a1d3aee73a019e7b3c98e9e7b8b5b3e"
+git-tree-sha1 = "d59e8320c2747553788e4fc42231489cc602fa50"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.57.3+0"
+version = "0.58.1+0"
 
 [[GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -916,9 +996,9 @@ version = "0.21.0+0"
 
 [[Glib_jll]]
 deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE_jll", "Pkg", "Zlib_jll"]
-git-tree-sha1 = "47ce50b742921377301e15005c96e979574e130b"
+git-tree-sha1 = "7bf67e9a481712b3dbe9cb3dac852dc4b1162e02"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
-version = "2.68.1+0"
+version = "2.68.3+0"
 
 [[Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
@@ -975,6 +1055,11 @@ git-tree-sha1 = "323a38ed1952d30586d0fe03412cde9399d3618b"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
 version = "1.5.0"
 
+[[IrrationalConstants]]
+git-tree-sha1 = "f76424439413893a832026ca355fe273e93bce94"
+uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
+version = "0.1.0"
+
 [[IterTools]]
 git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
@@ -993,9 +1078,9 @@ version = "1.3.0"
 
 [[JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
-git-tree-sha1 = "81690084b6198a2e1da36fcfda16eeca9f9f24e4"
+git-tree-sha1 = "8076680b162ada2a031f707ac7b4953e30667a37"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-version = "0.21.1"
+version = "0.21.2"
 
 [[JSONSchema]]
 deps = ["HTTP", "JSON", "ZipFile"]
@@ -1132,10 +1217,10 @@ deps = ["Libdl"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[LogExpFunctions]]
-deps = ["DocStringExtensions", "LinearAlgebra"]
-git-tree-sha1 = "7bd5f6565d80b6bf753738d2bc40a5dfea072070"
+deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
+git-tree-sha1 = "3d682c07e6dd250ed082f883dc88aee7996bf2cc"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.2.5"
+version = "0.3.0"
 
 [[Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -1158,9 +1243,9 @@ uuid = "3a97d323-0669-5f0c-9066-3539efd106a3"
 
 [[MacroTools]]
 deps = ["Markdown", "Random"]
-git-tree-sha1 = "6a8a2a625ab0dea913aba95c11370589e0239ff0"
+git-tree-sha1 = "0fb723cd8c45858c22169b2e42269e53271a6df7"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
-version = "0.5.6"
+version = "0.5.7"
 
 [[Markdown]]
 deps = ["Base64"]
@@ -1210,9 +1295,9 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[Mocking]]
 deps = ["ExprTools"]
-git-tree-sha1 = "916b850daad0d46b8c71f65f719c49957e9513ed"
+git-tree-sha1 = "748f6e1e4de814b101911e64cc12d83a6af66782"
 uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
-version = "0.7.1"
+version = "0.7.2"
 
 [[MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
@@ -1225,15 +1310,15 @@ version = "0.2.20"
 
 [[NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
-git-tree-sha1 = "50608f411a1e178e0129eab4110bd56efd08816f"
+git-tree-sha1 = "144bab5b1443545bc4e791536c9f1eacb4eed06a"
 uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
-version = "7.8.0"
+version = "7.8.1"
 
 [[NLopt]]
 deps = ["MathOptInterface", "MathProgBase", "NLopt_jll"]
-git-tree-sha1 = "e7b4c6b8e10b8d1238112a21f5cc001138989dc7"
+git-tree-sha1 = "d80cb3327d1aeef0f59eacf225e000f86e4eee0a"
 uuid = "76087f3c-5699-56af-9a33-bf431cd00edd"
-version = "0.6.2"
+version = "0.6.3"
 
 [[NLopt_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1256,9 +1341,9 @@ version = "1.0.0"
 
 [[OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "2bf78c5fd7fa56d2bbf1efbadd45c1b8789e6f57"
+git-tree-sha1 = "c0f4a4836e5f3e0763243b8324200af6d0e0f90c"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.10.2"
+version = "1.10.5"
 
 [[Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1284,9 +1369,9 @@ version = "0.5.5+0"
 
 [[Optim]]
 deps = ["Compat", "FillArrays", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
-git-tree-sha1 = "d34366a3abc25c41f88820762ef7dfdfe9306711"
+git-tree-sha1 = "7863df65dbb2a0fa8f85fcaf0a41167640d2ebed"
 uuid = "429524aa-4258-5aef-a3af-852621145aeb"
-version = "1.3.0"
+version = "1.4.1"
 
 [[Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1319,9 +1404,9 @@ version = "0.12.2"
 
 [[Parsers]]
 deps = ["Dates"]
-git-tree-sha1 = "c8abc88faa3f7a3950832ac5d6e690881590d6dc"
+git-tree-sha1 = "477bf42b4d1496b454c10cce46645bb5b8a0cf2c"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "1.1.0"
+version = "2.0.2"
 
 [[Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1347,9 +1432,9 @@ version = "1.0.11"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs"]
-git-tree-sha1 = "f32cd6fcd2909c2d1cdd47ce55e1394b04a66fe2"
+git-tree-sha1 = "8365fa7758e2e8e4443ce866d6106d8ecbb4474e"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.18.2"
+version = "1.20.1"
 
 [[PlutoUI]]
 deps = ["Base64", "Dates", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "Suppressor"]
@@ -1508,15 +1593,15 @@ version = "1.0.0"
 
 [[StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "2f6792d523d7448bbe2fec99eca9218f06cc746d"
+git-tree-sha1 = "fed1ec1e65749c4d96fc20dd13bea72b55457e62"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.8"
+version = "0.33.9"
 
 [[StatsFuns]]
-deps = ["LogExpFunctions", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "30cd8c360c54081f806b1ee14d2eecbef3c04c49"
+deps = ["IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
+git-tree-sha1 = "20d1bb720b9b27636280f751746ba4abb465f19d"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "0.9.8"
+version = "0.9.9"
 
 [[StructArrays]]
 deps = ["Adapt", "DataAPI", "Tables"]
@@ -1545,9 +1630,9 @@ version = "1.0.1"
 
 [[Tables]]
 deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "LinearAlgebra", "TableTraits", "Test"]
-git-tree-sha1 = "8ed4a3ea724dac32670b062be3ef1c1de6773ae8"
+git-tree-sha1 = "d0c690d37c73aeb5ca063056283fde5585a41710"
 uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
-version = "1.4.4"
+version = "1.5.0"
 
 [[Tar]]
 deps = ["ArgTools", "SHA"]
@@ -1577,9 +1662,9 @@ version = "0.6.3"
 
 [[TranscodingStreams]]
 deps = ["Random", "Test"]
-git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
+git-tree-sha1 = "216b95ea110b5972db65aa90f88d8d89dcb8851c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.5"
+version = "0.9.6"
 
 [[UUIDs]]
 deps = ["Random", "SHA"]
@@ -1811,11 +1896,23 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═eeca0160-d37e-11eb-05f4-bd7469319dad
 # ╟─99e0b1b9-d032-41d6-8a1d-742050d5ddeb
+# ╟─0a31eff6-d5b0-47c2-8483-042770a77478
+# ╠═eeca0160-d37e-11eb-05f4-bd7469319dad
 # ╟─0ac4cb74-c027-4677-bd45-672f19035ce4
+# ╟─fba8e77d-9141-4f57-afdd-141bb1311a22
 # ╟─25b6e79e-37dc-4a67-8b56-fbaf9da41713
 # ╟─a4f24d72-fb51-47cc-827d-c9f3cb367998
+# ╟─91fa7272-3e83-45c0-b787-87904d4381fb
+# ╟─29f3f1a7-c6c1-427a-8781-86ee7dbcd219
+# ╟─7e662cb3-8500-4381-ad13-0469f0dbf7eb
+# ╟─2cd62a7a-7573-4511-8c81-488de74ad8f5
+# ╟─3eaa46e2-5847-4b4d-b48d-fe1142545a8b
+# ╠═87a1c372-1e7f-4d00-b897-7739ffdf19e8
+# ╟─9771216f-9c98-42c7-98a9-ebc264a5ec0c
+# ╟─db94347c-df46-43ee-a7c0-0259c11c859f
+# ╟─ef77b7b9-c2ee-4222-a926-5672678aedeb
+# ╟─770e4972-6927-4370-8258-25fc101461af
 # ╟─9ffc49e0-056b-4029-87ce-2fee216277a5
 # ╟─31bc8646-bf07-4a22-9030-196af852251c
 # ╟─8313e1ee-7c01-4eda-8d4b-888f04de5c90
@@ -1830,7 +1927,7 @@ version = "0.9.1+5"
 # ╟─e5910bba-3703-4eb0-9aae-55554193de20
 # ╟─095e025d-0344-4e2c-97d9-fa1b230b2469
 # ╟─75ba3ecf-6dff-482d-99f3-9650b6597540
-# ╠═be3e84ef-842f-43ed-833b-7faee299c904
+# ╟─be3e84ef-842f-43ed-833b-7faee299c904
 # ╠═41cee516-36a5-4af3-b157-46fcd1ff6aa5
 # ╟─93a84049-7e73-41c4-afd8-0359656c6399
 # ╟─95125a71-1691-4009-acb4-5db30cd6b69f
@@ -1880,6 +1977,7 @@ version = "0.9.1+5"
 # ╠═11b12320-f60e-4a6f-a2fb-b85a573abdd2
 # ╟─7387b11f-873b-4af1-b909-bf3051d16e6e
 # ╟─5e55cf7d-a076-45e1-8c54-c561be82857d
+# ╟─e5ab6234-6221-4ef2-b2b1-05f7e8751928
 # ╟─0a9c73e1-68c1-4c17-bd48-98673b44d332
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

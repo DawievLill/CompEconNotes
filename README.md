@@ -14,5 +14,6 @@ The notes can be found in the `notebook` folder. Everything is pretty much a wor
 8. Dynamic programming II (stochastic) -- **Incomplete**
 9. Time iteration and the endogenous grid method -- **Empty**
 10. Perturbation methods -- **Empty**
+11. ODEs and continuous time models -- **Empty**
 
 Further topics will be added with future iterations of the reading group. 

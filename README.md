@@ -1,6 +1,6 @@
-# Notes for Computational Economics reading group
+# Computational Economics Notes
 
-The notes can be found in the `notebook` folder. Everything is pretty much a work in progress. 
+These are notes written in Julia for the computational economics reading group. The notes can be found in the `notebooks` folder. Everything is pretty much a work in progress. 
 
 ## Outline of topics
 
@@ -17,3 +17,13 @@ The notes can be found in the `notebook` folder. Everything is pretty much a wor
 11. ODEs and continuous time models -- **Empty**
 
 Further topics will be added with future iterations of the reading group. 
+
+## Resources
+
+Several resources were used in construcing these notes. Below I list some of the ones that I found most useful. 
+
+### Books
+### Articles
+### Websites
+### Github repos
+

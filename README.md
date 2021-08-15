@@ -1,21 +1,18 @@
-# CompEcon
+# Notes for Computational Economics reading group
 
-This code base is using the Julia Language and [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/)
-to make a reproducible scientific project named
-> CompEcon
+The notes can be found in the `notebook` folder. Everything is pretty much a work in progress. 
 
-It is authored by DawievLill.
+## Outline of topics
 
-To (locally) reproduce this project, do the following:
+1. Floating point arithmetic -- **Complete**
+2. Autodifferentiation and linear algebra -- **Complete**
+3. Solutions to systems of linear equations -- **Incomplete**
+4. Optimisation (unconstrained and constrained) -- **Complete**
+5. Function approximation -- **Incomplete**
+6. Numerical integration -- **Empty**
+7. Dynamic programming I (deterministic) -- **Incomplete**
+8. Dynamic programming II (stochastic) -- **Incomplete**
+9. Time iteration and the endogenous grid method -- **Empty**
+10. Perturbation methods -- **Empty**
 
-0. Download this code base. Notice that raw data are typically not included in the
-   git-history and may need to be downloaded independently.
-1. Open a Julia console and do:
-   ```
-   julia> using Pkg
-   julia> Pkg.activate("path/to/this/project")
-   julia> Pkg.instantiate()
-   ```
-
-This will install all necessary packages for you to be able to run the scripts and
-everything should work out of the box.
+Further topics will be added with future iterations of the reading group. 

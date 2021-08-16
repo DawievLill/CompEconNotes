@@ -13,8 +13,7 @@ These are notes written in Julia for the computational economics reading group. 
 7. Dynamic programming I (deterministic) -- **Incomplete**
 8. Dynamic programming II (stochastic) -- **Incomplete**
 9. Time iteration and the endogenous grid method -- **Empty**
-10. Perturbation methods -- **Empty**
-11. ODEs and continuous time models -- **Empty**
+10. ODEs and continuous time models -- **Empty**
 
 Further topics will be added with future iterations of the reading group. 
 

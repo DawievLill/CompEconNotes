@@ -261,28 +261,34 @@ Period $2$: $V_2(K_2) = \sqrt{K_2}$ because $c_2(K_2)=K_2$ where $K_2$ are the a
 Period $1$: $V_1(K_1) = \max_{c_1} \sqrt{K_1} + \beta V_2(K_1 - c_1)$"
 
 # ╔═╡ f17bd25f-a459-44b6-862e-5d8d7b5062c9
-md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. "
+md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. We start the problem by only considering period 2. No cake is consumed in period 1, so everything is consumed in the second period. "
 
 # ╔═╡ be24ede3-87c7-402c-adbc-2f003e5099a0
 β = 0.99 # Discount factor (only primitive for the model thus far)
 
 # ╔═╡ be62b6ff-a947-47ab-8905-6ac631abf8e6
-CakeSize = @bind max_K Slider(0.0:100.0, show_value = true, default = 5.0)
+K2_only = 5
 
 # ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
-md"  In this case, we have a maximum of $max_K resources. "
+md" In this case, we have $K2_only slices of cake in period 2. Next we construct a grid with all the potential values of cake."
 
 # ╔═╡ d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-grid_K2 = range(0, stop = max_K, step = 1) |> collect # Using a pipe operator (similar to one from R)
+grid_K2 = range(0, stop = K2_only, step = 1) |> collect 
+
+# ╔═╡ f9e3c61c-d6f9-4286-bada-6b71e5f51c13
+md" Obviously in this example we will consume all the cake at each potential size of the cake on the grid. Since there is no consumption in the first period. "
 
 # ╔═╡ a25b4e49-46c0-4c7d-b80e-e108614ec288
-C2 = grid_K2 # Consume all available resources at each grid point
+C2 = grid_K2 
+
+# ╔═╡ cc527219-7b13-46d7-a281-602bff618a0a
+md" We can see the utility that we received from the consumption at each grid point. We receive the most utility from consuming the entire cake. Our function is increasing in consumption. "
 
 # ╔═╡ 11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
-V2 = sqrt.(C2) # Apply the explicit functional form for utility function (sqrt) to each point with broadcasting.
+V2 = sqrt.(C2)
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
-plot(grid_K2, V2, xlab = "Resources (Cake size)", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
+plot(grid_K2, V2, xlab = "Slices of cake", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
 
 # ╔═╡ 8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
 md" Say that we want to find the value for $V_2$ at $K_2 = 2$. We have to reference the relevant index point for that value of $K_2$. The corresponding index value in $K_2$ is in the third position, and is indicated by a $3$ since we have $1$-based indexing in _Julia_. In Python we have zero based indexing, so the value for the index would have been $2$ instead. "
@@ -294,10 +300,10 @@ idx = 3
 grid_K2[idx], V2[idx]
 
 # ╔═╡ 6a15eaed-fffb-4483-b82d-011028260afd
-md" Next we find the optimal consumption in period $1$ given a level of $K_1$. "
+md" Next we find the optimal consumption in period $1$ given a level of $K_1$. This value is known as the state, and we take it as given."
 
 # ╔═╡ ed53fb3c-9fe6-47d5-b465-3af3369f9177
-K1_state = @bind K1 Slider(0:max_K, show_value = true, default = 3) # Define different values for the level of cake in period 1. This value is given! It is the state of our system.  
+K1_state = @bind K1 Slider(0:K2_only, show_value = true, default = 3) # Define different values for the level of cake in period 1. This value is given! It is the state of our system.  
 
 # ╔═╡ 8e14ac14-af81-4bd6-bdac-f850bb9020e9
 V1_guess = zeros(K1 + 1) # Allocate memory to store the value of our guesses
@@ -340,7 +346,7 @@ function backward_induction1(K1;
 		
 		# NB In this routine the value for K2 is going to be the same as its position in the index
 		K2 = K1 - C1 # Cake left after consumption in the first period gets consumed in second period. 
-		V1_guess[C1 + 1] = sqrt.(C1) .+ β .* sqrt(K2)  # Value associated with cake consumed across both periods (taking control variables C1 and K2 into account)
+		V1_guess[C1 + 1] = sqrt.(C1) .+ β .* sqrt.(K2)  # Value associated with cake consumed across both periods (taking control variables C1 and K2 into account)
 	end
 	
 	idx_max = argmax(V1_guess) # Pick out the position of the argument that maximises the value function
@@ -352,26 +358,6 @@ end
 
 # ╔═╡ 66da8280-4f94-4798-a16f-3b11967bc760
 backward_induction1(5) # Code finally works, had to play around with the idx_max component
-
-# ╔═╡ 33489d4c-4dd1-44b4-ac85-d170b7754f20
-function backward_induction2(K1; β = 0.99) # A much easier implementation to would perhaps be the following.
-    
-	V1_guess = sqrt(0) + β * sqrt(K1)
-	C1_guess = 0
-	
-	for C1 in 1:K1
-		V = sqrt(C1) + β * sqrt(K1 - C1)
-		
-		if V1_guess <= V
-			V1_guess = V
-			C1_guess = C1
-		end
-	end
-	md" The optimal consumption is $C1_guess in the first period with associated value of $V1_guess"
-end
-
-# ╔═╡ dbc2fcb4-42d7-4d4b-8091-7107e995da0d
-backward_induction2(5)
 
 # ╔═╡ 437462d4-2dd1-4ef9-aa7d-b0cb64bef455
 #md" Below we provide a graph of the different values associated with consumption for different levels of cake in period 1. "
@@ -2488,10 +2474,12 @@ version = "0.9.1+5"
 # ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
 # ╟─f17bd25f-a459-44b6-862e-5d8d7b5062c9
 # ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
-# ╟─be62b6ff-a947-47ab-8905-6ac631abf8e6
+# ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
 # ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 # ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
+# ╟─f9e3c61c-d6f9-4286-bada-6b71e5f51c13
 # ╠═a25b4e49-46c0-4c7d-b80e-e108614ec288
+# ╟─cc527219-7b13-46d7-a281-602bff618a0a
 # ╠═11dc1b7f-866e-42e6-b4ef-0b9d3b34366f
 # ╟─f2075369-02b7-4262-a543-91da85169e65
 # ╟─8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
@@ -2506,8 +2494,6 @@ version = "0.9.1+5"
 # ╟─eff5cdcf-3a07-4d08-9152-39c0b71eac3b
 # ╠═b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 # ╠═66da8280-4f94-4798-a16f-3b11967bc760
-# ╠═33489d4c-4dd1-44b4-ac85-d170b7754f20
-# ╠═dbc2fcb4-42d7-4d4b-8091-7107e995da0d
 # ╟─437462d4-2dd1-4ef9-aa7d-b0cb64bef455
 # ╟─18b69513-700f-4300-b578-4742112a23ca
 # ╟─53c21b1b-088f-4604-9246-fc6796c3e256
@@ -2551,13 +2537,13 @@ version = "0.9.1+5"
 # ╟─2fba5422-a46d-4606-8c21-c0df54f3544b
 # ╟─507514d4-d369-4950-9198-428561aecfd9
 # ╟─ab73acc7-f51f-48cc-8b91-48d6d3a41c2b
-# ╠═1229edd5-45cf-41f1-ad66-72af83a0a2e3
-# ╠═71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
-# ╠═1a3e85a7-a292-487e-804c-b408cd508498
-# ╠═597f6e04-3580-4214-b7f2-77db8286d864
+# ╟─1229edd5-45cf-41f1-ad66-72af83a0a2e3
+# ╟─71fb6ee5-bd3f-4465-b2c6-e8e11c0865cb
+# ╟─1a3e85a7-a292-487e-804c-b408cd508498
+# ╟─597f6e04-3580-4214-b7f2-77db8286d864
 # ╟─fcca074c-8f19-42b3-b60e-a75cdad1311f
 # ╟─785151e1-f0b1-4788-833a-2db80120c876
-# ╠═4eea7313-37fe-48ea-b30a-94f4ccedd71d
+# ╟─4eea7313-37fe-48ea-b30a-94f4ccedd71d
 # ╟─cbb90e8e-9656-4dfb-8103-6459fa46595e
 # ╟─2cef4d1b-39bd-4c24-8a3b-69c6da406e8f
 # ╠═91778068-9af3-4f28-bf76-aa19c9df3e45

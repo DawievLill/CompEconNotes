@@ -66,12 +66,6 @@ function T(w, grid, β, u, f, shocks; compute_policy = false)
 	return Tw
 end
 
-# ╔═╡ dc3e797b-368a-4d1f-84bc-635b6f836833
-md" #### Fitted value function iteration "
-
-# ╔═╡ 831241b0-d8a2-4ee9-a0fc-3c744395b511
-md" #### Policy function iteration "
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1273,7 +1267,5 @@ version = "0.9.1+5"
 # ╟─cbe8c857-ec72-48ff-93cf-61f28dda4e94
 # ╟─3e3a7c19-515f-4019-b85a-45c86b49ba67
 # ╠═cf83f018-3683-4e35-a06e-2887b44b7488
-# ╟─dc3e797b-368a-4d1f-84bc-635b6f836833
-# ╟─831241b0-d8a2-4ee9-a0fc-3c744395b511
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

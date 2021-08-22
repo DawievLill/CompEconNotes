@@ -538,6 +538,26 @@ end
 # ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
 bar(1:nperiods,C[:, end], leg = false, title = "Given K_t = $(Kspace[end]), take action...",xlab = "period")
 
+# ╔═╡ 0554fa0b-8ce7-4747-8a21-fe06dbf6e449
+md""" ## Income fluctuation problem """
+
+# ╔═╡ 262228b5-ac99-4a58-b050-a863f339186c
+md""" There are multiple examples discrete state deterministic dynamic programming problems, both in finite and infinite time. One of the well known problems that underlies many of the heterogenous household problems in macroeconomics is the income fluctuation problem. Here we will briefly showcase how this problem can be solved with value function iteration. 
+
+The general setup for the problem is as follows, 
+
+$\max _{\left\{a_{t+1}\right\}_{t=0}^{\infty}} \sum_{t=0}^{\infty} \beta^{t} u\left(c_{t}\right)$
+$c_{t}+a_{t+1} \leq y+R a_{t}$
+$a_{t+1} \geq \underline{a}$
+
+We assume with this model that income, $y_t = y$ is deterministic and constant. The recursive formulation of the problem is then the following Bellman equation, 
+
+$\begin{aligned} V(a) &=\max _{c, a^{\prime}} u(c)+\beta V\left(a^{\prime}\right) \\ c+a^{\prime} & \leq y+R a \\ a^{\prime} & \geq \underline{a} \end{aligned}$
+
+We need to solve for the unknown function. As we have mentioned before, the arguments of the value function are the state variables and the solution is given by a value function $V(a)$ and policy functions $c(a)$ and $a'(a)$. The easiest method to solve this problem numerically is value function iteration. We guess the value function on the RHS of the Bellman equation and then maximise to get the value function on the LHS. We update this guess and iterate to convergence. Contraction mapping guarantees convergence if $\beta < 1$. There are better methods to solve this problem, but this is often this simplest. 
+
+""" 
+
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
 
@@ -838,9 +858,6 @@ iterations = @bind iter Slider(5:200, show_value = true, default = 5)
 
 # ╔═╡ 07e571b5-9e5f-4690-89b6-4fc166c94a1b
 FVFI_y(w_new, K_grid, iter)
-
-# ╔═╡ 0554fa0b-8ce7-4747-8a21-fe06dbf6e449
-
 
 # ╔═╡ d31741a8-5184-45d8-8a62-0db938c9a372
 md" In the next session we will introduce a stochastic component to the problem, which means that there will be uncertainty in the model. In particular we will apply this to the cake eating and optimal growth models.  "
@@ -2515,6 +2532,8 @@ version = "0.9.1+5"
 # ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
+# ╟─0554fa0b-8ce7-4747-8a21-fe06dbf6e449
+# ╟─262228b5-ac99-4a58-b050-a863f339186c
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
@@ -2551,7 +2570,6 @@ version = "0.9.1+5"
 # ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be
 # ╟─128ec2e2-3b38-49cd-b507-c1f5fb051491
 # ╠═07e571b5-9e5f-4690-89b6-4fc166c94a1b
-# ╠═0554fa0b-8ce7-4747-8a21-fe06dbf6e449
 # ╟─d31741a8-5184-45d8-8a62-0db938c9a372
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

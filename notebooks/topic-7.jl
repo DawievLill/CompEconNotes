@@ -44,6 +44,9 @@ md" Below are the packages that we used for this section. "
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
 md" # Dynamic programming I"
 
+# ╔═╡ 7290e8e6-5853-4992-a1e5-1fdbbed56f09
+md""" ## Need to read and clean up this session! """
+
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. It is quite sseful in several areas of economics, but I have mostly used it in macroeconomic applications. It is therefore natural to me that most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem and optimal growth problem.
 
@@ -229,7 +232,7 @@ The value of having $K_t$ resources left in period $t$ is the value of optimizin
 Practically, given $K_t$ we could just try out different $c_t$ and see which gives the highest value. How do we determine $V_{t+1}(\cdot)$? 🤔"
 
 # ╔═╡ 728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
-md" #### Backward induction "
+md" ### Backward induction "
 
 # ╔═╡ 3f18f963-ad85-4c75-ab8c-64ac3cbf312c
 md" One way in which we could do this in our **finite time setup** is to specify that time stops at $t = T$ and then use a technique called backward induction. This method is available in all finite time horizon problems that allow dynamic programming structure. The value of leaving resources would then be zero, i.e. $V_{T+1}(K) = 0$. It is not optimal to leave cake on the table! Therefore the last period is going to be
@@ -631,6 +634,33 @@ begin
 	A_grid[A_grid .== minimum(abs.(A_grid .- 0))] .= 0 # insert explicit point at
 end
 
+# ╔═╡ 52bbcfc3-6498-49e5-847b-f4ad943f78e1
+begin
+	# Step 3: Initial guess for the value function and stopping criterion
+	
+	# Define the utility function
+	if σ == 1
+	    u(c) = log.(c)
+	else
+	    u(c) = (c .^ (1 - σ) .-1) ./ (1 - σ)
+	end
+	
+	u1(c) = c .^ (-σ)
+	
+	# Initialise arrays
+	V1 = zeros(1000, time)
+	con = zeros(1000, time)
+	sav = zeros(1000, time)
+	savind = zeros(Int, 1000, time)
+	
+	# Decisions at t = T
+	savind[:, time] .= findfirst(x -> x == 0, A_grid) # find the first index in the array where we have a zero
+	sav[:, time] .= 0
+	con[:, time] = R .* A_grid .+ y[time] .- sav[:, time]
+	V1[:, time] = u(con[:, time])
+	
+end
+
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
 
@@ -836,7 +866,7 @@ end
 md" #### Fitted value function iteration "
 
 # ╔═╡ 2fba5422-a46d-4606-8c21-c0df54f3544b
-md" The final topic for this session is fitted value function iteration. This method is quite similar to the value function iteration from before, but uses interpolation techniques. The general process looks like the following 
+md" The final topic for this session is fitted value function iteration. This method is quite similar to the value function iteration from before, but uses interpolation techniques. This technique is generally used when the choice variables are continuous, so we need some type of approximation of the choice. The general process looks like the following 
 
 The process looks like this:
 
@@ -909,6 +939,9 @@ function bellman_fitted_y(w, grid, β, u, f)
     return Tw
 end
 
+# ╔═╡ c1bfcd25-7c0c-4b6d-a85e-d15adca9f4a4
+md" As you will observe we also made use of numerical optimisation through the `Optim.jl` package. For more information on numerical optimisation, refer back to the previous session on the topic. "
+
 # ╔═╡ d111bb6f-f6ce-44bd-a40d-0d442d6484d0
 function FVFI_y(w, grid, iter)
 	
@@ -934,6 +967,9 @@ FVFI_y(w_new, K_grid, iter)
 
 # ╔═╡ d31741a8-5184-45d8-8a62-0db938c9a372
 md" In the next session we will introduce a stochastic component to the problem, which means that there will be uncertainty in the model. In particular we will apply this to the cake eating and optimal growth models.  "
+
+# ╔═╡ 7409ba1b-634e-46fe-82d5-eed7dff2dd98
+
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2538,6 +2574,7 @@ version = "0.9.1+5"
 # ╟─e52a9db5-1bbc-4e07-ab71-fb287c472260
 # ╠═7fffd413-6ebe-49d2-b426-1428aee5ae26
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
+# ╟─7290e8e6-5853-4992-a1e5-1fdbbed56f09
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
 # ╟─3e79f184-a3e8-44a0-9609-19827522d86a
 # ╟─340698bc-e27a-442b-a6fe-4b7c7ed3bd16
@@ -2594,7 +2631,7 @@ version = "0.9.1+5"
 # ╟─c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 # ╟─4716e611-3342-4c3e-afc2-5afd8de2fc15
 # ╟─aa534428-e995-4885-bfeb-135ad92129a4
-# ╟─b40713e0-54db-4b49-8d35-a5b68f71ac89
+# ╠═b40713e0-54db-4b49-8d35-a5b68f71ac89
 # ╟─7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
 # ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
 # ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
@@ -2614,6 +2651,7 @@ version = "0.9.1+5"
 # ╟─a2d214a4-a9e8-40fc-8482-f2f761be3ce5
 # ╠═5138f86b-64d3-43a6-ae75-5bb3e729c6bf
 # ╠═51c82ec9-ca11-481e-90c9-0589bda16475
+# ╠═52bbcfc3-6498-49e5-847b-f4ad943f78e1
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
@@ -2646,10 +2684,12 @@ version = "0.9.1+5"
 # ╟─cbb90e8e-9656-4dfb-8103-6459fa46595e
 # ╟─2cef4d1b-39bd-4c24-8a3b-69c6da406e8f
 # ╠═91778068-9af3-4f28-bf76-aa19c9df3e45
+# ╟─c1bfcd25-7c0c-4b6d-a85e-d15adca9f4a4
 # ╠═d111bb6f-f6ce-44bd-a40d-0d442d6484d0
 # ╠═cac96345-ee00-40ef-b8ae-3b7fdbfea9be
 # ╟─128ec2e2-3b38-49cd-b507-c1f5fb051491
 # ╠═07e571b5-9e5f-4690-89b6-4fc166c94a1b
 # ╟─d31741a8-5184-45d8-8a62-0db938c9a372
+# ╠═7409ba1b-634e-46fe-82d5-eed7dff2dd98
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

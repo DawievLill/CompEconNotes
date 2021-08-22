@@ -558,6 +558,79 @@ We need to solve for the unknown function. As we have mentioned before, the argu
 
 """ 
 
+# ╔═╡ 712abc2e-5454-4e29-9b85-f03dd8f1fe5b
+md""" ### Value function iteration """
+
+# ╔═╡ 3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
+md""" The procedure and accompanying code below is from the notes of Benjamin Moll at LSE. We will generally follow the following steps for our solution to the problem, 
+
+1. Set the appropriate parameter values for the model
+2. Define a grid of admissable values for the state variable $A = \{a_{1}, \ldots, a_{N}\}$. Set $a_{1} = \underline{a}$
+3. Provide initial guess for the value funtion $V_{0}(a)$ and choose stopping criterion $\varepsilon > 0$. A good guess is going to be, 
+
+$V_{0}(a)=\sum_{t=0}^{\infty} \beta^{t} u(r a+y)=\frac{u(r a+y)}{1-\beta}$
+
+4. Set $\ell = 1$. Start the iteration by looping over all $A$ and solving, 
+
+$a_{\ell+1}^{\prime}\left(a_{i}\right)=\arg \max _{a^{\prime} \in \mathcal{A}} u\left(y+(1+r) a_{i}-a^{\prime}\right)+\beta V_{\ell}\left(a^{\prime}\right)$
+
+$\begin{aligned} V_{\ell+1}\left(a_{i}\right) &=\max _{a^{\prime} \in \mathcal{A}} u\left(y+(1+r) a_{i}-a^{\prime}\right)+\beta V_{\ell}\left(a^{\prime}\right) \\ &=u\left(y+(1+r) a_{i}-a_{\ell+1}^{\prime}\left(a_{i}\right)\right)+\beta V_{\ell}\left(a_{\ell+1}^{\prime}\left(a_{i}\right)\right) \end{aligned}$
+
+5.  Check for convergence, $\epsilon_{\ell} < \epsilon$ where 
+
+$\epsilon_{\ell}=\max _{i}\left|V_{\ell+1}\left(a_{i}\right)-V_{\ell}\left(a_{i}\right)\right|$
+
+6. If $\epsilon_{\ell} \geq \epsilon$ go back to step 4 and set $\ell:= \ell + 1$. Otherwise, extract the optimal policy functions, 
+
+$a^{\prime}(a)=a_{\ell+1}(a)$
+$V(a)=V_{\ell+1}(a)$
+$C(a)=y+(1+r) a-a^{\prime}(a)$
+
+This basic idea will also be repeated for the optimal growth problem, but with different notation. Difficult to keep notation the same across multiple problems. Next step is to code this up. 
+
+
+"""
+
+# ╔═╡ 3776c21c-0fac-4683-8cfe-71b59d016250
+md""" ### Finite horizon problem """
+
+# ╔═╡ ba8a18f5-f074-45d5-89aa-ba332e80ab45
+md""" We will first deal with the finite horizon case, like we did with the cake eating problem to give us a better idea of the basic structure of the problem. """
+
+# ╔═╡ a2d214a4-a9e8-40fc-8482-f2f761be3ce5
+md"""
+Horizon $( @bind time Slider(21:100, show_value=true, default = 21) )
+"""
+
+# ╔═╡ 5138f86b-64d3-43a6-ae75-5bb3e729c6bf
+begin
+	# Step 1: Preferences and income process
+	
+	# β = 0.97
+	σ = 2 # coefficient of relative risk aversion
+	r = 0.05 # interest rate (return on investmet)
+	R = 1 + r
+	y = zeros(time) # initialise the income values
+	y[1:20] = 1:20 # first 20 values are increasing
+	y[21:time] .= 5 # rest of values are constant
+	y = y./sum(y) # rescale so that sum of income is equal to 1 // Is this needed?
+	sum(y)
+end
+
+# ╔═╡ 51c82ec9-ca11-481e-90c9-0589bda16475
+begin
+	# Step 2: Set up the grid
+	A_grid_max = 5 # upper bound
+	A_grid_min = -0.10 # lower bound =  borrowing limit
+	A_grid_par = 1 # 1 for linear, 0 for L-shaped
+
+	## assets
+	A_grid = range(0, 1, length = 1000)
+	A_grid = A_grid .^ (1 ./ A_grid_par)
+	A_grid = A_grid_min .+ (A_grid_max .- A_grid_min) .* A_grid
+	A_grid[A_grid .== minimum(abs.(A_grid .- 0))] .= 0 # insert explicit point at
+end
+
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
 
@@ -2534,6 +2607,13 @@ version = "0.9.1+5"
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─0554fa0b-8ce7-4747-8a21-fe06dbf6e449
 # ╟─262228b5-ac99-4a58-b050-a863f339186c
+# ╟─712abc2e-5454-4e29-9b85-f03dd8f1fe5b
+# ╟─3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
+# ╟─3776c21c-0fac-4683-8cfe-71b59d016250
+# ╟─ba8a18f5-f074-45d5-89aa-ba332e80ab45
+# ╟─a2d214a4-a9e8-40fc-8482-f2f761be3ce5
+# ╠═5138f86b-64d3-43a6-ae75-5bb3e729c6bf
+# ╠═51c82ec9-ca11-481e-90c9-0589bda16475
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b

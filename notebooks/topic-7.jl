@@ -291,7 +291,7 @@ md" We can see the utility that we received from the consumption at each grid po
 V2 = sqrt.(C2)
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
-plot(grid_K2, V2, xlab = "Slices of cake", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
+#plot(grid_K2, V2, xlab = "Slices of cake", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
 
 # ╔═╡ 8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
 md" Say that we want to find the value for $V_2$ at $K_2 = 2$. We have to reference the relevant index point for that value of $K_2$. The corresponding index value in $K_2$ is in the third position, and is indicated by a $3$ since we have $1$-based indexing in _Julia_. In Python we have zero based indexing, so the value for the index would have been $2$ instead. "
@@ -622,43 +622,99 @@ end
 
 # ╔═╡ 51c82ec9-ca11-481e-90c9-0589bda16475
 begin
-	# Step 2: Set up the grid
+	# Step 2: Set up the grid (very specific about the way the grid is set)
 	A_grid_max = 5 # upper bound
 	A_grid_min = -0.10 # lower bound =  borrowing limit
 	A_grid_par = 1 # 1 for linear, 0 for L-shaped
 
-	## assets
-	A_grid = range(0, 1, length = 1000)
-	A_grid = A_grid .^ (1 ./ A_grid_par)
-	A_grid = A_grid_min .+ (A_grid_max .- A_grid_min) .* A_grid
-	A_grid[A_grid .== minimum(abs.(A_grid .- 0))] .= 0 # insert explicit point at
+	# assets
+	A_grid = LinRange(0, 1, 1000)	# set up a grid between 0 and 1
+	A_grid = A_grid .^ (1 ./ A_grid_par) # doesnt do anything right now (when A_grid_par = 1)
+	A_grid = A_grid_min .+ (A_grid_max .- A_grid_min) .* A_grid # restructure so that range is now from -1.0 to 5.0. Is this a better scheme for the grid points? Why not LinRange(-.1, 5, 1000)?
+	A_grid[A_grid .== minimum(abs.(A_grid .- 0))] .= 0 # insert explicit value at a point. Replace abs(min) point with a zero. 
 end
 
 # ╔═╡ 52bbcfc3-6498-49e5-847b-f4ad943f78e1
 begin
-	# Step 3: Initial guess for the value function and stopping criterion
+	# Step 3a: Set up utility and initialise arrays
 	
-	# Define the utility function
+	# Define the utility function (conditional of value for σ)
 	if σ == 1
 	    u(c) = log.(c)
 	else
-	    u(c) = (c .^ (1 - σ) .-1) ./ (1 - σ)
+	    u(c) = (c .^ (1 - σ) .-1) ./ (1 - σ) # will be the case we work with initially
 	end
 	
-	u1(c) = c .^ (-σ)
+	u1(c) = c .^ (-σ) # alternate specification
 	
 	# Initialise arrays
-	V1 = zeros(1000, time)
-	con = zeros(1000, time)
-	sav = zeros(1000, time)
-	savind = zeros(Int, 1000, time)
+	V0 = zeros(1000, time) # values associated with consumption
+	con = zeros(1000, time) # consumption grid
+	sav = zeros(1000, time) # savings grid
+	savind = zeros(Int, 1000, time); # 1000 x T grid of zeros	
+end
+
+# ╔═╡ a8fa532e-3b09-45ae-809f-f882c9baac20
+
+
+# ╔═╡ 0d893110-ef3a-46ab-a97d-18df2b9e7944
+begin
+	# Step 3b: Initial guess for the value function 
 	
 	# Decisions at t = T
-	savind[:, time] .= findfirst(x -> x == 0, A_grid) # find the first index in the array where we have a zero
+	savind[:, time] .= findfirst(x -> x == 0, A_grid) # find the first value in the array where we have a zero (this will be 21 in my case since we placed it there)
 	sav[:, time] .= 0
-	con[:, time] = R .* A_grid .+ y[time] .- sav[:, time]
-	V1[:, time] = u(con[:, time])
+	con[:, time] = R .* A_grid .+ y[time] .- sav[:, time] # consumption equation from the budget constraint 
+	V0[:, time] = u(con[:, time]) # value associated with each level of consumption on the grid
+end
+
+# ╔═╡ 74b9096b-8c1d-4e58-b776-e4292be1097c
+begin
+	# Step 4, 5, 6: Solve the value function backward by iteration
 	
+	for it = (time - 1):-1:1 # run the iteration backward
+ 
+    	## loop over assets
+    	for ia = 1:1000 # asset count is na = 1000
+             
+        	cash           = R .* A_grid[ia] + y[it]
+        	Vchoice        = u(max.(cash .- A_grid, 1.0e-10)) + β .* V0[:,it + 1]  
+        	V0[ia, it]     = maximum(Vchoice)
+        	savind[ia, it] = argmax(Vchoice)[1]
+        	sav[ia, it]    = A_grid[savind[ia, it]]
+        	con[ia, it]    = cash .- sav[ia,it]
+    	end
+	end
+end
+
+# ╔═╡ 51ed65a1-d400-47aa-be29-d04ac9dd84b9
+begin
+	aindsim = zeros(Int, time + 1)
+	    
+	## initial assets: uniform on [borrow_lim, amax]    
+	ainitial = 0
+	    
+	## allocate to nearest point on agrid;
+	aindsim[1] = interpolate((A_grid,), 1:1000, Gridded(Constant())).(ainitial)
+	    
+	## loop over time periods
+	for it = 1:time
+		## asset choice
+	    aindsim[it + 1] = savind[aindsim[it], it]
+	end
+	    
+	## assign actual asset and income values;
+	asim = A_grid[aindsim]
+	csim = R .* asim[1:time] .+ y .- asim[2:(time+1)]
+end
+
+# ╔═╡ a139c967-9080-4449-82eb-936a5de0857d
+p1 = plot([1:time 1:time],[y csim],color=[:black :red],linestyle=[:solid :dash],labels=["Income" "Consumption"],title="Income and Consumption")
+
+# ╔═╡ 68fe7efa-de28-4ec0-9a4e-ef1223f2a274
+begin
+	p2 = plot(0:time, asim, color=:blue, title="Wealth", legend=false, lw = 1.5)
+	plot!(LinRange(0, time, 100), zeros(100), color=:black, lw=1, ls = :dash)
 end
 
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
@@ -2652,6 +2708,12 @@ version = "0.9.1+5"
 # ╠═5138f86b-64d3-43a6-ae75-5bb3e729c6bf
 # ╠═51c82ec9-ca11-481e-90c9-0589bda16475
 # ╠═52bbcfc3-6498-49e5-847b-f4ad943f78e1
+# ╠═a8fa532e-3b09-45ae-809f-f882c9baac20
+# ╠═0d893110-ef3a-46ab-a97d-18df2b9e7944
+# ╠═74b9096b-8c1d-4e58-b776-e4292be1097c
+# ╠═51ed65a1-d400-47aa-be29-d04ac9dd84b9
+# ╟─a139c967-9080-4449-82eb-936a5de0857d
+# ╟─68fe7efa-de28-4ec0-9a4e-ef1223f2a274
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b

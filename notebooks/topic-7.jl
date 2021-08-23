@@ -41,6 +41,9 @@ html"""
 # ╔═╡ e52a9db5-1bbc-4e07-ab71-fb287c472260
 md" Below are the packages that we used for this section. "
 
+# ╔═╡ 9cb9c5a2-b910-416a-bcca-cc7d69d2f88d
+TableOfContents()
+
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
 md" # Dynamic programming I"
 
@@ -598,11 +601,13 @@ This basic idea will also be repeated for the optimal growth problem, but with d
 md""" ### Finite horizon problem """
 
 # ╔═╡ ba8a18f5-f074-45d5-89aa-ba332e80ab45
-md""" We will first deal with the finite horizon case, like we did with the cake eating problem to give us a better idea of the basic structure of the problem. """
+md""" We will first deal with the finite horizon case, like we did with the cake eating problem to give us a better idea of the basic structure of the problem. Since this is a finite horizon problem, we can solve by backwards induction. 
+
+**Note** We can see the code was originally written with MATLAB in mind, generally it is written so as to vectorise many of the operations and purposefully avoid iterations. """
 
 # ╔═╡ a2d214a4-a9e8-40fc-8482-f2f761be3ce5
 md"""
-Horizon $( @bind time Slider(21:100, show_value=true, default = 21) )
+Horizon $( @bind time Slider(50:100, show_value=true, default = 50) )
 """
 
 # ╔═╡ 5138f86b-64d3-43a6-ae75-5bb3e729c6bf
@@ -613,23 +618,27 @@ begin
 	σ = 2 # coefficient of relative risk aversion
 	r = 0.05 # interest rate (return on investmet)
 	R = 1 + r
+	
+	# Define the income process
 	y = zeros(time) # initialise the income values
 	y[1:20] = 1:20 # first 20 values are increasing
 	y[21:time] .= 5 # rest of values are constant
-	y = y./sum(y) # rescale so that sum of income is equal to 1 // Is this needed?
-	sum(y)
+	y = y./mean(y) # rescale so that sum of income is equal to 1 (shouldnt it be mean = 1?)
+	
+	#y = y./sum(y) # This is what the notes have, but I don't know whether it is correct. 
+	
+	mean(y)
 end
 
 # ╔═╡ 51c82ec9-ca11-481e-90c9-0589bda16475
 begin
-	# Step 2: Set up the grid (very specific about the way the grid is set)
+	# Step 2: Set up the grid - discretise the asset space
+	nA = 1000
 	A_grid_max = 5 # upper bound
-	A_grid_min = -0.10 # lower bound =  borrowing limit
-	A_grid_par = 1 # 1 for linear, 0 for L-shaped
+	A_grid_min = -0.10 # lower bound = borrowing limit
 
 	# assets
-	A_grid = LinRange(0, 1, 1000)	# set up a grid between 0 and 1
-	A_grid = A_grid .^ (1 ./ A_grid_par) # doesnt do anything right now (when A_grid_par = 1)
+	A_grid = LinRange(0, 1, nA)	# set up a grid between 0 and 1
 	A_grid = A_grid_min .+ (A_grid_max .- A_grid_min) .* A_grid # restructure so that range is now from -1.0 to 5.0. Is this a better scheme for the grid points? Why not LinRange(-.1, 5, 1000)?
 	A_grid[A_grid .== minimum(abs.(A_grid .- 0))] .= 0 # insert explicit value at a point. Replace abs(min) point with a zero. 
 end
@@ -648,44 +657,55 @@ begin
 	u1(c) = c .^ (-σ) # alternate specification
 	
 	# Initialise arrays
-	V0 = zeros(1000, time) # values associated with consumption
-	con = zeros(1000, time) # consumption grid
-	sav = zeros(1000, time) # savings grid
-	savind = zeros(Int, 1000, time); # 1000 x T grid of zeros	
+	V₁ = zeros(nA, time) # values associated with consumption
+	con = zeros(nA, time) # consumption grid
+	sav = zeros(nA, time) # savings grid (in this case this is the same as a')
+	savind = zeros(Int, nA, time); # nA x T grid of zeros -- Used for indexing
 end
-
-# ╔═╡ a8fa532e-3b09-45ae-809f-f882c9baac20
-
 
 # ╔═╡ 0d893110-ef3a-46ab-a97d-18df2b9e7944
 begin
-	# Step 3b: Initial guess for the value function 
+	# Step 3b: Decisions at t = T (last time period)
 	
-	# Decisions at t = T
-	savind[:, time] .= findfirst(x -> x == 0, A_grid) # find the first value in the array where we have a zero (this will be 21 in my case since we placed it there)
-	sav[:, time] .= 0
-	con[:, time] = R .* A_grid .+ y[time] .- sav[:, time] # consumption equation from the budget constraint 
-	V0[:, time] = u(con[:, time]) # value associated with each level of consumption on the grid
+	savind[:, time]  .= findfirst(x -> x == 0, A_grid) # find the first value in the array where we have a zero (this will be 21 in my case since we placed it there) and add these values to the last column of savind
+	sav[:, time]     .= 0 # Add zero to last column and all rows (no saving in last period)
+	con[:, time]      = R .* A_grid .+ y[time] .- sav[:, time] # c = Ra + y - a'
+	V₁[:, time]       = u(con[:, time]) # value associated with consumption of everything
 end
 
 # ╔═╡ 74b9096b-8c1d-4e58-b776-e4292be1097c
 begin
 	# Step 4, 5, 6: Solve the value function backward by iteration
 	
+	# Start from T-1 since t = T has been solved
 	for it = (time - 1):-1:1 # run the iteration backward
  
     	## loop over assets
-    	for ia = 1:1000 # asset count is na = 1000
+    	for ia = 1:nA # asset count is na = 1000
              
-        	cash           = R .* A_grid[ia] + y[it]
-        	Vchoice        = u(max.(cash .- A_grid, 1.0e-10)) + β .* V0[:,it + 1]  
-        	V0[ia, it]     = maximum(Vchoice)
+        	cash           = R .* A_grid[ia] + y[it] # x = Ra + y // cash on hand
+        	Vchoice        = u(max.(cash .- A_grid, 1.0e-10)) + β .* V₁[:, it + 1] # u((x - a)) + βV0  
+        	V₁[ia, it]     = maximum(Vchoice) 
         	savind[ia, it] = argmax(Vchoice)[1]
-        	sav[ia, it]    = A_grid[savind[ia, it]]
-        	con[ia, it]    = cash .- sav[ia,it]
+        	sav[ia, it]    = A_grid[savind[ia, it]] 
+        	con[ia, it]    = cash .- sav[ia, it] # c = x - s
     	end
 	end
 end
+
+# ╔═╡ 9e81e572-947a-4c7d-b174-4cf41ae84bd2
+begin
+	
+	# something does not completely look right with this value function... 
+	# plotly()
+	plot(A_grid, V₁[:,time-5:time], legend = false) # Value function
+end
+
+# ╔═╡ 9dc64d75-765e-4f82-bec0-5342a7ca7294
+plot(A_grid, con[:, time-5: time], legend = false)
+
+# ╔═╡ 22c3b83d-fa42-4f5b-a84a-18163398d0cd
+md""" We have plotted the value function and corresponding consumption function. Next, let us try a simulation with this model. """ 
 
 # ╔═╡ 51ed65a1-d400-47aa-be29-d04ac9dd84b9
 begin
@@ -695,7 +715,7 @@ begin
 	ainitial = 0
 	    
 	## allocate to nearest point on agrid;
-	aindsim[1] = interpolate((A_grid,), 1:1000, Gridded(Constant())).(ainitial)
+	aindsim[1] = interpolate((A_grid,), 1:nA, Gridded(Constant())).(ainitial)
 	    
 	## loop over time periods
 	for it = 1:time
@@ -707,6 +727,9 @@ begin
 	asim = A_grid[aindsim]
 	csim = R .* asim[1:time] .+ y .- asim[2:(time+1)]
 end
+
+# ╔═╡ 0ad401c1-7c70-45e1-9513-7311c8dfa8a5
+md" Will plot income, consumption and wealth paths from this simulation. "
 
 # ╔═╡ a139c967-9080-4449-82eb-936a5de0857d
 p1 = plot([1:time 1:time],[y csim],color=[:black :red],linestyle=[:solid :dash],labels=["Income" "Consumption"],title="Income and Consumption")
@@ -2629,6 +2652,7 @@ version = "0.9.1+5"
 # ╟─c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 # ╟─e52a9db5-1bbc-4e07-ab71-fb287c472260
 # ╠═7fffd413-6ebe-49d2-b426-1428aee5ae26
+# ╠═9cb9c5a2-b910-416a-bcca-cc7d69d2f88d
 # ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
 # ╟─7290e8e6-5853-4992-a1e5-1fdbbed56f09
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
@@ -2704,14 +2728,17 @@ version = "0.9.1+5"
 # ╟─3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
 # ╟─3776c21c-0fac-4683-8cfe-71b59d016250
 # ╟─ba8a18f5-f074-45d5-89aa-ba332e80ab45
-# ╟─a2d214a4-a9e8-40fc-8482-f2f761be3ce5
+# ╠═a2d214a4-a9e8-40fc-8482-f2f761be3ce5
 # ╠═5138f86b-64d3-43a6-ae75-5bb3e729c6bf
 # ╠═51c82ec9-ca11-481e-90c9-0589bda16475
 # ╠═52bbcfc3-6498-49e5-847b-f4ad943f78e1
-# ╠═a8fa532e-3b09-45ae-809f-f882c9baac20
 # ╠═0d893110-ef3a-46ab-a97d-18df2b9e7944
 # ╠═74b9096b-8c1d-4e58-b776-e4292be1097c
+# ╠═9e81e572-947a-4c7d-b174-4cf41ae84bd2
+# ╠═9dc64d75-765e-4f82-bec0-5342a7ca7294
+# ╟─22c3b83d-fa42-4f5b-a84a-18163398d0cd
 # ╠═51ed65a1-d400-47aa-be29-d04ac9dd84b9
+# ╟─0ad401c1-7c70-45e1-9513-7311c8dfa8a5
 # ╟─a139c967-9080-4449-82eb-936a5de0857d
 # ╟─68fe7efa-de28-4ec0-9a4e-ef1223f2a274
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e

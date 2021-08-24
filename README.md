@@ -1,6 +1,8 @@
 # Computational Economics Notes
 
-These are notes written in Julia for the computational economics reading group. The notes can be found in the `notebooks` folder. Everything is pretty much a work in progress. 
+These are notes written in Julia for the computational economics reading group. The notes can be found in the `notebooks` folder. 
+
+Everything is pretty much a work in progress 🚧
 
 ## Outline of topics
 
@@ -13,9 +15,11 @@ These are notes written in Julia for the computational economics reading group. 
 7. Dynamic programming I (deterministic) -- **Incomplete**
 8. Dynamic programming II (stochastic) -- **Incomplete**
 9. Time iteration and the endogenous grid method -- **Empty**
-10. ODEs and continuous time models -- **Empty**
+10. Projection methods -- **Empty**
+11. Perturabtion methods -- **Empty**
+12. ODEs and continuous time models -- **Empty**
 
-Further topics will be added with future iterations of the reading group. 
+We will probably not cover all topics during the year, but this is a first run. Future iterations will have more complete notes and include more topics. 
 
 ## Resources
 

@@ -87,6 +87,42 @@ end;
 # ╔═╡ fb30b4b0-268c-41c9-a377-5df144323887
 md" This type keeps a record of all the exogenous parameters of the model as well as the grids and current guesses for the different types of value and policy functions. We have a type declaration after the definition of each component. This will help Julia to infer the type of the fields we are working with, but it does not always mean an improvement in terms of computational performance. It is good practice to declare types, but there are many instances where it is not needed. "
 
+# ╔═╡ 14499e8d-6f1b-4b57-8a77-32acacff0cd6
+md" Before we input the values for parameters and construct the relevant vectors and matrices, we can define some function that will be used throughout. "
+
+# ╔═╡ 30186648-3877-4d7e-a567-5e0b40b00f84
+u(c::Float64) = log(c);
+
+# ╔═╡ 683b9e7d-0177-49f1-9e61-e9f2f70894d8
+function budget_constraint(a::Float64, ap::Float64, y::Float64, r::Float64, w::Float64)
+	
+	c = (1 + r)*a + w*y - ap
+	return c
+end;
+
+# ╔═╡ 888c2227-c027-432a-87b2-694c6fdb8985
+function budget_constraint(a::Float64, ap::Float64, y::Float64, h::Household)
+	
+	budget_constraint(a, ap, y, h.r, h.w)
+end
+
+# ╔═╡ c87ba17d-acec-45bb-87a9-8a43a0842451
+md""" The budget constraint takes in the state values (`a` and `y`) and the choice of assets tomorrow `ap` and provides a value for consumption. Budget constraint has two methods, one that accepts values for wage and the interest rate directly and another that gains this information on these prices from a `Household` type. Implementation of **multiple dispatch** in Julia. """
+
+# ╔═╡ 28eb0b44-db0b-4108-bd30-ac8484114b9a
+function Household_f(; β::Float64 = 0.96, 
+		r::Float64 = 0.038,
+		w::Float64 = 1.09,
+		amax::Float64 = 30.0,
+		Na::Int64 = 100,
+		curv::Float64 = 0.4,
+	y_chain::MarkovChain{Float64, Matrix{Float64}, Vector{Float64}} = MarkovChain([0.5 0.5; 0.04 0.96], [0.25; 1.0]))
+	
+	# Set up the asset grid
+	a_grid = LinRange(0, amax ^ curv, Na) .^ (1 / curv)
+	
+end
+
 # ╔═╡ 5e396dac-60b9-4a2f-9bd5-d8af96240474
 md""" ### Discretisation of income process """
 
@@ -1347,7 +1383,13 @@ version = "0.9.1+5"
 # ╟─493fc95d-86c2-4f08-9e69-67450e84ea7e
 # ╟─5b668901-c299-4089-a1aa-2b4e48aa4c41
 # ╠═da6f3fbc-60bf-4522-91ea-cdcfb995c654
-# ╠═fb30b4b0-268c-41c9-a377-5df144323887
+# ╟─fb30b4b0-268c-41c9-a377-5df144323887
+# ╟─14499e8d-6f1b-4b57-8a77-32acacff0cd6
+# ╠═30186648-3877-4d7e-a567-5e0b40b00f84
+# ╠═683b9e7d-0177-49f1-9e61-e9f2f70894d8
+# ╠═888c2227-c027-432a-87b2-694c6fdb8985
+# ╟─c87ba17d-acec-45bb-87a9-8a43a0842451
+# ╠═28eb0b44-db0b-4108-bd30-ac8484114b9a
 # ╟─5e396dac-60b9-4a2f-9bd5-d8af96240474
 # ╟─4330c5c0-af20-44be-ad1d-ee31b9733397
 # ╟─9202f4d4-a4e2-496d-b39a-5514cb55973c

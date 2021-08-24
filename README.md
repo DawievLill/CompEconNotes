@@ -16,7 +16,7 @@ Everything is pretty much a work in progress 🚧
 8. Dynamic programming II (stochastic) -- **Incomplete**
 9. Time iteration and the endogenous grid method -- **Empty**
 10. Projection methods -- **Empty**
-11. Perturabtion methods -- **Empty**
+11. Perturbation methods -- **Empty**
 12. ODEs and continuous time models -- **Empty**
 
 We will probably not cover all topics during the year, but this is a first run. Future iterations will have more complete notes and include more topics. 

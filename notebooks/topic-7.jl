@@ -382,7 +382,7 @@ end
 # @bind highR Slider(2:200,show_value = true, default = 20)
 
 # ╔═╡ c8533761-ae1d-47a2-9860-ad88ecca2d34
-md" ### Backward induction example ($T > 2$)"
+md" ### Backward induction example ($2<T <\infty$)"
 
 # ╔═╡ 547def39-8a65-48bc-bb30-d28d016cd6fa
 md" Let us consider the same example but with an arbitrary number of periods (even approaching infinity if we wish). We will start with 500 time periods. The solution remains largely the same."
@@ -564,39 +564,6 @@ We need to solve for the unknown function. As we have mentioned before, the argu
 
 """ 
 
-# ╔═╡ 712abc2e-5454-4e29-9b85-f03dd8f1fe5b
-md""" ### Value function iteration """
-
-# ╔═╡ 3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
-md""" The procedure and accompanying code below is from the notes of Benjamin Moll at LSE. We will generally follow the following steps for our solution to the problem, 
-
-1. Set the appropriate parameter values for the model
-2. Define a grid of admissable values for the state variable $A = \{a_{1}, \ldots, a_{N}\}$. Set $a_{1} = \underline{a}$
-3. Provide initial guess for the value funtion $V_{0}(a)$ and choose stopping criterion $\varepsilon > 0$. A good guess is going to be, 
-
-$V_{0}(a)=\sum_{t=0}^{\infty} \beta^{t} u(r a+y)=\frac{u(r a+y)}{1-\beta}$
-
-4. Set $\ell = 1$. Start the iteration by looping over all $A$ and solving, 
-
-$a_{\ell+1}^{\prime}\left(a_{i}\right)=\arg \max _{a^{\prime} \in \mathcal{A}} u\left(y+(1+r) a_{i}-a^{\prime}\right)+\beta V_{\ell}\left(a^{\prime}\right)$
-
-$\begin{aligned} V_{\ell+1}\left(a_{i}\right) &=\max _{a^{\prime} \in \mathcal{A}} u\left(y+(1+r) a_{i}-a^{\prime}\right)+\beta V_{\ell}\left(a^{\prime}\right) \\ &=u\left(y+(1+r) a_{i}-a_{\ell+1}^{\prime}\left(a_{i}\right)\right)+\beta V_{\ell}\left(a_{\ell+1}^{\prime}\left(a_{i}\right)\right) \end{aligned}$
-
-5.  Check for convergence, $\epsilon_{\ell} < \epsilon$ where 
-
-$\epsilon_{\ell}=\max _{i}\left|V_{\ell+1}\left(a_{i}\right)-V_{\ell}\left(a_{i}\right)\right|$
-
-6. If $\epsilon_{\ell} \geq \epsilon$ go back to step 4 and set $\ell:= \ell + 1$. Otherwise, extract the optimal policy functions, 
-
-$a^{\prime}(a)=a_{\ell+1}(a)$
-$V(a)=V_{\ell+1}(a)$
-$C(a)=y+(1+r) a-a^{\prime}(a)$
-
-This basic idea will also be repeated for the optimal growth problem, but with different notation. Difficult to keep notation the same across multiple problems. Next step is to code this up. 
-
-
-"""
-
 # ╔═╡ 3776c21c-0fac-4683-8cfe-71b59d016250
 md""" ### Finite horizon problem """
 
@@ -605,9 +572,15 @@ md""" We will first deal with the finite horizon case, like we did with the cake
 
 **Note** We can see the code was originally written with MATLAB in mind, generally it is written so as to vectorise many of the operations and purposefully avoid iterations. """
 
+# ╔═╡ a6da19fd-44c8-4842-ad6c-2da98c3eb6a0
+md""" #### Backward induction """
+
+# ╔═╡ e613359b-aa8b-4e8a-963e-56e5ecfb8534
+md" The general steps that we are going to follow are, "
+
 # ╔═╡ a2d214a4-a9e8-40fc-8482-f2f761be3ce5
 md"""
-Horizon $( @bind time Slider(50:100, show_value=true, default = 50) )
+Horizon $( @bind time Slider(50:75, show_value=true, default = 50) )
 """
 
 # ╔═╡ 5138f86b-64d3-43a6-ae75-5bb3e729c6bf
@@ -698,11 +671,11 @@ begin
 	
 	# something does not completely look right with this value function... 
 	# plotly()
-	plot(A_grid, V₁[:,time-5:time], legend = false) # Value function
+	plot(A_grid, V₁[:,1], legend = false) # Value function
 end
 
 # ╔═╡ 9dc64d75-765e-4f82-bec0-5342a7ca7294
-plot(A_grid, con[:, time-5: time], legend = false)
+plot(A_grid, con[:, 1], legend = false)
 
 # ╔═╡ 22c3b83d-fa42-4f5b-a84a-18163398d0cd
 md""" We have plotted the value function and corresponding consumption function. Next, let us try a simulation with this model. """ 
@@ -740,6 +713,50 @@ begin
 	plot!(LinRange(0, time, 100), zeros(100), color=:black, lw=1, ls = :dash)
 end
 
+# ╔═╡ 8d2d1eb3-413f-4f76-9db5-13ac2a246012
+md" In the case that the problem does not have a finite time horizon, we must employ a different method than backward induction. In particular, we are going to show how to solve the problem using value function iteration. "
+
+# ╔═╡ 712abc2e-5454-4e29-9b85-f03dd8f1fe5b
+md""" ### Value function iteration """
+
+# ╔═╡ 7d50e4ca-53c8-4927-8b99-5a78d31d3333
+md" The first method that we will use to solve this problem is value function iteration. We have already used something similar to this method for the previous problems. For value function iteration we want to find the fixed point of the functional equation by iteration. 
+
+We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
+
+# ╔═╡ 3e1adb35-d1db-4942-abf7-d9cf9acefb11
+md" We solve the functional problem on the real line (which has continuous support) on a finite set of grid points only. This method is quite robust and easy to understand, but is known for being slow. Eventually, given an increased number of grid points to evaluate across and enough iterations one should approximate the true solution, but this can take a lot of time. This is especially true if the state space is mutlidimensional, which brings in the curse of dimensionality. " 
+
+# ╔═╡ 3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
+md""" The procedure and accompanying code below is from the notes of Benjamin Moll at LSE. We will generally follow the following steps for our solution to the problem, 
+
+1. Set the appropriate parameter values for the model
+2. Define a grid of admissable values for the state variable $A = \{a_{1}, \ldots, a_{N}\}$. Set $a_{1} = \underline{a}$
+3. Provide initial guess for the value funtion $V_{0}(a)$ and choose stopping criterion $\varepsilon > 0$. A good guess is going to be, 
+
+$V_{0}(a)=\sum_{t=0}^{\infty} \beta^{t} u(r a+y)=\frac{u(r a+y)}{1-\beta}$
+
+4. Set $\ell = 1$. Start the iteration by looping over all $A$ and solving, 
+
+$a_{\ell+1}^{\prime}\left(a_{i}\right)=\arg \max _{a^{\prime} \in \mathcal{A}} u\left(y+(1+r) a_{i}-a^{\prime}\right)+\beta V_{\ell}\left(a^{\prime}\right)$
+
+$\begin{aligned} V_{\ell+1}\left(a_{i}\right) &=\max _{a^{\prime} \in \mathcal{A}} u\left(y+(1+r) a_{i}-a^{\prime}\right)+\beta V_{\ell}\left(a^{\prime}\right) \\ &=u\left(y+(1+r) a_{i}-a_{\ell+1}^{\prime}\left(a_{i}\right)\right)+\beta V_{\ell}\left(a_{\ell+1}^{\prime}\left(a_{i}\right)\right) \end{aligned}$
+
+5.  Check for convergence, $\epsilon_{\ell} < \epsilon$ where 
+
+$\epsilon_{\ell}=\max _{i}\left|V_{\ell+1}\left(a_{i}\right)-V_{\ell}\left(a_{i}\right)\right|$
+
+6. If $\epsilon_{\ell} \geq \epsilon$ go back to step 4 and set $\ell:= \ell + 1$. Otherwise, extract the optimal policy functions, 
+
+$a^{\prime}(a)=a_{\ell+1}(a)$
+$V(a)=V_{\ell+1}(a)$
+$C(a)=y+(1+r) a-a^{\prime}(a)$
+
+This basic idea will also be repeated for the optimal growth problem, but with different notation. Difficult to keep notation the same across multiple problems. Next step is to code this up. 
+
+
+"""
+
 # ╔═╡ 616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 md" ## Optimal growth problem" 
 
@@ -769,16 +786,8 @@ $$V(K_i) = \max_{i'=1,2,\dots,n} U(f(K_i) - K_{i'}) + \beta V(K_{i'})$$"
 # ╔═╡ 5a3df38d-2973-421e-8da0-a190653af20f
 md" ### Value funtion iteration "
 
-# ╔═╡ e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
-md" The first method that we will use to solve this problem is value function iteration. We have already used something similar to this method for the cake eating problem, but let illustrate it for the optimal growth problem as well. For value function iteration we want to find the fixed point of the functional equation by iteration. 
-
-We iterate untill the distance (measured in whatever way we specify) between consecutive iterations becomes small. The notion of smallness is also arbitrarily defined. The reason that we can implement this method is as a result of the contraction mapping theorem and its application to the Bellman operator. If you are interested in the theoretical motivation, I would advise you start by reading the relevant material on the QuantEcon website and also look at textbook treatments such as Lucas and Stokey. "
-
-# ╔═╡ 8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
-md" We start with discrete dynamic programming, which means that we will look at a discrete state and action space. We solve the functional problem on the real line (which has continuous support) on a finite set of grid points only. This method is quite robust and easy to understand, but is known for being slow. Eventually, given an increased number of grid points to evaluate across and enough iterations one should approximate the true solution, but this can take a lot of time. This is especially true if the state space is mutlidimensional, which brings in the curse of dimensionality. " 
-
 # ╔═╡ 51c0c398-81d0-4e93-9907-34f3f39be2e4
-md" While the general steps provided above explain the general idea quite well, it is not practical as an algorithm to solve our problem. Let us expand more on these steps to provide us with an algorithm that we can take to the computer. The basic outline of the VFI algorithm that we need to follow is the following. 
+md" The basic outline of the VFI algorithm that we need to follow is the following. 
 
 1. Set the appropriate parameter values for the model
 2. Define a grid of admissable values for the state variable $K$
@@ -2715,7 +2724,7 @@ version = "0.9.1+5"
 # ╟─7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
 # ╟─b71abd7b-191f-4044-91a9-d0f4e4883f88
 # ╟─6f2eac77-4ad3-4da7-95a7-c958ccf270cd
-# ╟─d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
+# ╠═d81d8f8a-ac8a-4d01-89c8-bb62960a69bc
 # ╟─7529e1a7-c41c-49ec-8885-6c7c14093700
 # ╟─b22748fb-9acb-4105-9fbe-654daf34dbf4
 # ╠═86f2d8ca-ea32-4558-8133-bce4789ad105
@@ -2724,11 +2733,11 @@ version = "0.9.1+5"
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
 # ╟─0554fa0b-8ce7-4747-8a21-fe06dbf6e449
 # ╟─262228b5-ac99-4a58-b050-a863f339186c
-# ╟─712abc2e-5454-4e29-9b85-f03dd8f1fe5b
-# ╟─3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
 # ╟─3776c21c-0fac-4683-8cfe-71b59d016250
 # ╟─ba8a18f5-f074-45d5-89aa-ba332e80ab45
-# ╠═a2d214a4-a9e8-40fc-8482-f2f761be3ce5
+# ╟─a6da19fd-44c8-4842-ad6c-2da98c3eb6a0
+# ╟─e613359b-aa8b-4e8a-963e-56e5ecfb8534
+# ╟─a2d214a4-a9e8-40fc-8482-f2f761be3ce5
 # ╠═5138f86b-64d3-43a6-ae75-5bb3e729c6bf
 # ╠═51c82ec9-ca11-481e-90c9-0589bda16475
 # ╠═52bbcfc3-6498-49e5-847b-f4ad943f78e1
@@ -2741,12 +2750,15 @@ version = "0.9.1+5"
 # ╟─0ad401c1-7c70-45e1-9513-7311c8dfa8a5
 # ╟─a139c967-9080-4449-82eb-936a5de0857d
 # ╟─68fe7efa-de28-4ec0-9a4e-ef1223f2a274
+# ╟─8d2d1eb3-413f-4f76-9db5-13ac2a246012
+# ╟─712abc2e-5454-4e29-9b85-f03dd8f1fe5b
+# ╟─7d50e4ca-53c8-4927-8b99-5a78d31d3333
+# ╟─3e1adb35-d1db-4942-abf7-d9cf9acefb11
+# ╟─3c5d6b59-7abb-47ad-86bd-0b6bc06f9f97
 # ╟─616d4193-6ba7-450e-ad3e-d6b07cb90d2e
 # ╟─bfeff134-00d8-4ca5-9902-6b8dde5facd3
 # ╟─f4654f14-6bef-452f-a9af-ec62613ad20b
 # ╟─5a3df38d-2973-421e-8da0-a190653af20f
-# ╟─e8e3eb80-0c0f-4a08-b963-eb554cac8f0b
-# ╟─8f7abbcf-61c5-4c4f-92f4-41c02a6aaa41
 # ╟─51c0c398-81d0-4e93-9907-34f3f39be2e4
 # ╟─b2f96156-bd23-4767-8ec8-38215a8f4b63
 # ╠═60912ad4-c766-4b70-b843-baed710e29ce

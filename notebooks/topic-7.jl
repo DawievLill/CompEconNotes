@@ -42,7 +42,7 @@ html"""
 md" Below are the packages that we used for this section. "
 
 # ╔═╡ 9cb9c5a2-b910-416a-bcca-cc7d69d2f88d
-TableOfContents()
+# TableOfContents()
 
 # ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
 md" # Dynamic programming I"
@@ -648,7 +648,7 @@ end
 
 # ╔═╡ 74b9096b-8c1d-4e58-b776-e4292be1097c
 begin
-	# Step 4, 5, 6: Solve the value function backward by iteration
+	# Step 4: Solve by backward by iteration
 	
 	# Start from T-1 since t = T has been solved
 	for it = (time - 1):-1:1 # run the iteration backward

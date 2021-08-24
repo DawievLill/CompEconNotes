@@ -6,15 +6,20 @@ using InteractiveUtils
 
 # ╔═╡ 71c63caa-7304-4dc9-b683-08fd48314e28
 begin 
-	using LinearAlgebra
-	using Statistics
-	using Plots
-	using QuantEcon
 	using Interpolations
+	using KernelDensity
+	using LinearAlgebra
 	using NLsolve
 	using Optim
+	using Plots
+	using QuantEcon
 	using Random
+	using Statistics
+	using StatsBase
 end
+
+# ╔═╡ 07a187e2-9999-4ee7-bd01-0a002902c2af
+#html"<button onclick='present()'>present</button>"
 
 # ╔═╡ 432b9202-e4d0-11eb-22d5-8b28bb0e0f47
 md" # Dynamic Programming II "
@@ -26,10 +31,67 @@ md" Start our discussion on stochastic dynamic programming. Introduce the idea o
 md" ## Dynamic programming with uncertainty "
 
 # ╔═╡ 454997e5-abb6-4821-bb7c-7644fd508eeb
-md" ### Cake eating problem contd. "
+md" ### Cake eating problem "
 
 # ╔═╡ f52b2012-d19c-456e-9f36-b6b6083c09a4
 md" #### Value function iteration "
+
+# ╔═╡ 63e09a48-2a64-4f7e-bda1-e4a5c659b092
+md""" ### Income fluctation problem """
+
+# ╔═╡ 50bf70a6-c9f9-46f2-bf1c-c374214c9d24
+md""" We will have a discussion on what the income fluctuation problem looks like when uncertainty is introduced. """
+
+# ╔═╡ 5f4778b5-3675-49e0-a408-0c919a21fae8
+md""" We will be showing two different ways in which to look at the income fluctation problem. One that is written in a more Julia way with fast loops and another that emphasises vectorisation.  """
+
+# ╔═╡ 43b5b3a5-f250-465e-b7e7-b4dea2d0aac3
+md" #### Value function iteration: # 1 "
+
+# ╔═╡ 4103eaf3-7407-4870-bc81-086298cd8a22
+md" This first way of solving the problem is attributed to Benjamin Moll and his course code at LSE. "
+
+# ╔═╡ d319b12f-ab4f-4f77-96a4-0738b02a3281
+md" #### Value function iteration: # 2 "
+
+# ╔═╡ 493fc95d-86c2-4f08-9e69-67450e84ea7e
+md" >Should go back and use types in other examples "
+
+# ╔═╡ 5b668901-c299-4089-a1aa-2b4e48aa4c41
+md" The second way of coding this comes from a NYU workshop on computational economics. For this example we will start by setting up a `Household` type that is going to be used to store some useful information like the parameters for the model. We have not really worked with setting up our own types up until now, but in future iterations of these notes we might spend some more time on this. "
+
+# ╔═╡ da6f3fbc-60bf-4522-91ea-cdcfb995c654
+mutable struct Household
+	
+	# Parameters inputted by user
+	β::Float64 					# Discount factor
+	y_chain::MarkovChain{Float64, Matrix{Float64}, Vector{Float64}} # Income process
+	r::Float64 					# Interest rate
+	w::Float64 					# Wage
+	amax::Float64 				# Highest asset value in grid
+	Na::Int64 					# Number of points on asset grid
+	curv::Float64 				# Curvature of asset grid (???)
+	
+	# Variables that are created through construction process
+	a_grid::Vector{Float64} 	# Asset grid
+	y_grid::Vector{Float64} 	# Income grid
+	ay_grid::Matrix{Float64} 	# Combined asset / income grid
+	ayi_grid::Matrix{Float64} 	# Combined asset / income INDEX grid
+	Ny::Int64 					# Number of points on income grid
+	V::Matrix{Float64} 			# Current guess for the value function on grid points
+	ap::Matrix{Float64}     	# Current guess for asset policy function on grid
+	c::Matrix{Float64} 			# Current guess for cons policy function on grid
+	
+end;
+
+# ╔═╡ fb30b4b0-268c-41c9-a377-5df144323887
+md" This type keeps a record of all the exogenous parameters of the model as well as the grids and current guesses for the different types of value and policy functions. We have a type declaration after the definition of each component. This will help Julia to infer the type of the fields we are working with, but it does not always mean an improvement in terms of computational performance. It is good practice to declare types, but there are many instances where it is not needed. "
+
+# ╔═╡ 5e396dac-60b9-4a2f-9bd5-d8af96240474
+md""" ### Discretisation of income process """
+
+# ╔═╡ 4330c5c0-af20-44be-ad1d-ee31b9733397
+md""" Have a quick discussion on Tauchen's method """
 
 # ╔═╡ 9202f4d4-a4e2-496d-b39a-5514cb55973c
 md" ### Stochastic optimal growth model "
@@ -64,12 +126,16 @@ function T(w, grid, β, u, f, shocks; compute_policy = false)
 	end
 	
 	return Tw
-end
+end;
+
+# ╔═╡ 0088fe27-b8ce-4f4a-a425-5bc62292179a
+md""" #### Beyond Monte Carlo integration """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
@@ -77,13 +143,16 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 QuantEcon = "fcd29c91-0bd7-5a09-975d-7ac3f643a60c"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 Interpolations = "~0.13.3"
+KernelDensity = "~0.6.3"
 NLsolve = "~4.5.1"
 Optim = "~1.3.0"
 Plots = "~1.19.2"
 QuantEcon = "~0.16.2"
+StatsBase = "~0.33.9"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -484,6 +553,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "d735490ac75c5cb9f1b00d8b5509c11984dc6943"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.0+0"
+
+[[KernelDensity]]
+deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
+git-tree-sha1 = "591e8dc09ad18386189610acafb970032c519707"
+uuid = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
+version = "0.6.3"
 
 [[LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -964,9 +1039,9 @@ version = "1.0.0"
 
 [[StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "2f6792d523d7448bbe2fec99eca9218f06cc746d"
+git-tree-sha1 = "fed1ec1e65749c4d96fc20dd13bea72b55457e62"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.8"
+version = "0.33.9"
 
 [[StatsFuns]]
 deps = ["LogExpFunctions", "Rmath", "SpecialFunctions"]
@@ -1256,16 +1331,30 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╟─71c63caa-7304-4dc9-b683-08fd48314e28
+# ╟─07a187e2-9999-4ee7-bd01-0a002902c2af
+# ╠═71c63caa-7304-4dc9-b683-08fd48314e28
 # ╟─432b9202-e4d0-11eb-22d5-8b28bb0e0f47
 # ╟─51ba2dab-9291-4042-a7a8-4ea495278028
 # ╟─0d5de507-810e-498f-891a-6c0123354ef2
 # ╟─454997e5-abb6-4821-bb7c-7644fd508eeb
 # ╟─f52b2012-d19c-456e-9f36-b6b6083c09a4
+# ╟─63e09a48-2a64-4f7e-bda1-e4a5c659b092
+# ╟─50bf70a6-c9f9-46f2-bf1c-c374214c9d24
+# ╟─5f4778b5-3675-49e0-a408-0c919a21fae8
+# ╟─43b5b3a5-f250-465e-b7e7-b4dea2d0aac3
+# ╟─4103eaf3-7407-4870-bc81-086298cd8a22
+# ╟─d319b12f-ab4f-4f77-96a4-0738b02a3281
+# ╟─493fc95d-86c2-4f08-9e69-67450e84ea7e
+# ╟─5b668901-c299-4089-a1aa-2b4e48aa4c41
+# ╠═da6f3fbc-60bf-4522-91ea-cdcfb995c654
+# ╠═fb30b4b0-268c-41c9-a377-5df144323887
+# ╟─5e396dac-60b9-4a2f-9bd5-d8af96240474
+# ╟─4330c5c0-af20-44be-ad1d-ee31b9733397
 # ╟─9202f4d4-a4e2-496d-b39a-5514cb55973c
 # ╟─7405253f-9855-4d49-8c67-522331f1fce8
 # ╟─cbe8c857-ec72-48ff-93cf-61f28dda4e94
 # ╟─3e3a7c19-515f-4019-b85a-45c86b49ba67
 # ╠═cf83f018-3683-4e35-a06e-2887b44b7488
+# ╟─0088fe27-b8ce-4f4a-a425-5bc62292179a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -2,7 +2,7 @@
 
 These are notes written in Julia for the computational economics reading group. The notes can be found in the `notebooks` folder. 
 
-Everything is pretty much a work in progress 🚧
+There are probably many errors, all of which are my own. It is safe to say that everything is a work in progress 🚧
 
 ## Outline of topics
 
@@ -23,10 +23,19 @@ We will probably not cover all topics during the year, but this is a first run. 
 
 ## Resources
 
-Several resources were used in construcing these notes. Below I list some of the ones that I found most useful. 
+Several resources were used in construcing these notes. I relied a lot on code from other people in setting up these notes. Below are links to some of the repositories, books and websites that I found helpful in trying to make sense of it all. These are not presented in any particular order. 
+
+### Repositories and websites
+
+1. Fedor Ishkakov -- [Foundations of Computational Economics](https://github.com/fediskhakov/CompEcon)
+2. Florian Oswald -- [Computational Economics for PhDs](https://github.com/floswald/NumericalMethods)
+3. Ivan Rudik -- [Dynamic Optimization](https://github.com/AEM7130/class-repo)
+4. Toby Driscoll -- [Fundamentals of Numerical Computaion](http://tobydriscoll.net/fnc-julia/frontmatter.html)
+5. Chris Edmond -- [Macroeconomics PhD course](http://www.chrisedmond.net/phd2019.html)
+6. Alisdair McKay -- [Numerical Analysis](https://github.com/amckay/EC702)
+7. Stefano Pica -- [Macroeconomics PhD Course](https://github.com/stpica/EC702-Fall-TA)
+8. QuantEcon -- [Quantitative Economics](https://quantecon.org/lectures/)
 
 ### Books
-### Articles
-### Websites
-### Github repos
 
+### Articles

@@ -48,7 +48,7 @@ md" Below are the packages that we used for this section. "
 md" # Dynamic programming I"
 
 # ╔═╡ 7290e8e6-5853-4992-a1e5-1fdbbed56f09
-md""" ## Need to read and clean up this session! """
+md""" ## Need to read and clean up this session! Many mistakes! """
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. It is quite sseful in several areas of economics, but I have mostly used it in macroeconomic applications. It is therefore natural to me that most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem and optimal growth problem.
@@ -258,7 +258,15 @@ This iterative procedure will work all the way till we reach the first period. I
 md" ### Backward induction example ($T = 2$)"
 
 # ╔═╡ a897d516-60e9-4b96-9f1f-f7dea164f392
-md" Below we provide an example to illustrate the idea of bakward induction. Imagine a case with two periods where we have that the per period utility function is given by $U_t(c_t) = \sqrt{c_t}$. 
+md" Below we provide an example to illustrate the idea of backward induction. In our problem there is a cake of size $K_1$ at the beginning of period $t = 1$. In the first period we can consume some of the cake and save the rest for later. Consumption in period $t$ is given by $c_{t}$. The per period utility function is given by $U_t(c_t) = \sqrt{c_t}$. This utility function satisfies the usual properties, $u_{c} > 0, u_{cc} < 0$ and $\lim_{c \rightarrow 0} u_{c} = \infty$.
+
+Our sequence problem is then the following, 
+
+$$\max_{\{c_{t}\}_{t=1}^{2}} u(c_{1}) + \beta u(c_{2})$$
+
+subject to 
+
+$$K_{t+1}=K_{t}-c_{t}$$
 
 Optimal choice for the different periods are as follows, 
 
@@ -2687,7 +2695,7 @@ version = "0.9.1+5"
 # ╟─728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
 # ╟─3f18f963-ad85-4c75-ab8c-64ac3cbf312c
 # ╟─fc6640d2-f2de-4d09-8787-39954cc835b4
-# ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
+# ╠═a897d516-60e9-4b96-9f1f-f7dea164f392
 # ╟─f17bd25f-a459-44b6-862e-5d8d7b5062c9
 # ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
 # ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6

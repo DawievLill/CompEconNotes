@@ -62,26 +62,26 @@ md" The second way of coding this comes from a NYU workshop on computational eco
 
 # ╔═╡ da6f3fbc-60bf-4522-91ea-cdcfb995c654
 mutable struct Household
-	
-	# Parameters inputted by user
-	β::Float64 					# Discount factor
-	y_chain::MarkovChain{Float64, Matrix{Float64}, Vector{Float64}} # Income process
-	r::Float64 					# Interest rate
-	w::Float64 					# Wage
-	amax::Float64 				# Highest asset value in grid
-	Na::Int64 					# Number of points on asset grid
-	curv::Float64 				# Curvature of asset grid (???)
-	
-	# Variables that are created through construction process
-	a_grid::Vector{Float64} 	# Asset grid
-	y_grid::Vector{Float64} 	# Income grid
-	ay_grid::Matrix{Float64} 	# Combined asset / income grid
-	ayi_grid::Matrix{Float64} 	# Combined asset / income INDEX grid
-	Ny::Int64 					# Number of points on income grid
-	V::Matrix{Float64} 			# Current guess for the value function on grid points
-	ap::Matrix{Float64}     	# Current guess for asset policy function on grid
-	c::Matrix{Float64} 			# Current guess for cons policy function on grid
-	
+
+    # User-inputted
+    β::Float64                                                        # discount factor
+    y_chain::MarkovChain{Float64,Matrix{Float64},Vector{Float64}}     # income process
+    r::Float64                                                        # interest rate
+    w::Float64                                                        # wage
+    amax::Float64                                                     # top of asset grid
+    Na::Int64                                                         # number of points on asset grid
+    curv::Float64                                                     # curvature of asset grid
+
+    # Created in constructor
+    a_grid::Vector{Float64}     # asset grid
+    y_grid::Vector{Float64}     # income grid
+    ay_grid::Matrix{Float64}    # combined asset/income grid
+    ayi_grid::Matrix{Float64}   # combined asset/income index grid
+    Ny::Int64                   # number of points on income grid
+    V::Matrix{Float64}          # current guess for value function on grid points
+    ap::Matrix{Float64}         # current guess for asset policy function on grid points
+    c::Matrix{Float64}          # current guess for consumption policy function on grid points
+
 end;
 
 # ╔═╡ fb30b4b0-268c-41c9-a377-5df144323887
@@ -95,33 +95,152 @@ u(c::Float64) = log(c);
 
 # ╔═╡ 683b9e7d-0177-49f1-9e61-e9f2f70894d8
 function budget_constraint(a::Float64, ap::Float64, y::Float64, r::Float64, w::Float64)
-	
-	c = (1 + r)*a + w*y - ap
-	return c
+    c = (1 + r)*a + w*y - ap
+    return c
 end;
 
 # ╔═╡ 888c2227-c027-432a-87b2-694c6fdb8985
 function budget_constraint(a::Float64, ap::Float64, y::Float64, h::Household)
-	
-	budget_constraint(a, ap, y, h.r, h.w)
-end
+    budget_constraint(a, ap, y, h.r, h.w)
+end;
 
 # ╔═╡ c87ba17d-acec-45bb-87a9-8a43a0842451
-md""" The budget constraint takes in the state values (`a` and `y`) and the choice of assets tomorrow `ap` and provides a value for consumption. Budget constraint has two methods, one that accepts values for wage and the interest rate directly and another that gains this information on these prices from a `Household` type. Implementation of **multiple dispatch** in Julia. """
+md""" The budget constraint takes in the state values (`a` and `y`) and the choice of assets tomorrow `ap` and provides a value for consumption. Budget constraint has two methods, one that accepts values for wage and the interest rate directly and another that gains this information on these prices from a `Household` type. Implementation of **multiple dispatch** in Julia. Next we have a constructor function for the `Household`."""
 
 # ╔═╡ 28eb0b44-db0b-4108-bd30-ac8484114b9a
-function Household_f(; β::Float64 = 0.96, 
-		r::Float64 = 0.038,
-		w::Float64 = 1.09,
-		amax::Float64 = 30.0,
-		Na::Int64 = 100,
-		curv::Float64 = 0.4,
-	y_chain::MarkovChain{Float64, Matrix{Float64}, Vector{Float64}} = MarkovChain([0.5 0.5; 0.04 0.96], [0.25; 1.0]))
-	
-	# Set up the asset grid
-	a_grid = LinRange(0, amax ^ curv, Na) .^ (1 / curv)
-	
-end
+function Household_f(;β::Float64=0.96,
+    y_chain::MarkovChain{Float64,Matrix{Float64},Vector{Float64}}=MarkovChain([0.5 0.5; 0.04 0.96], [0.25; 1.0]),
+                   r::Float64=0.038, 
+                   w::Float64=1.09,
+                   amax::Float64=30.0,
+                   Na::Int64=100,
+                   curv::Float64=0.4)
+
+    # Set up asset grid
+    a_grid = LinRange(0, amax^curv, Na).^(1/curv)
+
+    # Parameters of income grid
+    y_grid = y_chain.state_values
+    Ny = length(y_grid)
+
+    # Combined grids
+    ay_grid = gridmake(a_grid, y_grid)
+    ayi_grid = gridmake(1:Na, 1:Ny)
+
+    # Set up initial guess for value function
+    V = zeros(Na, Ny)
+    c = zeros(Na, Ny)
+    for (yi, y) in enumerate(y_grid)
+        for (ai, a) in enumerate(a_grid)
+            c_max = budget_constraint(a, 0.0, y, r, w)
+            c[ai, yi] = c_max
+            V[ai, yi] = u(c_max)/(1 - β)
+        end
+    end
+
+    # Corresponding initial policy function is all zeros
+    ap = zeros(Na, Ny)
+
+    return Household(β, y_chain, r, w, amax, Na, curv, a_grid, y_grid, ay_grid, ayi_grid, Ny, V, ap, c)
+
+end;
+
+# ╔═╡ f7e61d62-d165-43c6-b2b7-34bca161b90c
+md""" The asset grid in this formulation is constructed so that there are more points closer to the borrowing constraint. In models with incomplete markets and a borrowing constraint there is expected to be more curvature in this area. More precision required where the function is not linear. """
+
+# ╔═╡ 0955158e-f97d-4343-a070-7b30bfe3a4c8
+md""" The initial guess for the value function is the present discounted value of consuming the maximum possible amount in a given state forever. Any guess would work here in principle. """
+
+# ╔═╡ f91e84e1-0949-41f3-9543-e53b28a90072
+md""" #### Bellman operator """
+
+# ╔═╡ 56207c00-6bec-451c-86f9-a99b07197592
+md""" Need to calculate the right hand side of the Bellman equation. For every grid point we need to be able to calculate the maximum. For this we will be using an optimisation package. Optimal asset policy will not necesarrily be on the grid, so we need to be able to evaluate off the grid. This requires interpolation (which will require a Julia package). 
+
+We start by writing a function to compute the flow value and continuation value given the indices of a set of states and choice for tomorrow's asset level. """
+
+# ╔═╡ de5b7982-418d-4fea-9f82-633ce27f00ff
+function value(h::Household, itp_V::Interpolations.GriddedInterpolation,
+                           ap::Float64, ai::Int64, yi::Int64)
+    
+    # Interpolate value function at a', for each possible income level
+    Vp = zeros(h.Ny)
+    for yii = 1:h.Ny
+        Vp[yii] = itp_V[ap, yii]
+    end
+
+    # Take expectations
+    continuation = h.β * dot(h.y_chain.p[yi, :], Vp)
+
+    # Compute today's consumption and utility
+    c = budget_constraint(h.a_grid[ai], ap, h.y_grid[yi], h)
+    flow = u(c)
+
+    RHS = flow + continuation   # This is what we want to maximize
+    return RHS
+
+end;
+
+# ╔═╡ 6e607d05-5846-4ed8-9608-34e8a58fcb1a
+function opt_value(h::Household, itp_V::Interpolations.GriddedInterpolation,
+                   ai::Int64, yi::Int64)
+
+    f(ap::Float64) = -value(h, itp_V, ap, ai, yi)
+    ub = (1 + h.r)*h.a_grid[ai] + h.w*h.y_grid[yi]
+    lb = 0.0
+    res = optimize(f, lb, ub)
+    return res.minimizer, -res.minimum
+
+end;
+
+# ╔═╡ f0cfce3e-592b-4a49-99a1-cab1349e3316
+function bellman_iterator!(h::Household)
+
+    # Set up interpolant for current value function guess
+    knots = (h.a_grid, [1, 2])
+    itp_V = interpolate(knots, h.V, (Gridded(Linear()), NoInterp()))
+
+    # Loop through the grid to update value and policy functions
+    V = zeros(h.Na, h.Ny)
+    ap = zeros(h.Na, h.Ny)
+    c = zeros(h.Na, h.Ny)
+    for (yi, y) in enumerate(h.y_grid)
+        for (ai, a) in enumerate(h.a_grid)
+            ap[ai, yi], V[ai, yi] = opt_value(h, itp_V, ai, yi)
+            c[ai, yi] = budget_constraint(a, ap[ai, yi], y, h)
+        end
+    end
+
+    # Update solution
+    h.V = V;
+    h.ap = ap;
+    h.c = c;
+    
+end;
+
+# ╔═╡ c6dc82a7-7fc2-46e2-8895-91ab8a2db121
+function vfi!(h::Household; tol::Float64=1e-8, maxit::Int64=3000)
+
+    dist = 1.0
+    i = 1
+    while (tol < dist) & (i < maxit)
+        V_old = h.V
+        bellman_iterator!(h)
+        dist = maximum(abs, h.V - V_old)
+
+        if i % 50 == 0
+            println("Iteration $(i), distance $(dist)")
+        end
+
+        i = i + 1
+    end
+
+    println("Converged in $(i) iterations!")
+
+end;
+
+# ╔═╡ 4a7a6b9c-88e3-42a3-8056-870a2d35522a
+h = Household_f();
 
 # ╔═╡ 5e396dac-60b9-4a2f-9bd5-d8af96240474
 md""" ### Discretisation of income process """
@@ -1390,6 +1509,15 @@ version = "0.9.1+5"
 # ╠═888c2227-c027-432a-87b2-694c6fdb8985
 # ╟─c87ba17d-acec-45bb-87a9-8a43a0842451
 # ╠═28eb0b44-db0b-4108-bd30-ac8484114b9a
+# ╟─f7e61d62-d165-43c6-b2b7-34bca161b90c
+# ╟─0955158e-f97d-4343-a070-7b30bfe3a4c8
+# ╟─f91e84e1-0949-41f3-9543-e53b28a90072
+# ╟─56207c00-6bec-451c-86f9-a99b07197592
+# ╠═de5b7982-418d-4fea-9f82-633ce27f00ff
+# ╠═6e607d05-5846-4ed8-9608-34e8a58fcb1a
+# ╠═f0cfce3e-592b-4a49-99a1-cab1349e3316
+# ╠═c6dc82a7-7fc2-46e2-8895-91ab8a2db121
+# ╠═4a7a6b9c-88e3-42a3-8056-870a2d35522a
 # ╟─5e396dac-60b9-4a2f-9bd5-d8af96240474
 # ╟─4330c5c0-af20-44be-ad1d-ee31b9733397
 # ╟─9202f4d4-a4e2-496d-b39a-5514cb55973c

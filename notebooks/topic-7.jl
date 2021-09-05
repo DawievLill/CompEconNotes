@@ -29,6 +29,46 @@ begin
 	using Random
 end
 
+# ╔═╡ 5ddc4d58-25dd-4263-9e8e-c72923a32feb
+html"""
+<div style="
+position: absolute;
+width: calc(100% - 30px);
+border: 50vw solid #2e3440;
+border-top: 200px solid #2e3440;
+border-bottom: none;
+box-sizing: content-box;
+left: calc(-50vw + 15px);
+top: -100px;
+height: 100px;
+pointer-events: none;
+"></div>
+
+<div style="
+height: 200px;
+width: 100%;
+background: #2e3440;
+color: #fff;
+padding-top: 50px;
+">
+<span style="
+font-family: Vollkorn, serif;
+font-weight: 700;
+font-feature-settings: 'lnum', 'pnum';
+"> <p style="
+font-size: 1.5rem;
+opacity: 0.8;
+">Computational Economics</p>
+<p style="text-align: center; font-size: 1.8rem;">
+ Dynamic Programming: Part 1
+</p>
+
+<style>
+body {
+overflow-x: hidden;
+}
+</style>"""
+
 # ╔═╡ c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 html"""
 <style>
@@ -44,11 +84,8 @@ md" Below are the packages that we used for this section. "
 # ╔═╡ 9cb9c5a2-b910-416a-bcca-cc7d69d2f88d
 # TableOfContents()
 
-# ╔═╡ 56121f90-e33f-11eb-1211-8578ae4eb05d
-md" # Dynamic programming I"
-
 # ╔═╡ 7290e8e6-5853-4992-a1e5-1fdbbed56f09
-md""" ## Need to read and clean up this session! Many mistakes! """
+md""" ## Clean up this session! Too many errors! """
 
 # ╔═╡ f6852b65-d493-4e2c-a8b6-517993c93ac8
 md" The primary sources for this session is the numerical methods course by Florian Oswald and the set of notes at QuantEcon. Dynamic programming is a method to solve dynamic problems in economics, and other disciplines. It is quite sseful in several areas of economics, but I have mostly used it in macroeconomic applications. It is therefore natural to me that most of the examples illustrated here will be from a macroeconomic context, but I am open to suggestions for problems in labour economics, microeconomics, etc. We will start with the simplest dynamic programming problem, referred to as the shortest path problem and then discuss the cake eating problem and optimal growth problem.
@@ -180,7 +217,7 @@ end
 md" This example is useful to get an idea of what dynamic programming is about. Now let us move to more complex problems. We will also need to talk about some of the theory surrounding dynamic programming. We will not delve too deeply into the theory, but rather provide sources that give a good overview of theorethical constructs. Dynamic programming can become quite technical and it is isnt witin the scope of these sessions to provide a rigorous training in these methods. "
 
 # ╔═╡ 1fa1bdc2-a076-42be-9540-1d20ebcffeb5
-md" ## Discrete dynamic programming "
+md" ## Cake eating problem "
 
 # ╔═╡ e5e5bf22-a1d3-4bc3-8968-aa1d0545c2c8
 md" This class of problems is more closely related to economics. It is a consumption-savings problem and is usefull both in micro and macroeconomics. The notes presented here are almost an exact copy of the ones used by **Florian Oswald**. "
@@ -258,7 +295,10 @@ This iterative procedure will work all the way till we reach the first period. I
 md" ### Backward induction example ($T = 2$)"
 
 # ╔═╡ a897d516-60e9-4b96-9f1f-f7dea164f392
-md" Below we provide an example to illustrate the idea of backward induction. In our problem there is a cake of size $K_1$ at the beginning of period $t = 1$. In the first period we can consume some of the cake and save the rest for later. Consumption in period $t$ is given by $c_{t}$. The per period utility function is given by $U_t(c_t) = \sqrt{c_t}$. This utility function satisfies the usual properties, $u_{c} > 0, u_{cc} < 0$ and $\lim_{c \rightarrow 0} u_{c} = \infty$.
+md" 
+**Question**: Is there a difference between backwards induction, value function iteration and successive approximation? They seem to be basically the same. 
+
+Below we provide an example to illustrate the idea of backward induction. In our problem there is a cake of size $K_1$ at the beginning of period $t = 1$. In the first period we can consume some of the cake and save the rest for later. Consumption in period $t$ is given by $c_{t}$. The per period utility function is given by $U_t(c_t) = \sqrt{c_t}$. This utility function satisfies the usual properties, $u_{c} > 0, u_{cc} < 0$ and $\lim_{c \rightarrow 0} u_{c} = \infty$.
 
 Our sequence problem is then the following, 
 
@@ -268,29 +308,27 @@ subject to
 
 $$K_{t+1}=K_{t}-c_{t}$$
 
-Optimal choice for the different periods are as follows, 
+Optimal choice for the different periods (if they were conducted in isolation) are as follows, 
 
 Period $2$: $V_2(K_2) = \sqrt{K_2}$ because $c_2(K_2)=K_2$ where $K_2$ are the available resources in period $2$.
 
 Period $1$: $V_1(K_1) = \max_{c_1} \sqrt{K_1} + \beta V_2(K_1 - c_1)$"
 
 # ╔═╡ f17bd25f-a459-44b6-862e-5d8d7b5062c9
-md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. We start the problem by only considering period 2. No cake is consumed in period 1, so everything is consumed in the second period. "
+md" Let us look at things from a numerical perspective. First, we construct a grid over period $2$ resources. We start the problem by **only considering period 2**. Our intution is that everything should be consumed in this period, since our utility function is monotonically increasing in consumption."
 
 # ╔═╡ be24ede3-87c7-402c-adbc-2f003e5099a0
+# Parameter
 β = 0.99 # Discount factor (only primitive for the model thus far)
 
-# ╔═╡ be62b6ff-a947-47ab-8905-6ac631abf8e6
-K2_only = 5
-
 # ╔═╡ cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
-md" In this case, we have $K2_only slices of cake in period 2. Next we construct a grid with all the potential values of cake."
+md" In this case, we have 5 slices of cake in period 2. Next we construct a grid with all the potential values of cake."
 
 # ╔═╡ d9a659a2-d0dd-45bb-bb5b-fb85f0208819
-grid_K2 = range(0, stop = K2_only, step = 1) |> collect 
+grid_K2 = range(0, stop = 5, step = 1) |> collect 
 
 # ╔═╡ f9e3c61c-d6f9-4286-bada-6b71e5f51c13
-md" Obviously in this example we will consume all the cake at each potential size of the cake on the grid. Since there is no consumption in the first period. "
+md" Obviously in this example we will consume all the cake at each potential size of the cake on the grid. "
 
 # ╔═╡ a25b4e49-46c0-4c7d-b80e-e108614ec288
 C2 = grid_K2 
@@ -302,7 +340,7 @@ md" We can see the utility that we received from the consumption at each grid po
 V2 = sqrt.(C2)
 
 # ╔═╡ f2075369-02b7-4262-a543-91da85169e65
-#plot(grid_K2, V2, xlab = "Slices of cake", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
+plot(grid_K2, V2, xlab = "Slices of cake", ylab = "Value",label = L"V_2", m = (:circle), leg = :bottomright, line = 1.5)
 
 # ╔═╡ 8b8c03cb-b8c5-45a8-9d45-a6730f0cf420
 md" Say that we want to find the value for $V_2$ at $K_2 = 2$. We have to reference the relevant index point for that value of $K_2$. The corresponding index value in $K_2$ is in the third position, and is indicated by a $3$ since we have $1$-based indexing in _Julia_. In Python we have zero based indexing, so the value for the index would have been $2$ instead. "
@@ -317,7 +355,7 @@ grid_K2[idx], V2[idx]
 md" Next we find the optimal consumption in period $1$ given a level of $K_1$. This value is known as the state, and we take it as given."
 
 # ╔═╡ ed53fb3c-9fe6-47d5-b465-3af3369f9177
-K1_state = @bind K1 Slider(0:K2_only, show_value = true, default = 3) # Define different values for the level of cake in period 1. This value is given! It is the state of our system.  
+K1_state = @bind K1 Slider(0:5, show_value = true, default = 3) # Define different values for the level of cake in period 1. This value is given! It is the state of our system.  
 
 # ╔═╡ 8e14ac14-af81-4bd6-bdac-f850bb9020e9
 V1_guess = zeros(K1 + 1) # Allocate memory to store the value of our guesses
@@ -341,9 +379,7 @@ begin
 end
 
 # ╔═╡ eff5cdcf-3a07-4d08-9152-39c0b71eac3b
-md" The function below encapsulates the logic that we have explored above in a neat container. 
-
-_Julia_ is mostly meant for functional programming, so try to write with functions in mind. "
+md" The function below encapsulates the logic that we have explored above in a neat container. _Julia_ is mostly meant for functional programming, so try to write with functions in mind. "
 
 # ╔═╡ b6cbcf47-669d-4ae3-aa79-b83d59e04d9d
 function backward_induction1(K1; 
@@ -368,7 +404,7 @@ function backward_induction1(K1;
 	V1, C1 = round(V1_guess[idx_max], digits = 3), idx_max - 1
 	md" The optimal consumption is $C1 in the first period with associated value of $V1"
 	#plot(V1_guess, xlab = "Consumption (Optimal at $C1)", ylab = "Value (Optimal at $V1)", label = L"V_1", line = 2)
-end
+end;
 
 # ╔═╡ 66da8280-4f94-4798-a16f-3b11967bc760
 backward_induction1(5) # Code finally works, had to play around with the idx_max component
@@ -408,12 +444,12 @@ begin
 	Kspace = exp.(range(log(lowK), stop = log(highK), length = points)) # The state space
 	CT = Kspace # Consume whatever is left -- Consume all resources in this case, since it is all left.
 	VT = sqrt.(CT)  # Utility of that consumption -- This is known for VT, since there is no VT + 1
-end
+end;
 
 # ╔═╡ c5ea0324-8e8c-49d1-88f6-3abc4278aefa
 function plotVT()
 	plot(Kspace, VT, xlab = "K", ylab = "Value",label = L"V_T", m = (:circle), leg = :bottomright)
-end
+end;
 
 # ╔═╡ 4716e611-3342-4c3e-afc2-5afd8de2fc15
 plotVT()
@@ -449,7 +485,7 @@ begin
 		CT_1[ik] = Kspace[ix]  # record optimal action level
 		
     end
-end
+end;
 
 # ╔═╡ 7854bba6-88c3-4f19-b7b1-1ae8487ac9bc
 let
@@ -458,7 +494,7 @@ let
 end
 
 # ╔═╡ b71abd7b-191f-4044-91a9-d0f4e4883f88
-plotaT() = plot(Kspace, CT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "K", line = 2)
+plotaT() = plot(Kspace, CT ,label = L"a_T",leg = :topleft,ylab = "action",xlab = "K", line = 2);
 
 # ╔═╡ 6f2eac77-4ad3-4da7-95a7-c958ccf270cd
 let
@@ -499,7 +535,7 @@ function Vperiod(grid::Vector,vplus::Vector)
 		at[ir] = grid[ix]  # record optimal action level
 	end
 	return (Vt, at)
-end
+end;
 
 # ╔═╡ 7529e1a7-c41c-49ec-8885-6c7c14093700
 function backwards(grid, nperiods)
@@ -515,7 +551,7 @@ function backwards(grid, nperiods)
 		a[it,:] = x[2]
 	end
 	return (V,a)
-end
+end;
 
 # ╔═╡ b22748fb-9acb-4105-9fbe-654daf34dbf4
 @bind nperiods Slider(2:20,show_value = true, default = 5)
@@ -552,6 +588,15 @@ end
 # ╔═╡ 8ec82051-79b0-4cd7-8585-163ffde2b290
 bar(1:nperiods,C[:, end], leg = false, title = "Given K_t = $(Kspace[end]), take action...",xlab = "period")
 
+# ╔═╡ c9cf139d-005c-4826-b9c5-9d2131aa9946
+md""" ### Value function iteration """
+
+# ╔═╡ b1481e94-57c8-42a2-8209-c96c0c603851
+md""" This is semi-superfluous, but will help me better understand the logic.  """
+
+# ╔═╡ 178fb659-f546-401c-ba2f-6e601fad3596
+md""" Attempt to translate some code from Takeki Sunakawa that has a nice description of value function iteration and the cake eating problem. There is also some QuantEcon code that I might want to take a look at. """
+
 # ╔═╡ 0554fa0b-8ce7-4747-8a21-fe06dbf6e449
 md""" ## Income fluctuation problem """
 
@@ -578,7 +623,7 @@ md""" ### Finite horizon problem """
 # ╔═╡ ba8a18f5-f074-45d5-89aa-ba332e80ab45
 md""" We will first deal with the finite horizon case, like we did with the cake eating problem to give us a better idea of the basic structure of the problem. Since this is a finite horizon problem, we can solve by backwards induction. 
 
-**Note** We can see the code was originally written with MATLAB in mind, generally it is written so as to vectorise many of the operations and purposefully avoid iterations. """
+**Note**: We can see the code was originally written with Matlab in mind, generally it is written so as to vectorise many of the operations and purposefully avoid iterations. This is not bad in any sense, just interesting.  """
 
 # ╔═╡ a6da19fd-44c8-4842-ad6c-2da98c3eb6a0
 md""" #### Backward induction """
@@ -609,7 +654,7 @@ begin
 	#y = y./sum(y) # This is what the notes have, but I don't know whether it is correct. 
 	
 	mean(y)
-end
+end;
 
 # ╔═╡ 51c82ec9-ca11-481e-90c9-0589bda16475
 begin
@@ -622,7 +667,7 @@ begin
 	A_grid = LinRange(0, 1, nA)	# set up a grid between 0 and 1
 	A_grid = A_grid_min .+ (A_grid_max .- A_grid_min) .* A_grid # restructure so that range is now from -1.0 to 5.0. Is this a better scheme for the grid points? Why not LinRange(-.1, 5, 1000)?
 	A_grid[A_grid .== minimum(abs.(A_grid .- 0))] .= 0 # insert explicit value at a point. Replace abs(min) point with a zero. 
-end
+end;
 
 # ╔═╡ 52bbcfc3-6498-49e5-847b-f4ad943f78e1
 begin
@@ -642,7 +687,7 @@ begin
 	con = zeros(nA, time) # consumption grid
 	sav = zeros(nA, time) # savings grid (in this case this is the same as a')
 	savind = zeros(Int, nA, time); # nA x T grid of zeros -- Used for indexing
-end
+end;
 
 # ╔═╡ 0d893110-ef3a-46ab-a97d-18df2b9e7944
 begin
@@ -652,7 +697,7 @@ begin
 	sav[:, time]     .= 0 # Add zero to last column and all rows (no saving in last period)
 	con[:, time]      = R .* A_grid .+ y[time] .- sav[:, time] # c = Ra + y - a'
 	V₁[:, time]       = u(con[:, time]) # value associated with consumption of everything
-end
+end;
 
 # ╔═╡ 74b9096b-8c1d-4e58-b776-e4292be1097c
 begin
@@ -672,7 +717,7 @@ begin
         	con[ia, it]    = cash .- sav[ia, it] # c = x - s
     	end
 	end
-end
+end;
 
 # ╔═╡ 9e81e572-947a-4c7d-b174-4cf41ae84bd2
 begin
@@ -707,7 +752,7 @@ begin
 	## assign actual asset and income values;
 	asim = A_grid[aindsim]
 	csim = R .* asim[1:time] .+ y .- asim[2:(time+1)]
-end
+end;
 
 # ╔═╡ 0ad401c1-7c70-45e1-9513-7311c8dfa8a5
 md" Will plot income, consumption and wealth paths from this simulation. "
@@ -818,7 +863,7 @@ begin
 	#β 				= 0.96 		# Discount factor (already defined in global scope of this notebook)
 	γ 				= 1.5 		# Degree of relative risk aversion
 	maxit           = 300 		# Maximum number of iterations
-end
+end;
 
 # ╔═╡ adc503f5-6f65-4f6a-ba10-965f78f52e9e
 begin
@@ -829,7 +874,7 @@ begin
 	
 	# Set up the grid
 	K_grid          = range(K_grid_min, K_grid_max, length = K_grid_size)
-end
+end;
 
 # ╔═╡ cd71f975-5058-46a4-80d8-0d410f19cbf1
 begin 
@@ -839,7 +884,7 @@ begin
 	
 	# Tolerance level for stopping criterion
 	ε = 1e-9
-end
+end;
 
 # ╔═╡ a8cbe356-218d-47f1-b62a-8fea4f6c1835
 md" Quick word about the Bellman operator and contraction mapping theorem here before we continue with iteration "
@@ -859,7 +904,7 @@ begin
 	k_star(k) = ab * k.^α   
 	c_star(k) = (1-ab) * k.^α  
 	ufun(x) = log.(x)
-end
+end;
 
 # ╔═╡ 828e7015-3b57-44fb-8cc4-0a7727245981
 # Step 4: Start the iteration
@@ -908,10 +953,10 @@ function bellman_op(grid, v0, n, f; β = 0.96)
     end
     return (v1, pol)   # return both value and policy function
 	
-end
+end;
 
 # ╔═╡ 4f944394-1175-4fc3-b3ee-b2185cab821b
-b1 = bellman_op(K_grid, v₀, K_grid_size, k -> k^α)
+b1 = bellman_op(K_grid, v₀, K_grid_size, k -> k^α);
 
 # ╔═╡ 86869393-2a2e-4539-98b2-a061c90897c3
 # VFI iterator
@@ -935,7 +980,7 @@ function VFI(op)
         end
         v_init = v_next[1]  # update guess 
     end
-end
+end;
 
 # ╔═╡ da73f82c-8fe4-4aaf-8b0f-7e20cf27dfc6
 function VFI_converge(op::Function,steps)
@@ -955,11 +1000,10 @@ function VFI_converge(op::Function,steps)
         end
         v_init = v_next[1]  # update guess 
     end
-	pl
-end
+end;
 
 # ╔═╡ 4bc01bd5-17ef-42a7-b829-5bd369b938f3
-md" #### Fitted value function iteration "
+md" ### Fitted value function iteration "
 
 # ╔═╡ 2fba5422-a46d-4606-8c21-c0df54f3544b
 md" The final topic for this session is fitted value function iteration. This method is quite similar to the value function iteration from before, but uses interpolation techniques. This technique is generally used when the choice variables are continuous, so we need some type of approximation of the choice. The general process looks like the following 
@@ -1033,7 +1077,7 @@ function bellman_fitted_y(w, grid, β, u, f)
   
 	Tw = Optim.maximum.(results)
     return Tw
-end
+end;
 
 # ╔═╡ c1bfcd25-7c0c-4b6d-a85e-d15adca9f4a4
 md" As you will observe we also made use of numerical optimisation through the `Optim.jl` package. For more information on numerical optimisation, refer back to the previous session on the topic. "
@@ -1050,7 +1094,7 @@ function FVFI_y(w, grid, iter)
 	          label = "")
 	end
 	plot!(plt, legend = :bottomright)
-end
+end;
 
 # ╔═╡ cac96345-ee00-40ef-b8ae-3b7fdbfea9be
 w_new = 0.5 * log.(K_grid); 
@@ -2666,11 +2710,11 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
+# ╟─5ddc4d58-25dd-4263-9e8e-c72923a32feb
 # ╟─c428b2b9-a4f4-4ddc-be20-d25cb14c9cf7
 # ╟─e52a9db5-1bbc-4e07-ab71-fb287c472260
 # ╠═7fffd413-6ebe-49d2-b426-1428aee5ae26
 # ╠═9cb9c5a2-b910-416a-bcca-cc7d69d2f88d
-# ╟─56121f90-e33f-11eb-1211-8578ae4eb05d
 # ╟─7290e8e6-5853-4992-a1e5-1fdbbed56f09
 # ╟─f6852b65-d493-4e2c-a8b6-517993c93ac8
 # ╟─3e79f184-a3e8-44a0-9609-19827522d86a
@@ -2695,10 +2739,9 @@ version = "0.9.1+5"
 # ╟─728e0ddc-f482-4d9a-b6f2-41f7cf6b8619
 # ╟─3f18f963-ad85-4c75-ab8c-64ac3cbf312c
 # ╟─fc6640d2-f2de-4d09-8787-39954cc835b4
-# ╠═a897d516-60e9-4b96-9f1f-f7dea164f392
+# ╟─a897d516-60e9-4b96-9f1f-f7dea164f392
 # ╟─f17bd25f-a459-44b6-862e-5d8d7b5062c9
 # ╠═be24ede3-87c7-402c-adbc-2f003e5099a0
-# ╠═be62b6ff-a947-47ab-8905-6ac631abf8e6
 # ╟─cd9f3fd5-307a-4e1d-b92f-1bf7d441d483
 # ╠═d9a659a2-d0dd-45bb-bb5b-fb85f0208819
 # ╟─f9e3c61c-d6f9-4286-bada-6b71e5f51c13
@@ -2739,6 +2782,9 @@ version = "0.9.1+5"
 # ╟─b1e0e8e1-858f-4f12-a272-7197a117af25
 # ╟─23bdbe50-8544-4bb9-9e91-ba7397ca4db2
 # ╟─8ec82051-79b0-4cd7-8585-163ffde2b290
+# ╟─c9cf139d-005c-4826-b9c5-9d2131aa9946
+# ╟─b1481e94-57c8-42a2-8209-c96c0c603851
+# ╟─178fb659-f546-401c-ba2f-6e601fad3596
 # ╟─0554fa0b-8ce7-4747-8a21-fe06dbf6e449
 # ╟─262228b5-ac99-4a58-b050-a863f339186c
 # ╟─3776c21c-0fac-4683-8cfe-71b59d016250
@@ -2751,8 +2797,8 @@ version = "0.9.1+5"
 # ╠═52bbcfc3-6498-49e5-847b-f4ad943f78e1
 # ╠═0d893110-ef3a-46ab-a97d-18df2b9e7944
 # ╠═74b9096b-8c1d-4e58-b776-e4292be1097c
-# ╠═9e81e572-947a-4c7d-b174-4cf41ae84bd2
-# ╠═9dc64d75-765e-4f82-bec0-5342a7ca7294
+# ╟─9e81e572-947a-4c7d-b174-4cf41ae84bd2
+# ╟─9dc64d75-765e-4f82-bec0-5342a7ca7294
 # ╟─22c3b83d-fa42-4f5b-a84a-18163398d0cd
 # ╠═51ed65a1-d400-47aa-be29-d04ac9dd84b9
 # ╟─0ad401c1-7c70-45e1-9513-7311c8dfa8a5

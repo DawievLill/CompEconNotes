@@ -11,19 +11,25 @@ There are probably many errors, all of which are my own. It is safe to say that 
 3. Solutions to systems of linear equations -- **Incomplete**
 4. Optimisation (unconstrained and constrained) -- **Complete**
 5. Function approximation -- **Incomplete**
-6. Numerical integration -- **Empty**
-7. Dynamic programming I (deterministic) -- **Incomplete**
-8. Dynamic programming II (stochastic) -- **Incomplete**
-9. Time iteration and the endogenous grid method -- **Empty**
-10. Projection methods -- **Empty**
-11. Perturbation methods -- **Empty**
-12. ODEs and continuous time models -- **Empty**
+6. Dynamic programming (deterministic) -- **Incomplete**
+7. Endogenous grid method (deterministic) -- **Empty**
+8. Stochastic processes -- **Incomplete**
+9. Simulation and random numbers **Incomplete**
+10. Numerical integration -- **Empty**
+11. Dynamic programming (stochastic) -- **Empty**
+12. Endogenous grid method (stochastic) -- **Empty**
+13. Perturbation methods -- **Empty**
+14. Reiter's method -- **Empty**
+15. Linear time iteration -- **Empty**
+16. BKM algorithm -- **Empty**
+17. Sequence space Jacobian -- **Empty**
+18. Neural networks -- **Empty**
 
 We will probably not cover all topics during the year, but this is a first run. Future iterations will have more complete notes and include more topics. 
 
 ## Resources
 
-Several resources were used in construcing these notes. I relied a lot on code from other people in setting up these notes. Below are links to some of the repositories, books and websites that I found helpful in trying to make sense of it all. These are not presented in any particular order. 
+Several resources were used in constructing these notes. I relied a lot on code from other people in setting up these notes. Below are links to some of the repositories, books and websites that I found helpful in trying to make sense of it all. These are not presented in any particular order. 
 
 ### Repositories and websites
 

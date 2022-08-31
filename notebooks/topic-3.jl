@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.19.5
 
 using Markdown
 using InteractiveUtils
@@ -721,9 +721,9 @@ md" #### Norms and condition numbers "
 
 # ╔═╡ Cell order:
 # ╟─796b0922-8c17-11eb-31e8-59d5b21ee32b
-# ╠═97dca378-8c17-11eb-1a9f-49d299180a72
+# ╟─97dca378-8c17-11eb-1a9f-49d299180a72
 # ╟─8dd16592-8d9c-11eb-1adb-af30ea9f5bc5
-# ╠═d3a32206-96ff-11eb-0c21-953e0d446b50
+# ╟─d3a32206-96ff-11eb-0c21-953e0d446b50
 # ╟─cdcc50b0-8c18-11eb-3188-ffb91dcecee8
 # ╟─dc8e8004-8d95-11eb-30c0-33a66a0c3f6b
 # ╠═eea539ae-8d95-11eb-1a13-d704f50969c3
@@ -731,7 +731,7 @@ md" #### Norms and condition numbers "
 # ╟─e9140e2a-8d97-11eb-3a2c-79fad99882ea
 # ╠═784d31a8-8d9a-11eb-02bc-a3a24bcb564c
 # ╟─3329945f-d07f-4aa8-8715-b9cdebb5fd22
-# ╟─61132429-1e0a-491a-b1e8-66dc45e72110
+# ╠═61132429-1e0a-491a-b1e8-66dc45e72110
 # ╟─ce128ae2-8d9b-11eb-0399-cda8550d4524
 # ╠═98dbd9c8-8d9b-11eb-009d-b93e1b869285
 # ╠═ff747db4-8d9b-11eb-3a10-3314a843e679

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.19.5
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -1350,7 +1351,7 @@ md" JuMP does not work in Pluto just yet, so I will have to show this in VScode 
 # ╟─bc9bfd83-b3b2-4f66-aaa3-0f9edf0e651a
 # ╟─866cf80c-26a1-421f-98f1-702bd2de2bb4
 # ╟─0af7eb48-153f-4d57-8691-82403ee3454d
-# ╠═637c4017-a537-4b79-902b-a4bf508e559e
+# ╟─637c4017-a537-4b79-902b-a4bf508e559e
 # ╟─59372abe-baf4-45f2-b7bd-339ae4dba2bb
 # ╟─f560279a-1c1c-45f9-991d-ceefc575da3d
 # ╟─8d02a306-7ba5-4513-a2e4-103c5637a1ac

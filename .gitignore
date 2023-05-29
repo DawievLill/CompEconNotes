@@ -411,6 +411,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Workspace files are user-specific
+CompEcon.code-workspace
 
 ## Acknowledgements
 # Many thanks to `https://gitignore.io/`, written and maintained by Joe Blau, which contributed much material to this gitignore file.
